@@ -638,23 +638,36 @@
 
   <!-- Officer Message / SOS to Control Room Card (Hidden until logged in) -->
   <div class="card" id="message-control-card" style="display: none; border: 1.5px solid rgba(59, 130, 246, 0.4); background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 58, 138, 0.25) 100%); margin-bottom: 12px; padding: 14px;">
+    
+    <!-- Direct High-Urgency One-Touch Emergency / SOS Broadcast Bar -->
+    <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(185, 28, 28, 0.5) 100%); border: 2px solid #ef4444; border-radius: 12px; padding: 12px; margin-bottom: 14px; box-shadow: 0 4px 18px rgba(220, 38, 38, 0.45);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+        <span style="color: #fca5a5; font-size: 11.5px; font-weight: 800; display: flex; align-items: center; gap: 5px;">
+          <i class="fa-solid fa-triangle-exclamation text-rose-400"></i> అత్యవసర సహాయం (Emergency SOS Broadcast)
+        </span>
+        <span style="font-size: 10px; background: #dc2626; color: white; padding: 2px 7px; border-radius: 6px; font-weight: 900; letter-spacing: 0.5px;">LIVE SOS</span>
+      </div>
+      <button type="button" onclick="triggerImmediateOfficerSos()" id="btn-instant-sos" style="width: 100%; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white; border: none; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: 900; letter-spacing: 0.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.6);">
+        <i class="fa-solid fa-tower-broadcast" style="font-size: 18px;"></i> 🚨 EMERGENCY / SOS అలర్ట్ పంపండి
+      </button>
+      <div style="font-size: 11px; color: #fecaca; margin-top: 6px; text-align: center; line-height: 1.3;">
+        దగ్గరలో ఆన్‌లైన్‌లో ఉన్న ఆఫీసర్లు మరియు కంట్రోల్ రూమ్‌కు తక్షణ సమాచారం & GPS లొకేషన్ వెళ్తుంది
+      </div>
+    </div>
+
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-      <span style="display: flex; align-items: center; gap: 8px; color: #38bdf8; font-weight: 700; font-size: 14px;">
-        <i class="fa-solid fa-tower-broadcast" style="color: #38bdf8;"></i>
-        <span>Message / Alert to Control Room</span>
+      <span style="display: flex; align-items: center; gap: 8px; color: #38bdf8; font-weight: 700; font-size: 13.5px;">
+        <i class="fa-solid fa-bullhorn" style="color: #38bdf8;"></i>
+        <span>పరిస్థితి వివరాలు / సందేశం (Situation Update)</span>
       </span>
       <span style="font-size: 10px; padding: 2px 8px; border-radius: 12px; background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); font-weight: 600;">
         Live Alert
       </span>
     </div>
 
-    <div style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 10px; line-height: 1.4;">
-      Send field situation update or emergency alert to Control Room instantly:
-    </div>
-
     <!-- Quick Situation Preset Buttons -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px;">
-      <button type="button" onclick="setQuickOfficerMsg('EMERGENCY / SOS: Immediate Police Assistance Required', 'URGENT')" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 8px 6px; border-radius: 8px; font-size: 11px; font-weight: bold; text-align: left; cursor: pointer;">
+      <button type="button" onclick="triggerImmediateOfficerSos()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 8px 6px; border-radius: 8px; font-size: 11px; font-weight: bold; text-align: left; cursor: pointer;">
         <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444; margin-right: 4px;"></i> Emergency / SOS
       </button>
       <button type="button" onclick="setQuickOfficerMsg('Disturbance / Dispute reported at Polling Station', 'HIGH')" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #fde68a; padding: 8px 6px; border-radius: 8px; font-size: 11px; font-weight: bold; text-align: left; cursor: pointer;">
@@ -1002,6 +1015,10 @@
       // Subscribe to Control Room replies to field officers
       mqttClient.subscribe(`srikakulam_police_tracker/${roomCode}/control_reply`, { qos: 1 });
       mqttClient.subscribe(`srikakulam_police_tracker/${roomCode}/reply/+`, { qos: 1 });
+
+      // Subscribe to peer officer SOS alerts & messages (Nearby Officer Broadcast)
+      mqttClient.subscribe(`srikakulam_police_tracker/${roomCode}/officer_messages`, { qos: 1 });
+      mqttClient.subscribe(`srikakulam_police_tracker/${roomCode}/sos_alert`, { qos: 1 });
     });
 
     mqttClient.on('message', (t, msg) => {
@@ -1009,9 +1026,16 @@
         const str = msg.toString().trim();
         if (!str) return;
         const payload = JSON.parse(str);
+
         // Control Room reply handling
         if (payload.type === 'control_reply' || t.includes('/control_reply') || t.includes('/reply/')) {
           handleIncomingControlReply(payload);
+          return;
+        }
+
+        // Peer Officer SOS Alert / Message handling
+        if (t.includes('/sos_alert') || t.includes('/officer_messages') || payload.type === 'sos_alert' || payload.type === 'officer_message') {
+          handleIncomingPeerSosAlert(payload);
           return;
         }
 
@@ -1658,6 +1682,294 @@
     }
   });
 
+  // -------------------------------------------------------------
+  // Real-Time Emergency / SOS Broadcast (To Nearby Officers & Control Room)
+  // -------------------------------------------------------------
+  let activePeerSosAlert = null;
+  let peerSosMarker = null;
+
+  window.triggerImmediateOfficerSos = function() {
+    const confirmSos = confirm("🚨 అత్యవసర సహాయం (EMERGENCY / SOS) అలర్ట్ పంపించాలా?\n\nఈ అలర్ట్ కంట్రోల్ రూమ్ మరియు దగ్గరలో ఉన్న సహచర పోలీస్ అధికారులందరికీ తక్షణమే చేరుతుంది.");
+    if (!confirmSos) return;
+
+    if (!currentSelectedUnit) {
+      const selUnit = document.getElementById('select-unit');
+      if (selUnit && selUnit.value && typeof allUnitsData !== 'undefined') {
+        currentSelectedUnit = allUnitsData.find(u => u.id === selUnit.value);
+      }
+    }
+    if (!currentSelectedUnit && currentLoggedInOfficer) {
+      currentSelectedUnit = {
+        id: currentLoggedInOfficer.unitId || ('FIELD_' + userId),
+        unitName: currentLoggedInOfficer.officerName || 'Duty Force',
+        category: currentLoggedInOfficer.category || 'Patrol Force',
+        categoryKey: 'RM',
+        mandal: currentLoggedInOfficer.mandal || 'Srikakulam',
+        officer: currentLoggedInOfficer.officerName || 'Police Officer',
+        phone: currentLoggedInOfficer.phone || ''
+      };
+    }
+
+    let curLat = (typeof lastLat === 'number' && !isNaN(lastLat) && lastLat !== 0) ? lastLat : 0;
+    let curLng = (typeof lastLng === 'number' && !isNaN(lastLng) && lastLng !== 0) ? lastLng : 0;
+    if ((!curLat || !curLng) && typeof anchorLat === 'number' && anchorLat !== 0) {
+      curLat = anchorLat;
+      curLng = anchorLng;
+    }
+    if ((!curLat || !curLng) && typeof lastKnownPosition !== 'undefined' && lastKnownPosition && lastKnownPosition.coords) {
+      curLat = lastKnownPosition.coords.latitude || 0;
+      curLng = lastKnownPosition.coords.longitude || 0;
+    }
+
+    const unit = currentSelectedUnit || {};
+    const sosPayload = {
+      type: 'sos_alert',
+      msgId: 'sos_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+      unitId: unit.id || ('FIELD_' + userId),
+      unitName: unit.unitName || 'Duty Force',
+      category: unit.category || 'Patrol Force',
+      categoryKey: unit.categoryKey || 'RM',
+      mandal: unit.mandal || 'Srikakulam',
+      officer: unit.officer || (currentLoggedInOfficer ? currentLoggedInOfficer.officerName : 'Police Officer'),
+      phone: unit.phone || (currentLoggedInOfficer ? currentLoggedInOfficer.phone : ''),
+      message: 'EMERGENCY / SOS: Immediate Police Assistance Required! దగ్గరలోని అధికారులు వెంటనే సహాయం అందించగలరు.',
+      priority: 'URGENT',
+      latitude: curLat,
+      longitude: curLng,
+      timestamp: Date.now()
+    };
+
+    const payloadJson = JSON.stringify(sosPayload);
+    const targetRoom = (typeof roomCode !== 'undefined' && roomCode) ? roomCode : 'SrikakulamPolice';
+    const sosTopic = `srikakulam_police_tracker/${targetRoom}/sos_alert`;
+    const msgTopic = `srikakulam_police_tracker/${targetRoom}/officer_messages`;
+    const generalTopic = `srikakulam_police_tracker/${targetRoom}/locations`;
+
+    function dispatchSos(client) {
+      if (!client) return;
+      try { client.publish(sosTopic, payloadJson, { qos: 1 }); } catch (e) {}
+      try { client.publish(msgTopic, payloadJson, { qos: 1 }); } catch (e) {}
+      try { client.publish(generalTopic, payloadJson, { qos: 0 }); } catch (e) {}
+    }
+
+    if (!mqttClient || !mqttClient.connected) {
+      initMQTT();
+    }
+    if (mqttClient) {
+      dispatchSos(mqttClient);
+      if (!mqttClient.connected && typeof mqttClient.once === 'function') {
+        mqttClient.once('connect', () => dispatchSos(mqttClient));
+      }
+    }
+
+    playOfficerChime();
+    showToast("🚨 SOS అలర్ట్ కంట్రోల్ రూమ్ & దగ్గరలోని ఆఫీసర్లకు పంపబడింది!");
+
+    const btn = document.getElementById('btn-instant-sos');
+    if (btn) {
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> 🚨 SOS Alert Broadcasted!';
+      btn.style.background = 'linear-gradient(135deg, #15803d 0%, #166534 100%)';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fa-solid fa-tower-broadcast"></i> 🚨 EMERGENCY / SOS అలర్ట్ పంపండి';
+        btn.style.background = 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)';
+      }, 4000);
+    }
+  };
+
+  function handleIncomingPeerSosAlert(payload) {
+    if (!payload || !payload.message) return;
+    const myUnitId = currentSelectedUnit ? currentSelectedUnit.id : '';
+    const myPhone = currentLoggedInOfficer ? currentLoggedInOfficer.phone : (currentSelectedUnit ? currentSelectedUnit.phone : '');
+
+    // 1. Ignore if sent by myself
+    if (myUnitId && payload.unitId === myUnitId) return;
+    if (myPhone && normalizePhone(payload.phone) === normalizePhone(myPhone)) return;
+
+    // 2. Must be an urgent/SOS alert
+    const msgLower = (payload.message || '').toLowerCase();
+    const isSos = payload.type === 'sos_alert' || 
+                  payload.priority === 'URGENT' || 
+                  msgLower.includes('emergency') || 
+                  msgLower.includes('sos');
+    if (!isSos) return;
+
+    // 3. Distance calculation
+    let curLat = (typeof lastLat === 'number' && !isNaN(lastLat) && lastLat !== 0) ? lastLat : 0;
+    let curLng = (typeof lastLng === 'number' && !isNaN(lastLng) && lastLng !== 0) ? lastLng : 0;
+    if ((!curLat || !curLng) && typeof anchorLat === 'number' && anchorLat !== 0) {
+      curLat = anchorLat;
+      curLng = anchorLng;
+    }
+
+    let distMeters = null;
+    let distKm = null;
+    let distanceBadgeText = '';
+    let isNearby = false;
+
+    if (curLat && curLng && payload.latitude && payload.longitude) {
+      distMeters = calculateDistanceMeters(curLat, curLng, payload.latitude, payload.longitude);
+      distKm = (distMeters / 1000).toFixed(1);
+      if (distMeters < 1000) {
+        distanceBadgeText = `📍 మీ నుండి కేవలం ${Math.round(distMeters)} మీటర్ల దూరంలో ఉన్నారు!`;
+      } else {
+        distanceBadgeText = `📍 మీ నుండి కేవలం ${distKm} కి.మీ దూరంలో ఉన్నారు!`;
+      }
+      if (distMeters <= 25000) {
+        isNearby = true;
+      }
+    }
+
+    const myMandal = (currentSelectedUnit ? (currentSelectedUnit.mandal || '') : '').trim().toLowerCase();
+    const alertMandal = (payload.mandal || '').trim().toLowerCase();
+    if (myMandal && alertMandal && myMandal === alertMandal) {
+      isNearby = true;
+      if (!distanceBadgeText) distanceBadgeText = `📍 మీ మండల పరిధిలోని అధికారి (${payload.mandal})!`;
+    }
+
+    // Default to alert if coordinates are pending
+    if (distKm === null && !myMandal) {
+      isNearby = true;
+      distanceBadgeText = `📍 ఎన్నికల బందోబస్తు పరిధిలోని అధికారి!`;
+    }
+
+    if (!isNearby) return;
+
+    activePeerSosAlert = payload;
+
+    // Trigger high-urgency siren audio & heavy vibration
+    playPeerEmergencySiren();
+    if (navigator.vibrate) {
+      try { navigator.vibrate([600, 200, 600, 200, 800, 300, 1000]); } catch (e) {}
+    }
+
+    // Populate modal
+    const modal = document.getElementById('peer-sos-modal');
+    const nameEl = document.getElementById('peer-sos-officer-name');
+    const dutyEl = document.getElementById('peer-sos-duty');
+    const phoneEl = document.getElementById('peer-sos-phone');
+    const msgEl = document.getElementById('peer-sos-msg');
+    const distBadge = document.getElementById('peer-sos-distance-badge');
+    const callBtn = document.getElementById('peer-sos-call-btn');
+    const navBtn = document.getElementById('peer-sos-nav-btn');
+
+    if (nameEl) nameEl.innerText = payload.officer || 'Police Officer';
+    if (dutyEl) dutyEl.innerText = `[${payload.category || ''}] ${payload.mandal || ''} - ${payload.unitName || ''}`;
+    if (phoneEl) phoneEl.innerText = payload.phone || 'N/A';
+    if (msgEl) msgEl.innerText = payload.message || 'EMERGENCY / SOS: Immediate Police Assistance Required';
+    if (distBadge) distBadge.innerText = distanceBadgeText || '📍 అత్యవసర సహాయం!';
+
+    if (callBtn) {
+      callBtn.href = payload.phone ? `tel:${payload.phone}` : '#';
+      callBtn.innerHTML = `<i class="fa-solid fa-phone-volume"></i> వెంటనే కాల్ చేయండి (${payload.phone || 'Call'})`;
+    }
+
+    if (navBtn) {
+      if (payload.latitude && payload.longitude) {
+        navBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${payload.latitude},${payload.longitude}`;
+        navBtn.style.display = 'flex';
+      } else {
+        navBtn.style.display = 'none';
+      }
+    }
+
+    if (modal) modal.style.display = 'flex';
+
+    // Plot on map
+    plotSosOfficerOnMap(payload);
+  }
+
+  window.closePeerSosModal = function() {
+    const modal = document.getElementById('peer-sos-modal');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.focusPeerSosOnMap = function() {
+    closePeerSosModal();
+    if (!activePeerSosAlert || !officerMap) return;
+    const lat = parseFloat(activePeerSosAlert.latitude);
+    const lng = parseFloat(activePeerSosAlert.longitude);
+    if (!isNaN(lat) && !isNaN(lng)) {
+      officerMap.flyTo([lat, lng], 16, { duration: 1 });
+      if (peerSosMarker) peerSosMarker.openPopup();
+    }
+  };
+
+  function plotSosOfficerOnMap(payload) {
+    if (!payload || !payload.latitude || !payload.longitude || typeof officerMap === 'undefined' || !officerMap) return;
+    const lat = parseFloat(payload.latitude);
+    const lng = parseFloat(payload.longitude);
+    if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return;
+
+    if (peerSosMarker) {
+      try { officerMap.removeLayer(peerSosMarker); } catch(e) {}
+    }
+
+    const sosIcon = L.divIcon({
+      className: 'peer-sos-pin',
+      html: `
+        <div style="position:relative; text-align:center;">
+          <div style="background:#dc2626; color:#fff; font-weight:800; font-size:10px; padding:3px 8px; border-radius:8px; border:1.5px solid #fff; white-space:nowrap; position:absolute; bottom:36px; left:50%; transform:translateX(-50%); box-shadow:0 3px 10px rgba(220,38,38,0.8);">
+            🚨 SOS: ${escapeHtml(payload.unitName || payload.officer || 'Officer')}
+          </div>
+          <div style="width:36px; height:36px; border-radius:50%; background:#dc2626; border:3px solid #ffffff; display:flex; align-items:center; justify-content:center; color:white; font-size:18px; box-shadow:0 0 20px #ef4444;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+        </div>
+      `,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18]
+    });
+
+    peerSosMarker = L.marker([lat, lng], { icon: sosIcon, zIndexOffset: 3000 }).addTo(officerMap);
+    peerSosMarker.bindPopup(`
+      <div style="color:#0f172a; font-size:12px; line-height:1.4;">
+        <strong style="color:#dc2626; font-size:13px;">🚨 EMERGENCY / SOS ALERT</strong><br/>
+        <strong>ఆఫీసర్:</strong> ${escapeHtml(payload.officer)}<br/>
+        <strong>ఫోన్:</strong> <a href="tel:${escapeHtml(payload.phone)}" style="color:#2563eb; font-weight:bold;">${escapeHtml(payload.phone)}</a><br/>
+        <strong>యూనిట్:</strong> ${escapeHtml(payload.mandal)} - ${escapeHtml(payload.unitName)}<br/>
+        <div style="margin-top:6px;">
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" style="display:inline-block; background:#2563eb; color:#fff; padding:5px 9px; border-radius:5px; text-decoration:none; font-size:11px; font-weight:bold;">
+            <i class="fa-solid fa-diamond-turn-right"></i> గూగుల్ మ్యాప్స్ రూట్
+          </a>
+        </div>
+      </div>
+    `);
+
+    // Fit bounds to show current officer and SOS officer together
+    const curLat = (typeof lastLat === 'number' && !isNaN(lastLat) && lastLat !== 0) ? lastLat : anchorLat;
+    const curLng = (typeof lastLng === 'number' && !isNaN(lastLng) && lastLng !== 0) ? lastLng : anchorLng;
+    if (curLat && curLng) {
+      try {
+        const bounds = L.latLngBounds([[curLat, curLng], [lat, lng]]);
+        officerMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+      } catch(e) {}
+    }
+  }
+
+  function playPeerEmergencySiren() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      for (let i = 0; i < 4; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        const st = now + (i * 0.45);
+        osc.frequency.setValueAtTime(650, st);
+        osc.frequency.exponentialRampToValueAtTime(1450, st + 0.22);
+        osc.frequency.exponentialRampToValueAtTime(650, st + 0.44);
+        gain.gain.setValueAtTime(0.45, st);
+        gain.gain.exponentialRampToValueAtTime(0.01, st + 0.44);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(st);
+        osc.stop(st + 0.45);
+      }
+    } catch (e) {}
+  }
+
   window.sendOfficerMessageToControl = function() {
     const input = document.getElementById('officer-msg-input');
     const btn = document.getElementById('btn-send-officer-msg');
@@ -1743,6 +2055,9 @@
         if (!client) return;
         try { client.publish(msgTopic, payloadJson, { qos: 0 }); } catch (e) {}
         try { client.publish(msgTopic, payloadJson, { qos: 1 }); } catch (e) {}
+        if (isUrgent) {
+          try { client.publish(`srikakulam_police_tracker/${targetRoom}/sos_alert`, payloadJson, { qos: 1 }); } catch (e) {}
+        }
         try { client.publish(generalTopic, payloadJson, { qos: 0 }); } catch (e) {}
       }
 
@@ -2317,6 +2632,71 @@
         </button>
         <button type="button" onclick="closeSetPasswordModal()" style="background: rgba(255,255,255,0.1); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2); padding: 11px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;">
           రద్దు
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- High-Urgency Modal for Nearby Officer SOS Alerts -->
+  <div id="peer-sos-modal" style="display: none; position: fixed; inset: 0; z-index: 999999; background: rgba(10, 17, 40, 0.94); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 14px;">
+    <div style="background: #0f172a; border: 2.5px solid #ef4444; box-shadow: 0 10px 40px rgba(239, 68, 68, 0.7); border-radius: 16px; width: 100%; max-width: 420px; padding: 18px; color: white;">
+      
+      <!-- Flashing Header -->
+      <div style="display: flex; align-items: center; gap: 10px; border-bottom: 1.5px solid rgba(239,68,68,0.4); padding-bottom: 12px; margin-bottom: 12px;">
+        <div style="width: 44px; height: 44px; border-radius: 50%; background: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; flex-shrink: 0; box-shadow: 0 0 15px rgba(220,38,38,0.8);">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+          <div style="font-size: 16px; font-weight: 900; color: #ef4444; letter-spacing: 0.5px;">🚨 ఎమర్జెన్సీ / SOS అలర్ట్!</div>
+          <div style="font-size: 11px; color: #fca5a5;">దగ్గరలోని సహచర అధికారి అత్యవసర సహాయం కోరుతున్నారు</div>
+        </div>
+      </div>
+
+      <!-- Distance Badge -->
+      <div id="peer-sos-distance-badge" style="background: rgba(220, 38, 38, 0.25); border: 1px solid #ef4444; color: #fecaca; font-weight: 800; font-size: 12.5px; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; text-align: center;">
+        📍 మీ నుండి కేవలం 1.2 కి.మీ దూరంలో ఉన్నారు!
+      </div>
+
+      <!-- Officer Info Card -->
+      <div style="background: #1e293b; border-radius: 10px; padding: 12px; margin-bottom: 12px; font-size: 12.5px; line-height: 1.5;">
+        <div style="margin-bottom: 6px;">
+          <span style="color: #94a3b8; font-size: 11px;">సహాయం కోరుతున్న అధికారి:</span><br/>
+          <strong id="peer-sos-officer-name" style="color: #38bdf8; font-size: 13.5px;">--</strong>
+        </div>
+        <div style="margin-bottom: 6px;">
+          <span style="color: #94a3b8; font-size: 11px;">యూనిట్ / డ్యూటీ:</span>
+          <span id="peer-sos-duty" style="color: #fde047; font-weight: 600;">--</span>
+        </div>
+        <div style="margin-bottom: 6px;">
+          <span style="color: #94a3b8; font-size: 11px;">మొబైల్ నెంబర్:</span>
+          <strong id="peer-sos-phone" style="color: #4ade80;">--</strong>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.7); border-left: 3px solid #ef4444; padding: 8px 10px; border-radius: 4px; margin-top: 6px;">
+          <div style="font-size: 11px; color: #fca5a5; font-weight: bold; margin-bottom: 2px;">సందేశం / Message:</div>
+          <div id="peer-sos-msg" style="color: #ffffff; font-weight: 600; font-size: 12px;">--</div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- 1. Direct Phone Call Button -->
+        <a id="peer-sos-call-btn" href="#" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; text-decoration: none; padding: 12px; border-radius: 8px; font-size: 13.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);">
+          <i class="fa-solid fa-phone-volume"></i> వెంటనే కాల్ చేయండి (Call Officer)
+        </a>
+
+        <!-- 2. Google Maps Navigation Route -->
+        <a id="peer-sos-nav-btn" href="#" target="_blank" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; text-decoration: none; padding: 11px; border-radius: 8px; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <i class="fa-solid fa-diamond-turn-right"></i> గూగుల్ మ్యాప్స్ లో రూట్ (Navigate to Location)
+        </a>
+
+        <!-- 3. Local Mini Map Zoom Button -->
+        <button type="button" onclick="focusPeerSosOnMap()" style="background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid #38bdf8; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <i class="fa-solid fa-map-location-dot"></i> మ్యాప్‌లో ప్రదేశం చూడండి (View on Map)
+        </button>
+
+        <!-- 4. Close / Acknowledge -->
+        <button type="button" onclick="closePeerSosModal()" style="background: rgba(255,255,255,0.1); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer;">
+          సరే / గ్రహించాము (Acknowledge)
         </button>
       </div>
     </div>

@@ -87,8 +87,10 @@ function initLiveMQTT() {
             const retainedTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/officer/+';
             const controlTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/control_command';
             const officerMsgTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/officer_messages';
+            const sosAlertTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/sos_alert';
             const deleteTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/messages_delete';
             window.liveMqttClient.subscribe(officerMsgTopic, { qos: 1 });
+            window.liveMqttClient.subscribe(sosAlertTopic, { qos: 1 });
             const historyTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/messages_history';
             window.liveMqttClient.subscribe(historyTopic, { qos: 1 });
             window.liveMqttClient.subscribe(deleteTopic, { qos: 1 });
@@ -181,7 +183,7 @@ function initLiveMQTT() {
                 }
 
                 // Handle incoming officer messages / SOS alerts
-                if (topic.indexOf('/officer_messages') !== -1 || payload.type === 'officer_message' || (payload.message && typeof payload.message === 'string' && payload.message.trim())) {
+                if (topic.indexOf('/officer_messages') !== -1 || topic.indexOf('/sos_alert') !== -1 || payload.type === 'officer_message' || payload.type === 'sos_alert' || (payload.message && typeof payload.message === 'string' && payload.message.trim())) {
                     handleIncomingOfficerMessage(payload);
                     if (!payload.latitude && !payload.lat) return;
                 }
@@ -1208,6 +1210,13 @@ function handleIncomingOfficerMessage(payload) {
     // Show floating banner toast on Live Route Map
     showLiveOfficerToast(msgObj);
     queueBroadcastMessagesHistory();
+
+    // Auto-locate on Live Route Map if URGENT / SOS
+    if (priority === 'URGENT' && msgObj.lat && msgObj.lng && typeof locateOfficerOnLiveMap === 'function') {
+        try {
+            locateOfficerOnLiveMap(msgObj.lat, msgObj.lng, msgObj.unitName, msgObj.officer, msgObj.phone, msgObj.message);
+        } catch(e) {}
+    }
 
     const modal = document.getElementById('officer-messages-modal');
     if (modal && !modal.classList.contains('hidden')) {
