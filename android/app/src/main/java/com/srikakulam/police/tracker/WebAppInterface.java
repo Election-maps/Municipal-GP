@@ -2,6 +2,7 @@ package com.srikakulam.police.tracker;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.webkit.JavascriptInterface;
 
@@ -45,5 +46,31 @@ public class WebAppInterface {
         Intent intent = new Intent(context, LocationTrackingService.class);
         intent.setAction(LocationTrackingService.ACTION_STOP);
         context.startService(intent);
+    }
+
+    @JavascriptInterface
+    public void makePhoneCall(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) return;
+        try {
+            String clean = phoneNumber.replaceAll("[^0-9+]", "");
+            if (clean.isEmpty()) return;
+            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + clean));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @JavascriptInterface
+    public void openNavigation(String url) {
+        if (url == null || url.trim().isEmpty()) return;
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -12,6 +12,7 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -53,7 +54,57 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+            @SuppressWarnings("deprecation")
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return handleSpecialUrl(url);
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                if (request != null && request.getUrl() != null) {
+                    return handleSpecialUrl(request.getUrl().toString());
+                }
+                return false;
+            }
+
+            private boolean handleSpecialUrl(String url) {
+                if (url == null) return false;
+                if (url.startsWith("tel:")) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse(url));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        return true;
+                    } catch (Exception e) {
+                        Toast.makeText(MainActivity.this, "కాల్ డయలర్ ఓపెన్ కాలేదు", Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                }
+                if (url.startsWith("geo:") || url.contains("maps.google.com") || url.contains("google.com/maps")) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        return true;
+                    } catch (Exception e) {
+                        return false;
+                    }
+                }
+                if (url.startsWith("mailto:") || url.startsWith("whatsapp:") || url.startsWith("intent:")) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        return true;
+                    } catch (Exception e) {
+                        return false;
+                    }
+                }
+                return false;
+            }
+        });
 
         // Inject Native Javascript Interface
         webView.addJavascriptInterface(new WebAppInterface(this), "AndroidApp");
