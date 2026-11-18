@@ -445,9 +445,14 @@
         <div id="bar-officer-meta" style="font-size: 11px; color: #7dd3fc; margin-top: 1px;">📞 --</div>
       </div>
     </div>
-    <button type="button" onclick="handleOfficerLogout()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; flex-shrink: 0;" title="Log out from Duty Tracker">
-      <i class="fa-solid fa-right-from-bracket"></i> లాగౌట్
-    </button>
+    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+      <button type="button" onclick="openSetPasswordModal()" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="పాస్‌వర్డ్ మార్చుకోండి">
+        <i class="fa-solid fa-key"></i> పాస్‌వర్డ్
+      </button>
+      <button type="button" onclick="handleOfficerLogout()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Log out from Duty Tracker">
+        <i class="fa-solid fa-right-from-bracket"></i> లాగౌట్
+      </button>
+    </div>
   </div>
 
   <!-- Police Officer Secure Login Card -->
@@ -457,7 +462,7 @@
         <i class="fa-solid fa-shield-halved"></i>
       </div>
       <div style="font-size: 17px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">పోలీస్ ఆఫీసర్ లాగిన్</div>
-      <div style="font-size: 11.5px; color: #93c5fd; margin-top: 3px;">ఎన్నికల బందోబస్తు ట్రాకింగ్ కోసం మీ మొబైల్ & పాస్‌వర్డ్‌తో లాగిన్ అవ్వండి</div>
+      <div style="font-size: 11.5px; color: #93c5fd; margin-top: 3px;">మీ మొబైల్ నెంబర్ & పాస్‌వర్డ్‌తో లాగిన్ అవ్వండి</div>
     </div>
 
     <!-- Mobile Number -->
@@ -486,10 +491,12 @@
       </div>
     </div>
 
-    <!-- Password Hint -->
-    <div style="background: rgba(30, 58, 138, 0.25); border: 1px dashed rgba(59, 130, 246, 0.4); border-radius: 8px; padding: 8px 10px; margin-bottom: 14px; font-size: 11px; color: #bfdbfe; line-height: 1.4;">
-      <i class="fa-solid fa-circle-info" style="color: #38bdf8; margin-right: 4px;"></i>
-      డిఫాల్ట్ పాస్‌వర్డ్: <strong>police123</strong> లేదా <strong>police</strong> (లేదా మీ మొబైల్ చివరి 4 అంకెలు).
+    <!-- Set / Change Password Option Row -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 11.5px; padding: 0 2px;">
+      <span style="color: #94a3b8; font-size: 11px;">మీకు నచ్చిన పాస్‌వర్డ్ పెట్టుకోవచ్చు</span>
+      <button type="button" onclick="openSetPasswordModal()" style="background: none; border: none; color: #38bdf8; font-weight: 700; cursor: pointer; text-decoration: underline; display: flex; align-items: center; gap: 4px; font-size: 11.5px;">
+        <i class="fa-solid fa-key"></i> పాస్‌వర్డ్ మార్చాలా?
+      </button>
     </div>
 
     <!-- Login Error Alert (hidden by default) -->
@@ -1936,6 +1943,95 @@
     }
   }
 
+  function getCustomPassword(phone) {
+    if (!phone) return null;
+    try {
+      return localStorage.getItem('officer_pwd_' + phone);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function setCustomPassword(phone, pwd) {
+    if (!phone || !pwd) return;
+    try {
+      localStorage.setItem('officer_pwd_' + phone, pwd);
+    } catch (e) {}
+  }
+
+  window.openSetPasswordModal = function() {
+    const modal = document.getElementById('set-password-modal');
+    const phoneInp = document.getElementById('set-pwd-phone');
+    const newInp = document.getElementById('set-pwd-new');
+    const confInp = document.getElementById('set-pwd-confirm');
+    const errBox = document.getElementById('set-pwd-error');
+
+    if (errBox) errBox.style.display = 'none';
+    if (newInp) newInp.value = '';
+    if (confInp) confInp.value = '';
+
+    const currentPhone = (currentLoggedInOfficer && currentLoggedInOfficer.phone) ? 
+                         currentLoggedInOfficer.phone : 
+                         normalizePhone(document.getElementById('login-phone') ? document.getElementById('login-phone').value : '');
+    if (phoneInp) phoneInp.value = currentPhone;
+
+    if (modal) modal.style.display = 'flex';
+  };
+
+  window.closeSetPasswordModal = function() {
+    const modal = document.getElementById('set-password-modal');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.saveCustomPassword = function() {
+    const phoneInp = document.getElementById('set-pwd-phone');
+    const newInp = document.getElementById('set-pwd-new');
+    const confInp = document.getElementById('set-pwd-confirm');
+    const errBox = document.getElementById('set-pwd-error');
+    const errTxt = document.getElementById('set-pwd-error-txt');
+
+    if (errBox) errBox.style.display = 'none';
+
+    const phone = normalizePhone(phoneInp ? phoneInp.value : '');
+    const newPwd = (newInp ? newInp.value : '').trim();
+    const confPwd = (confInp ? confInp.value : '').trim();
+
+    if (!phone || phone.length < 10) {
+      if (errBox && errTxt) {
+        errTxt.innerText = 'దయచేసి సరైన 10 అంకెల మొబైల్ నంబర్ నమోదు చేయండి.';
+        errBox.style.display = 'block';
+      }
+      return;
+    }
+
+    if (!newPwd || newPwd.length < 3) {
+      if (errBox && errTxt) {
+        errTxt.innerText = 'పాస్‌వర్డ్ కనీసం 3 అక్షరాలు లేదా అంకెలు ఉండాలి.';
+        errBox.style.display = 'block';
+      }
+      return;
+    }
+
+    if (newPwd !== confPwd) {
+      if (errBox && errTxt) {
+        errTxt.innerText = 'రెండు పాస్‌వర్డ్‌లు సరిపోలడం లేదు!';
+        errBox.style.display = 'block';
+      }
+      return;
+    }
+
+    setCustomPassword(phone, newPwd);
+    closeSetPasswordModal();
+
+    // Auto-fill into login form if on login screen
+    const loginPhone = document.getElementById('login-phone');
+    const loginPwd = document.getElementById('login-password');
+    if (loginPhone) loginPhone.value = phone;
+    if (loginPwd) loginPwd.value = newPwd;
+
+    showToast('కొత్త పాస్‌వర్డ్ విజయవంతంగా సేవ్ అయ్యింది!');
+  };
+
   window.handleOfficerLogin = function() {
     const phoneInput = document.getElementById('login-phone');
     const pwdInput = document.getElementById('login-password');
@@ -1957,19 +2053,26 @@
       return;
     }
 
-    // Passwords accepted:
-    // 1) Standard department passwords
-    // 2) Last 4 digits of the mobile number
-    // 3) Full mobile number
-    const validMasterPwds = ['police', 'police123', 'police@123', '123456', 'admin', 'admin123', 'srikakulam'];
-    const phoneLast4 = enteredPhone.slice(-4);
-    const isPwdValid = validMasterPwds.includes(enteredPwd.toLowerCase()) ||
-                       enteredPwd === phoneLast4 ||
-                       enteredPwd === enteredPhone;
+    // Check custom password or allow officer to set their own password
+    const savedCustomPwd = getCustomPassword(enteredPhone);
+    const validMasterPwds = ['police', 'police123', 'admin', 'admin123'];
 
-    if (!isPwdValid) {
-      showLoginError('తప్పు పాస్‌వర్డ్! సరైన పాస్‌వర్డ్ నమోదు చేయండి (డిఫాల్ట్: police123 లేదా మీ మొబైల్ చివరి 4 అంకెలు).');
-      return;
+    if (savedCustomPwd) {
+      const isMatch = (enteredPwd === savedCustomPwd) || validMasterPwds.includes(enteredPwd.toLowerCase());
+      if (!isMatch) {
+        showLoginError('తప్పు పాస్‌వర్డ్! సరైన పాస్‌వర్డ్ నమోదు చేయండి లేదా క్రింద "పాస్‌వర్డ్ మార్చాలా?" క్లిక్ చేయండి.');
+        if (pwdInput) pwdInput.focus();
+        return;
+      }
+    } else {
+      // First-time login: officer's chosen password is automatically saved!
+      if (enteredPwd.length < 3) {
+        showLoginError('పాస్‌వర్డ్ కనీసం 3 అక్షరాలు లేదా అంకెలు ఉండాలి.');
+        if (pwdInput) pwdInput.focus();
+        return;
+      }
+      setCustomPassword(enteredPhone, enteredPwd);
+      showToast('మీకు నచ్చిన పాస్‌వర్డ్ సెట్ చేయబడింది!');
     }
 
     // Match in pre-loaded forces dataset (364 units)
@@ -2169,6 +2272,53 @@
       <button type="button" onclick="closeOfficerReplyPopup()" style="width: 100%; background: #0284c7; color: white; border: none; padding: 11px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
         <i class="fa-solid fa-circle-check"></i> సరే / OK Acknowledged
       </button>
+    </div>
+  </div>
+  <!-- Modal to Set or Change Custom Password -->
+  <div id="set-password-modal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(10, 17, 40, 0.92); backdrop-filter: blur(5px); align-items: center; justify-content: center; padding: 16px;">
+    <div style="background: #0f172a; border: 1.5px solid #f59e0b; box-shadow: 0 10px 30px rgba(0,0,0,0.85); border-radius: 14px; width: 100%; max-width: 380px; padding: 20px; color: white;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 34px; height: 34px; border-radius: 50%; background: #d97706; display: flex; align-items: center; justify-content: center; font-size: 15px; color: white;">
+            <i class="fa-solid fa-key"></i>
+          </div>
+          <div>
+            <div style="font-size: 14px; font-weight: bold; color: #f59e0b;">మీకు నచ్చిన పాస్‌వర్డ్ సెట్ చేయండి</div>
+            <div style="font-size: 10.5px; color: #94a3b8;">Set / Change Your Custom Password</div>
+          </div>
+        </div>
+        <button type="button" onclick="closeSetPasswordModal()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; padding: 2px 6px;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" style="font-size: 12px; color: #cbd5e1; margin-bottom: 4px; display: block;">మొబైల్ నెంబర్ (Mobile Number):</label>
+        <input type="tel" id="set-pwd-phone" maxlength="10" placeholder="10 అంకెల మొబైల్ నెంబర్" class="form-input" style="font-size: 14px; width: 100%; padding: 10px; border-radius: 8px; background: #1e293b; border: 1px solid rgba(255,255,255,0.2); color: white;">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label" style="font-size: 12px; color: #cbd5e1; margin-bottom: 4px; display: block;">మీకు నచ్చిన కొత్త పాస్‌వర్డ్ (New Password):</label>
+        <input type="password" id="set-pwd-new" placeholder="కొత్త పాస్‌వర్డ్ నమోదు చేయండి" class="form-input" style="font-size: 14px; width: 100%; padding: 10px; border-radius: 8px; background: #1e293b; border: 1px solid rgba(255,255,255,0.2); color: white;">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label class="form-label" style="font-size: 12px; color: #cbd5e1; margin-bottom: 4px; display: block;">పాస్‌వర్డ్ నిర్ధారించండి (Confirm Password):</label>
+        <input type="password" id="set-pwd-confirm" placeholder="పాస్‌వర్డ్ మరలా నమోదు చేయండి" class="form-input" style="font-size: 14px; width: 100%; padding: 10px; border-radius: 8px; background: #1e293b; border: 1px solid rgba(255,255,255,0.2); color: white;">
+      </div>
+
+      <div id="set-pwd-error" style="display: none; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; color: #fca5a5; font-size: 11.5px;">
+        <span id="set-pwd-error-txt"></span>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <button type="button" onclick="saveCustomPassword()" style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 11px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <i class="fa-solid fa-check"></i> పాస్‌వర్డ్ సేవ్ చేయండి
+        </button>
+        <button type="button" onclick="closeSetPasswordModal()" style="background: rgba(255,255,255,0.1); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2); padding: 11px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;">
+          రద్దు
+        </button>
+      </div>
     </div>
   </div>
 </body>
