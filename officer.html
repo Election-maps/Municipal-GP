@@ -425,13 +425,83 @@
     <div>
       <div style="font-weight: 700; color: #93c5fd; font-size: 13px; display: flex; align-items: center; gap: 6px;">
         <i class="fa-brands fa-android" style="color: #34d399; font-size: 18px;"></i>
-        <span>పోలీస్ ఆండ్రాయిడ్ APK యాప్</span>
+        <span>మున్సిపల్-GP ఆండ్రాయిడ్ APK యాప్</span>
       </div>
       <div style="font-size: 11px; color: #cbd5e1; margin-top: 2px;">యాప్ క్లోజ్ చేసినా బ్యాక్‌గ్రౌండ్‌లో లొకేషన్ వెళ్తుంది</div>
     </div>
-    <a href="SrikakulamPoliceTracker.apk" download="SrikakulamPoliceTracker.apk" style="text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; color: white; background: #2563eb; display: flex; align-items: center; gap: 6px; white-space: nowrap; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.5);">
+    <a href="MunicipalPoliceTracker.apk" download="MunicipalPoliceTracker.apk" style="text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; color: white; background: #2563eb; display: flex; align-items: center; gap: 6px; white-space: nowrap; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.5);">
       <i class="fa-solid fa-download"></i> APK ఫైల్
     </a>
+  </div>
+
+  <!-- Logged-in Officer Profile Header (Visible only when logged in) -->
+  <div id="officer-profile-bar" style="display: none; background: linear-gradient(135deg, rgba(30, 58, 138, 0.6) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #38bdf8; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+    <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+      <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);">
+        <i class="fa-solid fa-user-shield"></i>
+      </div>
+      <div style="min-width: 0;">
+        <div id="bar-officer-name" style="font-weight: 700; color: #ffffff; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">--</div>
+        <div id="bar-officer-meta" style="font-size: 11px; color: #7dd3fc; margin-top: 1px;">📞 --</div>
+      </div>
+    </div>
+    <button type="button" onclick="handleOfficerLogout()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 6px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; flex-shrink: 0;" title="Log out from Duty Tracker">
+      <i class="fa-solid fa-right-from-bracket"></i> లాగౌట్
+    </button>
+  </div>
+
+  <!-- Police Officer Secure Login Card -->
+  <div class="card" id="login-card" style="display: block; border: 1.5px solid rgba(245, 158, 11, 0.5); background: linear-gradient(145deg, #0d1b2a 0%, #1b263b 100%); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7); margin-bottom: 14px;">
+    <div style="text-align: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%); display: inline-flex; align-items: center; justify-content: center; color: #0b1a2e; font-size: 26px; margin-bottom: 8px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div style="font-size: 17px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">పోలీస్ ఆఫీసర్ లాగిన్</div>
+      <div style="font-size: 11.5px; color: #93c5fd; margin-top: 3px;">ఎన్నికల బందోబస్తు ట్రాకింగ్ కోసం మీ మొబైల్ & పాస్‌వర్డ్‌తో లాగిన్ అవ్వండి</div>
+    </div>
+
+    <!-- Mobile Number -->
+    <div class="form-group" style="margin-bottom: 14px;">
+      <label class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
+        <span><i class="fa-solid fa-mobile-screen-button" style="color: #f59e0b; margin-right: 5px;"></i> మొబైల్ నెంబర్ (Mobile Number):</span>
+        <span style="font-size: 10.5px; color: #94a3b8;">10 అంకెలు</span>
+      </label>
+      <div style="position: relative;">
+        <input type="tel" id="login-phone" maxlength="10" placeholder="ఉదా: 9876543210" class="form-input" style="padding-left: 40px; font-size: 15px; letter-spacing: 0.5px;" autocomplete="tel">
+        <i class="fa-solid fa-phone" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 14px;"></i>
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="form-group" style="margin-bottom: 8px;">
+      <label class="form-label">
+        <i class="fa-solid fa-key" style="color: #f59e0b; margin-right: 5px;"></i> పాస్‌వర్డ్ (Password):
+      </label>
+      <div style="position: relative;">
+        <input type="password" id="login-password" placeholder="పాస్‌వర్డ్ నమోదు చేయండి" class="form-input" style="padding-left: 40px; padding-right: 44px; font-size: 15px;" autocomplete="current-password">
+        <i class="fa-solid fa-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 14px;"></i>
+        <button type="button" onclick="togglePasswordVisibility()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px 6px; font-size: 14px;" title="పాస్‌వర్డ్ చూపించు / దాచు">
+          <i class="fa-solid fa-eye" id="pwd-eye-icon"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Password Hint -->
+    <div style="background: rgba(30, 58, 138, 0.25); border: 1px dashed rgba(59, 130, 246, 0.4); border-radius: 8px; padding: 8px 10px; margin-bottom: 14px; font-size: 11px; color: #bfdbfe; line-height: 1.4;">
+      <i class="fa-solid fa-circle-info" style="color: #38bdf8; margin-right: 4px;"></i>
+      డిఫాల్ట్ పాస్‌వర్డ్: <strong>police123</strong> లేదా <strong>police</strong> (లేదా మీ మొబైల్ చివరి 4 అంకెలు).
+    </div>
+
+    <!-- Login Error Alert (hidden by default) -->
+    <div id="login-error-alert" style="display: none; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; color: #fca5a5; font-size: 12px; font-weight: 600;">
+      <i class="fa-solid fa-triangle-exclamation" style="margin-right: 6px;"></i>
+      <span id="login-error-text">తప్పు వివరాలు నమోదు చేశారు</span>
+    </div>
+
+    <!-- Login Button -->
+    <button type="button" class="btn-main" id="btn-officer-login" onclick="handleOfficerLogin()" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); font-size: 15px; padding: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border-radius: 10px; border: none; color: white; font-weight: 700;">
+      <i class="fa-solid fa-right-to-bracket"></i> లాగిన్ (Login)
+    </button>
   </div>
 
   <!-- PWA Install Banner -->
@@ -489,7 +559,7 @@
       </div>
       <div>
         • బ్రౌజర్‌లో స్క్రీన్ ఆన్‌లో ఉన్నంతవరకు లొకేషన్ నిరంతరం కంట్రోల్ రూమ్‌కు వెళ్తుంది.<br/>
-        • <strong>HOME బటన్ ప్రెస్ చేసినా లేదా స్క్రీన్ లాక్ చేసినా లొకేషన్ ఆగకుండా వెళ్లడానికి</strong> పైన ఉన్న <a href="SrikakulamPoliceTracker.apk" download="SrikakulamPoliceTracker.apk" style="color: #38bdf8; font-weight: bold; text-decoration: underline;">"APK యాప్"</a> డౌన్‌లోడ్ చేసి ఇన్‌స్టాల్ చేసుకోండి.
+        • <strong>HOME బటన్ ప్రెస్ చేసినా లేదా స్క్రీన్ లాక్ చేసినా లొకేషన్ ఆగకుండా వెళ్లడానికి</strong> పైన ఉన్న <a href="MunicipalPoliceTracker.apk" download="MunicipalPoliceTracker.apk" style="color: #38bdf8; font-weight: bold; text-decoration: underline;">"APK యాప్"</a> డౌన్‌లోడ్ చేసి ఇన్‌స్టాల్ చేసుకోండి.
       </div>
     </div>
 
@@ -499,10 +569,10 @@
     </button>
   </div>
 
-  <!-- Unit Registration Form Card -->
-  <div class="card" id="selection-card">
+  <!-- Unit Registration Form Card (Hidden until logged in) -->
+  <div class="card" id="selection-card" style="display: none;">
     <div class="card-title">
-      <i class="fa-solid fa-user-shield"></i> మీ డ్యూటీ వివరాలు నమోదు చేయండి
+      <i class="fa-solid fa-user-shield"></i> మీ డ్యూటీ వివరాలు నిర్ధారించండి
     </div>
 
     <!-- Category Select -->
@@ -559,8 +629,8 @@
     </button>
   </div>
 
-  <!-- Officer Message / SOS to Control Room Card -->
-  <div class="card" id="message-control-card" style="border: 1.5px solid rgba(59, 130, 246, 0.4); background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 58, 138, 0.25) 100%); margin-bottom: 12px; padding: 14px;">
+  <!-- Officer Message / SOS to Control Room Card (Hidden until logged in) -->
+  <div class="card" id="message-control-card" style="display: none; border: 1.5px solid rgba(59, 130, 246, 0.4); background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 58, 138, 0.25) 100%); margin-bottom: 12px; padding: 14px;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
       <span style="display: flex; align-items: center; gap: 8px; color: #38bdf8; font-weight: 700; font-size: 14px;">
         <i class="fa-solid fa-tower-broadcast" style="color: #38bdf8;"></i>
@@ -612,8 +682,8 @@
     </div>
   </div>
 
-  <!-- Personal Mini Map (Only shows THIS officer's location, NO other officers) -->
-  <div class="card" style="padding: 12px; margin-bottom: 8px;">
+  <!-- Personal Mini Map (Hidden until logged in) -->
+  <div class="card" id="officer-map-card" style="display: none; padding: 12px; margin-bottom: 8px;">
     <div style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between;">
       <span><i class="fa-solid fa-map-location-dot" style="color: #38bdf8;"></i> మీ కదలికల లైవ్ మ్యాప్:</span>
       <span style="font-size: 10px; color: #10b981;">● ప్రైవేట్ ట్రాక్</span>
@@ -629,8 +699,8 @@
     </div>
   </div>
 
-  <!-- Background Advice Tip -->
-  <div class="tip-card" style="background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.35); color: #a7f3d0;">
+  <!-- Background Advice Tip (Hidden until logged in) -->
+  <div class="tip-card" id="officer-home-tip" style="display: none; background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.35); color: #a7f3d0;">
     <i class="fa-solid fa-house-circle-check" style="font-size: 20px; color: #34d399; flex-shrink: 0; margin-top: 2px;"></i>
     <div>
       <strong style="color: #6ee7b7; font-size: 13px;">📲 HOME బటన్ నొక్కి వాడుకోవచ్చు:</strong><br/>
@@ -686,6 +756,7 @@
       .then(data => {
         allUnitsData = data;
         initSelectionHierarchy();
+        checkExistingSession();
       })
       .catch(err => console.error("Error loading route_mobiles.json:", err));
   }
@@ -1822,8 +1893,260 @@
     }
   });
 
+  // -------------------------------------------------------------
+  // Police Officer Authentication (Mobile + Password Login)
+  // -------------------------------------------------------------
+  let currentLoggedInOfficer = null;
+
+  function normalizePhone(val) {
+    if (!val) return '';
+    let digits = String(val).replace(/[^0-9]/g, '').trim();
+    if (digits.length === 12 && digits.startsWith('91')) {
+      digits = digits.substring(2);
+    }
+    if (digits.length > 10) {
+      digits = digits.slice(-10);
+    }
+    return digits;
+  }
+
+  window.togglePasswordVisibility = function() {
+    const pwdInput = document.getElementById('login-password');
+    const eyeIcon = document.getElementById('pwd-eye-icon');
+    if (!pwdInput || !eyeIcon) return;
+    if (pwdInput.type === 'password') {
+      pwdInput.type = 'text';
+      eyeIcon.classList.remove('fa-eye');
+      eyeIcon.classList.add('fa-eye-slash');
+    } else {
+      pwdInput.type = 'password';
+      eyeIcon.classList.remove('fa-eye-slash');
+      eyeIcon.classList.add('fa-eye');
+    }
+  };
+
+  function showLoginError(msg) {
+    const errBox = document.getElementById('login-error-alert');
+    const errText = document.getElementById('login-error-text');
+    if (errBox && errText) {
+      errText.innerText = msg;
+      errBox.style.display = 'block';
+    } else {
+      alert(msg);
+    }
+  }
+
+  window.handleOfficerLogin = function() {
+    const phoneInput = document.getElementById('login-phone');
+    const pwdInput = document.getElementById('login-password');
+    const errBox = document.getElementById('login-error-alert');
+    if (errBox) errBox.style.display = 'none';
+
+    const enteredPhone = normalizePhone(phoneInput ? phoneInput.value : '');
+    const enteredPwd = (pwdInput ? pwdInput.value : '').trim();
+
+    if (!enteredPhone || enteredPhone.length < 10) {
+      showLoginError('దయచేసి సరైన 10 అంకెల మొబైల్ నంబర్ నమోదు చేయండి.');
+      if (phoneInput) phoneInput.focus();
+      return;
+    }
+
+    if (!enteredPwd) {
+      showLoginError('దయచేసి పాస్‌వర్డ్ నమోదు చేయండి.');
+      if (pwdInput) pwdInput.focus();
+      return;
+    }
+
+    // Passwords accepted:
+    // 1) Standard department passwords
+    // 2) Last 4 digits of the mobile number
+    // 3) Full mobile number
+    const validMasterPwds = ['police', 'police123', 'police@123', '123456', 'admin', 'admin123', 'srikakulam'];
+    const phoneLast4 = enteredPhone.slice(-4);
+    const isPwdValid = validMasterPwds.includes(enteredPwd.toLowerCase()) ||
+                       enteredPwd === phoneLast4 ||
+                       enteredPwd === enteredPhone;
+
+    if (!isPwdValid) {
+      showLoginError('తప్పు పాస్‌వర్డ్! సరైన పాస్‌వర్డ్ నమోదు చేయండి (డిఫాల్ట్: police123 లేదా మీ మొబైల్ చివరి 4 అంకెలు).');
+      return;
+    }
+
+    // Match in pre-loaded forces dataset (364 units)
+    const matchedUnits = (allUnitsData || []).filter(u => {
+      const uPhone = normalizePhone(u.phone);
+      const uSupp = normalizePhone(u.supporting);
+      return (uPhone && uPhone.includes(enteredPhone)) ||
+             (uSupp && uSupp.includes(enteredPhone)) ||
+             (enteredPhone.length >= 10 && uPhone.slice(-10) === enteredPhone.slice(-10));
+    });
+
+    let assignedUnit = null;
+    let officerDisplayName = '';
+
+    if (matchedUnits.length > 0) {
+      assignedUnit = matchedUnits[0];
+      officerDisplayName = assignedUnit.officer;
+    } else {
+      officerDisplayName = `పోలీస్ ఆఫీసర్ (${enteredPhone})`;
+    }
+
+    const sessionData = {
+      phone: enteredPhone,
+      officerName: officerDisplayName,
+      unitId: assignedUnit ? assignedUnit.id : '',
+      category: assignedUnit ? assignedUnit.category : '',
+      mandal: assignedUnit ? assignedUnit.mandal : '',
+      loginTime: Date.now()
+    };
+
+    try {
+      localStorage.setItem('skl_officer_session', JSON.stringify(sessionData));
+    } catch (e) {}
+
+    currentLoggedInOfficer = sessionData;
+    applyLoggedInState(assignedUnit, matchedUnits);
+    showToast('విజయవంతంగా లాగిన్ అయ్యారు!');
+  };
+
+  function applyLoggedInState(assignedUnit, matchedUnits = []) {
+    const loginCard = document.getElementById('login-card');
+    const profileBar = document.getElementById('officer-profile-bar');
+    const selCard = document.getElementById('selection-card');
+    const msgCard = document.getElementById('message-control-card');
+    const mapCard = document.getElementById('officer-map-card');
+    const tipCard = document.getElementById('officer-home-tip');
+    const cockpitCard = document.getElementById('cockpit-card');
+
+    if (loginCard) loginCard.style.display = 'none';
+    if (profileBar) profileBar.style.display = 'flex';
+    if (msgCard) msgCard.style.display = 'block';
+    if (mapCard) mapCard.style.display = 'block';
+    if (tipCard) tipCard.style.display = 'flex';
+
+    if (isTracking) {
+      if (selCard) selCard.style.display = 'none';
+      if (cockpitCard) cockpitCard.style.display = 'block';
+    } else {
+      if (selCard) selCard.style.display = 'block';
+      if (cockpitCard) cockpitCard.style.display = 'none';
+    }
+
+    // Refresh Leaflet size when map container becomes visible
+    setTimeout(() => {
+      if (officerMap) officerMap.invalidateSize();
+    }, 250);
+
+    const nameEl = document.getElementById('bar-officer-name');
+    const metaEl = document.getElementById('bar-officer-meta');
+
+    if (currentLoggedInOfficer) {
+      if (nameEl) nameEl.innerText = currentLoggedInOfficer.officerName || 'పోలీస్ ఆఫీసర్';
+      if (metaEl) {
+        const unitLabel = assignedUnit ? ` | ${assignedUnit.mandal || ''} - ${assignedUnit.unitName || ''}` : '';
+        metaEl.innerText = `📞 ${currentLoggedInOfficer.phone}${unitLabel}`;
+      }
+    }
+
+    // Auto-select unit if matched
+    if (assignedUnit) {
+      selCategory.value = assignedUnit.category;
+      populateMandals(assignedUnit.category, assignedUnit.mandal);
+      populateUnits(assignedUnit.category, assignedUnit.mandal, assignedUnit.id);
+      renderUnitPreview(assignedUnit);
+    }
+  }
+
+  window.handleOfficerLogout = function() {
+    if (isTracking) {
+      const confirmStop = confirm("⚠️ లైవ్ లొకేషన్ ట్రాకింగ్ ఆన్‌లో ఉంది!\n\nలాగౌట్ అయితే మీ లొకేషన్ షేరింగ్ ఆగిపోతుంది. ఖచ్చితంగా లాగౌట్ అవ్వాలనుకుంటున్నారా?");
+      if (!confirmStop) return;
+      stopTracking();
+    } else {
+      const confirmLogout = confirm("ఖచ్చితంగా లాగౌట్ అవ్వాలనుకుంటున్నారా?");
+      if (!confirmLogout) return;
+    }
+
+    try {
+      localStorage.removeItem('skl_officer_session');
+    } catch (e) {}
+
+    currentLoggedInOfficer = null;
+    applyLoggedOutState();
+    showToast("విజయవంతంగా లాగౌట్ అయ్యారు");
+  };
+
+  function applyLoggedOutState() {
+    const loginCard = document.getElementById('login-card');
+    const profileBar = document.getElementById('officer-profile-bar');
+    const selCard = document.getElementById('selection-card');
+    const cockpitCard = document.getElementById('cockpit-card');
+    const msgCard = document.getElementById('message-control-card');
+    const mapCard = document.getElementById('officer-map-card');
+    const tipCard = document.getElementById('officer-home-tip');
+
+    if (loginCard) loginCard.style.display = 'block';
+    if (profileBar) profileBar.style.display = 'none';
+    if (selCard) selCard.style.display = 'none';
+    if (cockpitCard) cockpitCard.style.display = 'none';
+    if (msgCard) msgCard.style.display = 'none';
+    if (mapCard) mapCard.style.display = 'none';
+    if (tipCard) tipCard.style.display = 'none';
+
+    const phoneInput = document.getElementById('login-phone');
+    const pwdInput = document.getElementById('login-password');
+    if (phoneInput) phoneInput.value = '';
+    if (pwdInput) pwdInput.value = '';
+    const errBox = document.getElementById('login-error-alert');
+    if (errBox) errBox.style.display = 'none';
+  }
+
+  function checkExistingSession() {
+    try {
+      const raw = localStorage.getItem('skl_officer_session');
+      if (raw) {
+        const session = JSON.parse(raw);
+        if (session && session.phone) {
+          currentLoggedInOfficer = session;
+          const matched = (allUnitsData || []).filter(u => {
+            const uPhone = normalizePhone(u.phone);
+            const uSupp = normalizePhone(u.supporting);
+            return (uPhone && uPhone.includes(session.phone)) ||
+                   (uSupp && uSupp.includes(session.phone));
+          });
+          const targetUnit = matched.find(u => u.id === session.unitId) || matched[0] || null;
+          applyLoggedInState(targetUnit, matched);
+          return true;
+        }
+      }
+    } catch (e) {}
+    applyLoggedOutState();
+    return false;
+  }
+
+  // Keydown listeners for quick submit
+  const phoneInp = document.getElementById('login-phone');
+  const pwdInp = document.getElementById('login-password');
+  if (phoneInp) {
+    phoneInp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (pwdInp) pwdInp.focus();
+      }
+    });
+  }
+  if (pwdInp) {
+    pwdInp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleOfficerLogin();
+      }
+    });
+  }
+
   if (allUnitsData && allUnitsData.length > 0) {
     initSelectionHierarchy();
+    checkExistingSession();
   }
 </script>
 
