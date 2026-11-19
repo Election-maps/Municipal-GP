@@ -358,6 +358,43 @@
       background: #0f172a;
     }
 
+    /* Live Map Fullscreen Mode */
+    #officer-map-card.map-fullscreen {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      z-index: 99998 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      padding: 12px 14px 14px 14px !important;
+      background: #0a1128 !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+
+    #officer-map-card.map-fullscreen #officer-map {
+      flex: 1 !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      margin-top: 8px !important;
+      margin-bottom: 8px !important;
+      border-radius: 12px !important;
+    }
+
+    #officer-map-card.map-fullscreen .map-controls-row {
+      margin-top: 0 !important;
+      padding-bottom: 4px;
+    }
+
+    #officer-map-card.map-fullscreen .btn-map-control {
+      padding: 10px 8px !important;
+      font-size: 12px !important;
+    }
+
     /* Smooth Marker Movement Animation ("ekkada vunna icon kuda move avvali") */
     .my-location-marker, .leaflet-marker-icon {
       transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1) !important;
@@ -706,7 +743,12 @@
   <div class="card" id="officer-map-card" style="display: none; padding: 12px; margin-bottom: 8px;">
     <div style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between;">
       <span><i class="fa-solid fa-map-location-dot" style="color: #38bdf8;"></i> మీ కదలికల లైవ్ మ్యాప్:</span>
-      <span style="font-size: 10px; color: #10b981;">● ప్రైవేట్ ట్రాక్</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 10px; color: #10b981;">● ప్రైవేట్ ట్రాక్</span>
+        <button type="button" id="btn-hdr-fullscreen" onclick="toggleOfficerMapFullscreen()" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+          <i class="fa-solid fa-expand" id="hdr-fullscreen-icon"></i> <span id="hdr-fullscreen-txt">ఫుల్ స్క్రీన్</span>
+        </button>
+      </div>
     </div>
     <div id="officer-map"></div>
     <div class="map-controls-row">
@@ -715,6 +757,9 @@
       </button>
       <button class="btn-map-control" id="btn-recenter-map">
         <i class="fa-solid fa-location-arrow"></i> కేంద్రీకరించు
+      </button>
+      <button class="btn-map-control" id="btn-fullscreen-map" onclick="toggleOfficerMapFullscreen()">
+        <i class="fa-solid fa-expand" id="icon-fullscreen-map"></i> <span id="txt-fullscreen-map">ఫుల్ స్క్రీన్</span>
       </button>
     </div>
   </div>
@@ -1841,11 +1886,8 @@
 
     activePeerSosAlert = payload;
 
-    // Trigger high-urgency siren audio & heavy vibration
-    playPeerEmergencySiren();
-    if (navigator.vibrate) {
-      try { navigator.vibrate([600, 200, 600, 200, 800, 300, 1000]); } catch (e) {}
-    }
+    // Trigger continuous high-urgency siren audio & heavy vibration loop until Acknowledge is clicked
+    startPeerEmergencySirenLoop();
 
     // Populate modal
     const modal = document.getElementById('peer-sos-modal');
@@ -1991,6 +2033,7 @@
   };
 
   window.triggerPeerSosCall = function() {
+    stopPeerEmergencySirenLoop();
     const callBtn = document.getElementById('peer-sos-call-btn');
     const phone = (callBtn && callBtn.getAttribute('data-phone')) 
                   ? callBtn.getAttribute('data-phone') 
@@ -1999,6 +2042,7 @@
   };
 
   window.triggerPeerSosNav = function() {
+    stopPeerEmergencySirenLoop();
     const navBtn = document.getElementById('peer-sos-nav-btn');
     const lat = navBtn ? navBtn.getAttribute('data-lat') : (activePeerSosAlert ? activePeerSosAlert.latitude : null);
     const lng = navBtn ? navBtn.getAttribute('data-lng') : (activePeerSosAlert ? activePeerSosAlert.longitude : null);
@@ -2008,6 +2052,7 @@
   };
 
   window.closePeerSosModal = function() {
+    stopPeerEmergencySirenLoop();
     const modal = document.getElementById('peer-sos-modal');
     if (modal) modal.style.display = 'none';
   };
@@ -2022,6 +2067,67 @@
       if (peerSosMarker) peerSosMarker.openPopup();
     }
   };
+
+  // -------------------------------------------------------------
+  // Fullscreen Live Map Mode Toggle
+  // -------------------------------------------------------------
+  window.toggleOfficerMapFullscreen = function() {
+    const card = document.getElementById('officer-map-card');
+    if (!card) return;
+    const isFull = card.classList.toggle('map-fullscreen');
+    
+    const icon1 = document.getElementById('icon-fullscreen-map');
+    const txt1 = document.getElementById('txt-fullscreen-map');
+    const icon2 = document.getElementById('hdr-fullscreen-icon');
+    const txt2 = document.getElementById('hdr-fullscreen-txt');
+    const btn1 = document.getElementById('btn-fullscreen-map');
+    const btn2 = document.getElementById('btn-hdr-fullscreen');
+
+    if (isFull) {
+      if (icon1) icon1.className = 'fa-solid fa-compress';
+      if (txt1) txt1.innerText = 'సాధారణ వ్యూ';
+      if (icon2) icon2.className = 'fa-solid fa-compress';
+      if (txt2) txt2.innerText = 'ఎగ్జిట్';
+      if (btn1) btn1.classList.add('active');
+      if (btn2) {
+        btn2.style.background = 'rgba(239, 68, 68, 0.25)';
+        btn2.style.borderColor = '#ef4444';
+        btn2.style.color = '#fecaca';
+      }
+      document.body.style.overflow = 'hidden';
+    } else {
+      if (icon1) icon1.className = 'fa-solid fa-expand';
+      if (txt1) txt1.innerText = 'ఫుల్ స్క్రీన్';
+      if (icon2) icon2.className = 'fa-solid fa-expand';
+      if (txt2) txt2.innerText = 'ఫుల్ స్క్రీన్';
+      if (btn1) btn1.classList.remove('active');
+      if (btn2) {
+        btn2.style.background = 'rgba(56, 189, 248, 0.2)';
+        btn2.style.borderColor = '#38bdf8';
+        btn2.style.color = '#7dd3fc';
+      }
+      document.body.style.overflow = '';
+    }
+
+    setTimeout(() => {
+      if (officerMap) {
+        officerMap.invalidateSize();
+        if (myMarker) {
+          const latlng = myMarker.getLatLng();
+          if (latlng) officerMap.panTo(latlng);
+        }
+      }
+    }, 150);
+  };
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const card = document.getElementById('officer-map-card');
+      if (card && card.classList.contains('map-fullscreen')) {
+        toggleOfficerMapFullscreen();
+      }
+    }
+  });
 
   function plotSosOfficerOnMap(payload) {
     if (!payload || !payload.latitude || !payload.longitude || typeof officerMap === 'undefined' || !officerMap) return;
@@ -2078,13 +2184,27 @@
     }
   }
 
-  function playPeerEmergencySiren() {
+  // -------------------------------------------------------------
+  // Continuous Loop Siren Audio & Vibration (Plays until Acknowledge clicked)
+  // -------------------------------------------------------------
+  let peerSosAudioCtx = null;
+  let peerSosSirenInterval = null;
+  let peerSosVibrateInterval = null;
+  let isPeerSosSoundPlaying = false;
+
+  function playSirenChirp() {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return;
-      const ctx = new AudioCtx();
+      if (!peerSosAudioCtx || peerSosAudioCtx.state === 'closed') {
+        peerSosAudioCtx = new AudioCtx();
+      }
+      if (peerSosAudioCtx.state === 'suspended') {
+        peerSosAudioCtx.resume();
+      }
+      const ctx = peerSosAudioCtx;
       const now = ctx.currentTime;
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 3; i++) {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sawtooth';
@@ -2092,14 +2212,94 @@
         osc.frequency.setValueAtTime(650, st);
         osc.frequency.exponentialRampToValueAtTime(1450, st + 0.22);
         osc.frequency.exponentialRampToValueAtTime(650, st + 0.44);
-        gain.gain.setValueAtTime(0.45, st);
+        gain.gain.setValueAtTime(0.55, st);
         gain.gain.exponentialRampToValueAtTime(0.01, st + 0.44);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(st);
         osc.stop(st + 0.45);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn("playSirenChirp error:", e);
+    }
+  }
+
+  function startPeerEmergencySirenLoop() {
+    if (isPeerSosSoundPlaying) return;
+    isPeerSosSoundPlaying = true;
+
+    // 1. Try native Android alarm sound if running inside native APK
+    if (window.AndroidApp && typeof window.AndroidApp.startAlarmSound === 'function') {
+      try {
+        window.AndroidApp.startAlarmSound();
+      } catch (e) {
+        console.warn("AndroidApp.startAlarmSound error:", e);
+      }
+    }
+
+    // 2. Play Web Audio siren sound immediately and loop every 1450ms
+    playSirenChirp();
+    if (peerSosSirenInterval) clearInterval(peerSosSirenInterval);
+    peerSosSirenInterval = setInterval(() => {
+      if (!isPeerSosSoundPlaying) {
+        clearInterval(peerSosSirenInterval);
+        return;
+      }
+      playSirenChirp();
+    }, 1450);
+
+    // 3. Heavy vibration loop
+    if (navigator.vibrate) {
+      try { navigator.vibrate([600, 200, 600, 200, 800, 300, 1000]); } catch (e) {}
+    }
+    if (peerSosVibrateInterval) clearInterval(peerSosVibrateInterval);
+    peerSosVibrateInterval = setInterval(() => {
+      if (!isPeerSosSoundPlaying) {
+        clearInterval(peerSosVibrateInterval);
+        return;
+      }
+      if (navigator.vibrate) {
+        try { navigator.vibrate([600, 200, 600, 200, 800]); } catch (e) {}
+      }
+    }, 2200);
+  }
+
+  function stopPeerEmergencySirenLoop() {
+    isPeerSosSoundPlaying = false;
+
+    // 1. Stop native Android alarm sound
+    if (window.AndroidApp && typeof window.AndroidApp.stopAlarmSound === 'function') {
+      try {
+        window.AndroidApp.stopAlarmSound();
+      } catch (e) {
+        console.warn("AndroidApp.stopAlarmSound error:", e);
+      }
+    }
+
+    // 2. Stop Web Audio siren loop
+    if (peerSosSirenInterval) {
+      clearInterval(peerSosSirenInterval);
+      peerSosSirenInterval = null;
+    }
+    if (peerSosVibrateInterval) {
+      clearInterval(peerSosVibrateInterval);
+      peerSosVibrateInterval = null;
+    }
+
+    // 3. Stop phone vibration immediately
+    if (navigator.vibrate) {
+      try { navigator.vibrate(0); } catch (e) {}
+    }
+
+    // 4. Close audio context
+    if (peerSosAudioCtx) {
+      try {
+        if (peerSosAudioCtx.state !== 'closed') {
+          peerSosAudioCtx.close();
+        }
+      } catch (e) {}
+      peerSosAudioCtx = null;
+    }
   }
 
   window.sendOfficerMessageToControl = function() {
@@ -2827,8 +3027,8 @@
         </button>
 
         <!-- 4. Close / Acknowledge -->
-        <button type="button" onclick="closePeerSosModal()" style="background: rgba(255,255,255,0.1); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer;">
-          సరే / గ్రహించాము (Acknowledge)
+        <button type="button" id="peer-sos-ack-btn" onclick="closePeerSosModal()" style="background: rgba(239, 68, 68, 0.2); color: #fecaca; border: 1.5px solid #ef4444; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 10px rgba(239, 68, 68, 0.25);">
+          <i class="fa-solid fa-bell-slash"></i> సరే / గ్రహించాము (Acknowledge & Stop Alarm)
         </button>
       </div>
     </div>

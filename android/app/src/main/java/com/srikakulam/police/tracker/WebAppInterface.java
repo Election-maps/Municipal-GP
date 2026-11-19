@@ -3,6 +3,8 @@ package com.srikakulam.police.tracker;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.webkit.JavascriptInterface;
@@ -13,6 +15,7 @@ import androidx.core.content.ContextCompat;
 public class WebAppInterface {
 
     private final Context context;
+    private static Ringtone alarmRingtone = null;
 
     public WebAppInterface(Context context) {
         this.context = context;
@@ -138,5 +141,52 @@ public class WebAppInterface {
     @JavascriptInterface
     public void openNavigation(String url) {
         openExternalUrl(url);
+    }
+
+    @JavascriptInterface
+    public void startAlarmSound() {
+        if (context instanceof Activity) {
+            ((Activity) context).runOnUiThread(() -> {
+                try {
+                    if (alarmRingtone != null && alarmRingtone.isPlaying()) {
+                        return;
+                    }
+                    Uri alertUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+                    if (alertUri == null) {
+                        alertUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+                    }
+                    if (alertUri == null) {
+                        alertUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                    }
+                    if (alertUri != null) {
+                        alarmRingtone = RingtoneManager.getRingtone(context, alertUri);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && alarmRingtone != null) {
+                            alarmRingtone.setLooping(true);
+                        }
+                        if (alarmRingtone != null) {
+                            alarmRingtone.play();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
+
+    @JavascriptInterface
+    public void stopAlarmSound() {
+        if (context instanceof Activity) {
+            ((Activity) context).runOnUiThread(() -> {
+                try {
+                    if (alarmRingtone != null) {
+                        alarmRingtone.stop();
+                        alarmRingtone = null;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
     }
 }

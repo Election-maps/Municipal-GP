@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
         checkAndRequestPermissions();
         requestBatteryOptimizationExemption();
 
-        String appUrl = "https://election-maps.github.io/Municipal-GP/officer.html?app=native&v=1.0.1";
+        String appUrl = "https://election-maps.github.io/Municipal-GP/officer.html?app=native&v=1.0.2";
         webView.loadUrl(appUrl);
     }
 
@@ -226,11 +226,24 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            // Minimize to home screen instead of exiting
-            moveTaskToBack(true);
+        if (webView != null) {
+            webView.evaluateJavascript("(function(){ " +
+                    "var m = document.getElementById('peer-sos-modal'); " +
+                    "if (m && m.style.display !== 'none') { window.closePeerSosModal(); return 'handled'; } " +
+                    "var c = document.getElementById('officer-map-card'); " +
+                    "if (c && c.classList.contains('map-fullscreen')) { window.toggleOfficerMapFullscreen(); return 'handled'; } " +
+                    "return 'not_handled'; })()", value -> {
+                if ("\"handled\"".equals(value) || "handled".equals(value)) {
+                    return;
+                }
+                if (webView.canGoBack()) {
+                    webView.goBack();
+                } else {
+                    moveTaskToBack(true);
+                }
+            });
+            return;
         }
+        moveTaskToBack(true);
     }
 }
