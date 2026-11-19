@@ -2154,11 +2154,25 @@
         currentSelectedUnit = allUnitsData.find(u => u.id === selUnit.value);
       }
     }
+    if (!currentSelectedUnit && typeof allUnitsData !== 'undefined' && allUnitsData && allUnitsData.length > 0) {
+      if (currentLoggedInOfficer && currentLoggedInOfficer.unitId) {
+        currentSelectedUnit = allUnitsData.find(u => u.id === currentLoggedInOfficer.unitId);
+      }
+      if (!currentSelectedUnit && currentLoggedInOfficer && currentLoggedInOfficer.phone) {
+        const cleanP = normalizePhone(currentLoggedInOfficer.phone);
+        currentSelectedUnit = allUnitsData.find(u => {
+          const up = normalizePhone(u.phone);
+          const us = normalizePhone(u.supporting);
+          return (up && (up === cleanP || up.endsWith(cleanP.slice(-10)))) ||
+                 (us && (us.includes(cleanP) || (cleanP.length >= 10 && us.includes(cleanP.slice(-10)))));
+        });
+      }
+    }
     if (!currentSelectedUnit && currentLoggedInOfficer) {
       currentSelectedUnit = {
         id: currentLoggedInOfficer.unitId || ('FIELD_' + userId),
         unitName: currentLoggedInOfficer.officerName || 'Duty Force',
-        category: currentLoggedInOfficer.category || 'Patrol Force',
+        category: currentLoggedInOfficer.category || 'Route Mobiles',
         categoryKey: 'RM',
         mandal: currentLoggedInOfficer.mandal || 'Srikakulam',
         officer: currentLoggedInOfficer.officerName || 'Police Officer',
@@ -2178,6 +2192,59 @@
     }
 
     const unit = currentSelectedUnit || {};
+    const alertMandal = (unit.mandal || (currentLoggedInOfficer ? currentLoggedInOfficer.mandal : '') || 'Srikakulam').trim();
+    const alertRoute = (unit.route || unit.unitName || '').trim();
+
+    // Identify designated SF, SSF, and QRT units for this mandal/route from allUnitsData
+    let designatedSfUnits = [];
+    let designatedSsfUnits = [];
+    let designatedQrtUnits = [];
+    let designatedPhones = [];
+
+    if (alertMandal && typeof allUnitsData !== 'undefined' && allUnitsData && allUnitsData.length > 0) {
+      designatedSfUnits = allUnitsData.filter(u => {
+        const cat = (u.category || '').toLowerCase();
+        const catK = (u.categoryKey || '').toUpperCase();
+        const r = (u.route || '').toUpperCase();
+        return ((cat.includes('striking force') && !cat.includes('special')) || catK === 'SF' || r.startsWith('SF-')) &&
+               mandalsMatch(u.mandal, alertMandal);
+      });
+
+      designatedSsfUnits = allUnitsData.filter(u => {
+        const cat = (u.category || '').toLowerCase();
+        const catK = (u.categoryKey || '').toUpperCase();
+        const r = (u.route || '').toUpperCase();
+        return (cat.includes('special striking') || catK === 'SSF' || r.startsWith('SSF-')) &&
+               mandalsMatch(u.mandal, alertMandal);
+      });
+
+      designatedQrtUnits = allUnitsData.filter(u => {
+        const cat = (u.category || '').toLowerCase();
+        const catK = (u.categoryKey || '').toUpperCase();
+        const r = (u.route || '').toUpperCase();
+        return (cat.includes('qrt') || catK === 'QRT' || r.startsWith('QRT-')) &&
+               (isMandalInList(alertMandal, u.mandal) || mandalsMatch(u.mandal, alertMandal));
+      });
+
+      [...designatedSfUnits, ...designatedSsfUnits, ...designatedQrtUnits].forEach(u => {
+        if (u.phone) {
+          const p = normalizePhone(u.phone);
+          if (p && !designatedPhones.includes(p)) designatedPhones.push(p);
+        }
+        if (u.supporting) {
+          const supDigits = String(u.supporting).match(/[6-9]\d{9}/g) || [];
+          supDigits.forEach(num => {
+            const p = normalizePhone(num);
+            if (p && !designatedPhones.includes(p)) designatedPhones.push(p);
+          });
+        }
+      });
+
+      if (isSdpoTargetMandal(alertMandal) && !designatedPhones.includes('6309990804')) {
+        designatedPhones.push('6309990804');
+      }
+    }
+
     const sosPayload = {
       type: 'sos_alert',
       msgId: 'sos_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
@@ -2185,16 +2252,18 @@
       unitName: unit.unitName || 'Duty Force',
       category: unit.category || 'Route Mobiles',
       categoryKey: unit.categoryKey || 'RM',
-      mandal: unit.mandal || (currentLoggedInOfficer ? currentLoggedInOfficer.mandal : 'Srikakulam'),
-      route: unit.route || '',
+      mandal: alertMandal,
+      route: alertRoute,
       hq: unit.hq || '',
       officer: unit.officer || (currentLoggedInOfficer ? currentLoggedInOfficer.officerName : 'Police Officer'),
       phone: unit.phone || (currentLoggedInOfficer ? currentLoggedInOfficer.phone : ''),
-      message: `🚨 EMERGENCY / SOS: ${unit.route ? unit.route + ' (' + (unit.mandal || '') + ')' : (unit.mandal || 'రూట్')} బందోబస్తు అధికారి నుండి అత్యవసర సహాయం కోరబడింది!`,
+      message: `🚨 EMERGENCY / SOS: ${alertRoute ? alertRoute + ' (' + alertMandal + ')' : alertMandal + ' రూట్'} బందోబస్తు అధికారి నుండి అత్యవసర సహాయం కోరబడింది!`,
       priority: 'URGENT',
       latitude: curLat,
       longitude: curLng,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      designatedPhones: designatedPhones,
+      designatedUnitIds: [...designatedSfUnits, ...designatedSsfUnits, ...designatedQrtUnits].map(u => u.id)
     };
 
     const payloadJson = JSON.stringify(sosPayload);
@@ -2272,12 +2341,16 @@
 
   function handleIncomingPeerSosAlert(payload) {
     if (!payload || !payload.message) return;
-    const myUnitId = currentSelectedUnit ? currentSelectedUnit.id : '';
-    const myPhone = currentLoggedInOfficer ? currentLoggedInOfficer.phone : (currentSelectedUnit ? currentSelectedUnit.phone : '');
+    const myUnitId = currentSelectedUnit ? currentSelectedUnit.id : (currentLoggedInOfficer ? currentLoggedInOfficer.unitId : '');
+    const myPhone = normalizePhone(
+      (currentLoggedInOfficer && currentLoggedInOfficer.phone) ||
+      (currentSelectedUnit && currentSelectedUnit.phone) ||
+      localStorage.getItem('skl_officer_phone') || ''
+    );
 
     // 1. Ignore if sent by myself
     if (myUnitId && payload.unitId === myUnitId) return;
-    if (myPhone && normalizePhone(payload.phone) === normalizePhone(myPhone)) return;
+    if (myPhone && normalizePhone(payload.phone) === myPhone) return;
 
     // 2. Must be an urgent/SOS alert
     const msgLower = (payload.message || '').toLowerCase();
@@ -2287,38 +2360,93 @@
                   msgLower.includes('sos');
     if (!isSos) return;
 
-    // 3. Current Officer Context & Designation
-    const myUnit = currentSelectedUnit || {};
-    const myCat = (myUnit.category || '').toLowerCase();
-    const myCatKey = (myUnit.categoryKey || '').toUpperCase();
-    const myMandal = (myUnit.mandal || (currentLoggedInOfficer ? currentLoggedInOfficer.mandal : '') || '').trim();
     const alertMandal = (payload.mandal || '').trim();
     const alertRoute = (payload.route || payload.unitName || '').trim();
 
-    // Check if THIS logged-in officer is the designated SF, SSF, or QRT for the triggered route/mandal
+    // 3. Robust Target Force Identification (SF, SSF, QRT)
     let isTargetSF = false;
     let isTargetSSF = false;
     let isTargetQRT = false;
 
-    // Striking Force Incharge (SF)
-    if ((myCat.includes('striking force') && !myCat.includes('special')) || myCatKey === 'SF' || (myUnit.route && myUnit.route.startsWith('SF-'))) {
-      if (mandalsMatch(myMandal, alertMandal)) {
-        isTargetSF = true;
+    // Check A: Direct targeted match if sender included designatedPhones or designatedUnitIds
+    if (myPhone && Array.isArray(payload.designatedPhones)) {
+      if (payload.designatedPhones.some(p => p === myPhone || p.endsWith(myPhone.slice(-10)) || myPhone.endsWith(p.slice(-10)))) {
+        if (typeof allUnitsData !== 'undefined' && allUnitsData && allUnitsData.length > 0) {
+          const myMatches = allUnitsData.filter(u => {
+            const up = normalizePhone(u.phone);
+            const us = String(u.supporting || '');
+            return (up && (up === myPhone || up.endsWith(myPhone.slice(-10)))) || us.includes(myPhone);
+          });
+          myMatches.forEach(u => {
+            const cat = (u.category || '').toLowerCase();
+            const catK = (u.categoryKey || '').toUpperCase();
+            const r = (u.route || '').toUpperCase();
+            if ((cat.includes('striking force') && !cat.includes('special')) || catK === 'SF' || r.startsWith('SF-')) isTargetSF = true;
+            if (cat.includes('special striking') || catK === 'SSF' || r.startsWith('SSF-')) isTargetSSF = true;
+            if (cat.includes('qrt') || catK === 'QRT' || r.startsWith('QRT-')) isTargetQRT = true;
+          });
+        }
+        if (!isTargetSF && !isTargetSSF && !isTargetQRT) {
+          if (payload.designatedUnitIds && myUnitId && payload.designatedUnitIds.includes(myUnitId)) {
+            isTargetSF = true;
+          } else {
+            isTargetQRT = true;
+          }
+        }
       }
     }
 
-    // Special Striking Force Incharge (SSF)
-    if (myCat.includes('special striking') || myCatKey === 'SSF' || (myUnit.route && myUnit.route.startsWith('SSF-'))) {
-      if (mandalsMatch(myMandal, alertMandal)) {
-        isTargetSSF = true;
+    // Check B: Comprehensive check of this officer's units from session and allUnitsData
+    const myUnits = [];
+    if (currentSelectedUnit) myUnits.push(currentSelectedUnit);
+    if (currentLoggedInOfficer && currentLoggedInOfficer.unitId && (!currentSelectedUnit || currentSelectedUnit.id !== currentLoggedInOfficer.unitId)) {
+      const uFromSession = (typeof allUnitsData !== 'undefined' && allUnitsData) ? allUnitsData.find(x => x.id === currentLoggedInOfficer.unitId) : null;
+      if (uFromSession) myUnits.push(uFromSession);
+    }
+    if (myPhone && typeof allUnitsData !== 'undefined' && allUnitsData) {
+      allUnitsData.forEach(u => {
+        const up = normalizePhone(u.phone);
+        const us = String(u.supporting || '');
+        if ((up && (up === myPhone || up.endsWith(myPhone.slice(-10)))) || us.includes(myPhone)) {
+          if (!myUnits.some(x => x.id === u.id)) myUnits.push(u);
+        }
+      });
+    }
+
+    if (currentLoggedInOfficer && currentLoggedInOfficer.category && currentLoggedInOfficer.mandal) {
+      if (!myUnits.some(u => u.category === currentLoggedInOfficer.category && u.mandal === currentLoggedInOfficer.mandal)) {
+        myUnits.push({
+          category: currentLoggedInOfficer.category,
+          categoryKey: '',
+          mandal: currentLoggedInOfficer.mandal,
+          route: ''
+        });
       }
     }
 
-    // Quick Response Team (QRT)
-    if (myCat.includes('qrt') || myCatKey === 'QRT' || (myUnit.route && myUnit.route.startsWith('QRT-'))) {
-      if (isMandalInList(alertMandal, myMandal)) {
-        isTargetQRT = true;
+    myUnits.forEach(u => {
+      const cat = (u.category || '').toLowerCase();
+      const catKey = (u.categoryKey || '').toUpperCase();
+      const r = (u.route || '').toUpperCase();
+      const m = (u.mandal || '').trim();
+
+      // Striking Force (SF)
+      if ((cat.includes('striking force') && !cat.includes('special')) || catKey === 'SF' || r.startsWith('SF-')) {
+        if (mandalsMatch(m, alertMandal)) isTargetSF = true;
       }
+      // Special Striking Force (SSF)
+      if (cat.includes('special striking') || catKey === 'SSF' || r.startsWith('SSF-')) {
+        if (mandalsMatch(m, alertMandal)) isTargetSSF = true;
+      }
+      // Quick Response Team (QRT)
+      if (cat.includes('qrt') || catKey === 'QRT' || r.startsWith('QRT-')) {
+        if (isMandalInList(alertMandal, m) || mandalsMatch(m, alertMandal)) isTargetQRT = true;
+      }
+    });
+
+    // Check C: SDPO Srikakulam (6309990804) oversees 11 mandals
+    if (isSdpoLoggedIn() && isSdpoTargetMandal(alertMandal)) {
+      isTargetQRT = true;
     }
 
     const isDesignatedForce = isTargetSF || isTargetSSF || isTargetQRT;
@@ -2350,12 +2478,13 @@
     }
 
     // Mandal match for proximity
-    if (myMandal && alertMandal && mandalsMatch(myMandal, alertMandal)) {
+    const myPrimaryMandal = (currentSelectedUnit ? currentSelectedUnit.mandal : (currentLoggedInOfficer ? currentLoggedInOfficer.mandal : '')) || '';
+    if (myPrimaryMandal && alertMandal && mandalsMatch(myPrimaryMandal, alertMandal)) {
       isNearby = true;
-      if (!distanceBadgeText) distanceBadgeText = `📍 మీ మండల పరిధిలోని అధికారి (${payload.mandal})!`;
+      if (!distanceBadgeText) distanceBadgeText = `📍 మీ మండల పరిధిలోని అధికారి (${alertMandal})!`;
     }
 
-    // Designated Route Incharges (SF, SSF, QRT) MUST ALWAYS receive the alert regardless of distance!
+    // Designated Route Incharges (SF, SSF, QRT) MUST ALWAYS receive the alert regardless of distance or GPS status!
     if (isDesignatedForce) {
       isNearby = true;
       if (isTargetSF) {
@@ -2363,14 +2492,14 @@
       } else if (isTargetSSF) {
         distanceBadgeText = `🚨 [SSF INCHARGE] మీ మండల పరిధిలోని ${alertRoute || alertMandal} అత్యవసర SOS!`;
       } else if (isTargetQRT) {
-        distanceBadgeText = `🚨 [QRT TEAM] మీ సబ్-డివిజన్ పరిధిలోని ${alertRoute || alertMandal} అత్యవసర SOS!`;
+        distanceBadgeText = `🚨 [QRT TEAM INCHARGE] మీ సబ్-డివిజన్ పరిధిలోని ${alertRoute || alertMandal} అత్యవసర SOS!`;
       }
     }
 
     // Default to alert if coordinates are pending and receiver is on duty
-    if (distKm === null && !myMandal) {
+    if (!isNearby && !curLat && !curLng) {
       isNearby = true;
-      distanceBadgeText = `📍 ఎన్నికల బందోబస్తు పరిధిలోని అధికారి!`;
+      if (!distanceBadgeText) distanceBadgeText = `📍 ఎన్నికల బందోబస్తు పరిధిలోని అధికారి (${alertMandal})!`;
     }
 
     if (!isNearby) return;
@@ -2395,13 +2524,13 @@
     if (forceTargetBadge) {
       if (isTargetSF) {
         forceTargetBadge.style.display = 'block';
-        forceTargetBadge.innerHTML = `⚡ <b>STRIKING FORCE (SF) INCHARGE ALERT</b><br/><span style="font-size: 11px; font-weight: normal;">మీ మండలంలోని ${alertRoute || 'రూట్ మొబైల్'} అధికారి అత్యవసర సహాయం కోరుతున్నారు!</span>`;
+        forceTargetBadge.innerHTML = `⚡ <b>STRIKING FORCE (SF) INCHARGE ALERT</b><br/><span style="font-size: 11px; font-weight: normal;">మీ మండలంలోని (${alertMandal}) ${alertRoute || 'రూట్ మొబైల్'} అధికారి అత్యవసర సహాయం కోరుతున్నారు!</span>`;
       } else if (isTargetSSF) {
         forceTargetBadge.style.display = 'block';
-        forceTargetBadge.innerHTML = `⚡ <b>SPECIAL STRIKING FORCE (SSF) INCHARGE ALERT</b><br/><span style="font-size: 11px; font-weight: normal;">మీ మండలంలోని ${alertRoute || 'రూట్ మొబైల్'} అధికారి అత్యవసర సహాయం కోరుతున్నారు!</span>`;
+        forceTargetBadge.innerHTML = `⚡ <b>SPECIAL STRIKING FORCE (SSF) INCHARGE ALERT</b><br/><span style="font-size: 11px; font-weight: normal;">మీ మండలంలోని (${alertMandal}) ${alertRoute || 'రూట్ మొబైల్'} అధికారి అత్యవసర సహాయం కోరుతున్నారు!</span>`;
       } else if (isTargetQRT) {
         forceTargetBadge.style.display = 'block';
-        forceTargetBadge.innerHTML = `⚡ <b>QRT (QUICK RESPONSE TEAM) INCHARGE ALERT</b><br/><span style="font-size: 11px; font-weight: normal;">మీ సబ్-డివిజన్ పరిధిలోని ${alertRoute || 'రూట్ మొబైల్'} అధికారి అత్యవసర సహాయం కోరుతున్నారు!</span>`;
+        forceTargetBadge.innerHTML = `⚡ <b>QRT (QUICK RESPONSE TEAM) INCHARGE ALERT</b><br/><span style="font-size: 11px; font-weight: normal;">మీ సబ్-డివిజన్ పరిధిలోని (${alertMandal}) ${alertRoute || 'రూట్ మొబైల్'} అధికారి అత్యవసర సహాయం కోరుతున్నారు!</span>`;
       } else {
         forceTargetBadge.style.display = 'none';
       }
@@ -2870,21 +2999,60 @@
 
       const isUrgent = selectedQuickPriority === 'URGENT' || msgText.toLowerCase().includes('emergency') || msgText.toLowerCase().includes('sos');
 
+      let msgDesignatedPhones = [];
+      let msgDesignatedUnitIds = [];
+      const msgMandal = (currentSelectedUnit.mandal || '').trim();
+      const msgRoute = (currentSelectedUnit.route || currentSelectedUnit.unitName || '').trim();
+
+      if (isUrgent && msgMandal && typeof allUnitsData !== 'undefined' && allUnitsData && allUnitsData.length > 0) {
+        const targetUnits = allUnitsData.filter(u => {
+          const cat = (u.category || '').toLowerCase();
+          const catK = (u.categoryKey || '').toUpperCase();
+          const r = (u.route || '').toUpperCase();
+          const isSf = ((cat.includes('striking force') && !cat.includes('special')) || catK === 'SF' || r.startsWith('SF-')) && mandalsMatch(u.mandal, msgMandal);
+          const isSsf = (cat.includes('special striking') || catK === 'SSF' || r.startsWith('SSF-')) && mandalsMatch(u.mandal, msgMandal);
+          const isQrt = (cat.includes('qrt') || catK === 'QRT' || r.startsWith('QRT-')) && (isMandalInList(msgMandal, u.mandal) || mandalsMatch(u.mandal, msgMandal));
+          return isSf || isSsf || isQrt;
+        });
+
+        targetUnits.forEach(u => {
+          msgDesignatedUnitIds.push(u.id);
+          if (u.phone) {
+            const p = normalizePhone(u.phone);
+            if (p && !msgDesignatedPhones.includes(p)) msgDesignatedPhones.push(p);
+          }
+          if (u.supporting) {
+            const supDigits = String(u.supporting).match(/[6-9]\d{9}/g) || [];
+            supDigits.forEach(num => {
+              const p = normalizePhone(num);
+              if (p && !msgDesignatedPhones.includes(p)) msgDesignatedPhones.push(p);
+            });
+          }
+        });
+
+        if (isSdpoTargetMandal(msgMandal) && !msgDesignatedPhones.includes('6309990804')) {
+          msgDesignatedPhones.push('6309990804');
+        }
+      }
+
       const msgPayload = {
-        type: 'officer_message',
+        type: isUrgent ? 'sos_alert' : 'officer_message',
         msgId: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
         unitId: currentSelectedUnit.id,
         unitName: currentSelectedUnit.unitName || currentSelectedUnit.name || 'Duty Force',
         category: currentSelectedUnit.category || '',
         categoryKey: currentSelectedUnit.categoryKey || '',
-        mandal: currentSelectedUnit.mandal || '',
+        mandal: msgMandal,
+        route: msgRoute,
         officer: currentSelectedUnit.officer || 'Police Officer',
         phone: currentSelectedUnit.phone || '',
         message: msgText,
         priority: isUrgent ? 'URGENT' : (selectedQuickPriority || 'NORMAL'),
         latitude: curLat || 0,
         longitude: curLng || 0,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        designatedPhones: msgDesignatedPhones,
+        designatedUnitIds: msgDesignatedUnitIds
       };
 
       const payloadJson = JSON.stringify(msgPayload);
