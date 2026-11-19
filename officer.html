@@ -22,6 +22,8 @@
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <!-- Pre-loaded Forces Data (Routes, SF, SSF, QRTs, Reserve Parties) -->
   <script src="route_mobiles_data.js?v=20261104"></script>
+  <!-- Pre-loaded Srikakulam Mandals GeoJSON Boundaries -->
+  <script src="srikakulam_mandals.js?v=20261119"></script>
 
   <style>
     :root {
@@ -400,6 +402,22 @@
       transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1) !important;
     }
 
+    /* Mandal Boundary Tooltip Styling */
+    .mandal-tooltip {
+      background: rgba(15, 23, 42, 0.9) !important;
+      border: 1px solid #0284c7 !important;
+      color: #38bdf8 !important;
+      font-size: 10px !important;
+      font-weight: 700 !important;
+      border-radius: 4px !important;
+      padding: 2px 6px !important;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
+      pointer-events: none;
+    }
+    .mandal-tooltip::before {
+      display: none !important;
+    }
+
     /* Keep-alive Advice Card */
     .tip-card {
       background: rgba(59, 130, 246, 0.1);
@@ -745,6 +763,9 @@
       <span><i class="fa-solid fa-map-location-dot" style="color: #38bdf8;"></i> మీ కదలికల లైవ్ మ్యాప్:</span>
       <div style="display: flex; align-items: center; gap: 8px;">
         <span style="font-size: 10px; color: #10b981;">● ప్రైవేట్ ట్రాక్</span>
+        <button type="button" id="btn-toggle-mandals" onclick="toggleMandalBorders()" style="background: rgba(14, 165, 233, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="మండల బోర్డర్లు ఆన్ / ఆఫ్ చేయండి">
+          <i class="fa-solid fa-draw-polygon"></i> <span id="txt-mandal-borders">మండలాలు</span>
+        </button>
         <button type="button" id="btn-hdr-fullscreen" onclick="toggleOfficerMapFullscreen()" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
           <i class="fa-solid fa-expand" id="hdr-fullscreen-icon"></i> <span id="hdr-fullscreen-txt">ఫుల్ స్క్రీన్</span>
         </button>
@@ -862,6 +883,73 @@
     opacity: 0.85,
     dashArray: '5, 8'
   }).addTo(officerMap);
+
+  // -------------------------------------------------------------
+  // Srikakulam District Mandal Boundaries Layer
+  // -------------------------------------------------------------
+  let mandalBordersLayer = null;
+  let mandalsVisible = true;
+
+  function initMandalBoundaries() {
+    if (!window.SRIKAKULAM_MANDALS_GEOJSON || !officerMap) return;
+    try {
+      mandalBordersLayer = L.geoJSON(window.SRIKAKULAM_MANDALS_GEOJSON, {
+        style: function(feature) {
+          return {
+            color: '#0284c7',
+            weight: 2,
+            opacity: 0.85,
+            dashArray: '5, 5',
+            fillColor: '#38bdf8',
+            fillOpacity: 0.06
+          };
+        },
+        onEachFeature: function(feature, layer) {
+          const mName = feature.properties ? (feature.properties.mandal || '') : '';
+          if (mName) {
+            layer.bindTooltip(`🏛️ ${mName}`, {
+              permanent: false,
+              sticky: true,
+              direction: 'center',
+              className: 'mandal-tooltip'
+            });
+            layer.on('click', function(e) {
+              L.popup()
+                .setLatLng(e.latlng)
+                .setContent(`<div style="padding: 4px 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                  <strong style="color: #0284c7; font-size: 13px;">🏛️ ${mName} మండలం</strong><br/>
+                  <span style="font-size: 11px; color: #475569;">శ్రీకాకుళం జిల్లా మండల సరిహద్దు</span>
+                </div>`)
+                .openOn(officerMap);
+            });
+          }
+        }
+      }).addTo(officerMap);
+    } catch (err) {
+      console.warn("Failed to load mandal boundaries on officer map:", err);
+    }
+  }
+
+  window.toggleMandalBorders = function() {
+    if (!mandalBordersLayer || !officerMap) return;
+    mandalsVisible = !mandalsVisible;
+    const btn = document.getElementById('btn-toggle-mandals');
+    const txt = document.getElementById('txt-mandal-borders');
+    if (mandalsVisible) {
+      officerMap.addLayer(mandalBordersLayer);
+      if (btn) btn.style.background = 'rgba(14, 165, 233, 0.2)';
+      if (txt) txt.innerText = 'మండలాలు';
+      showToast("మండల బోర్డర్లు ఆన్ చేయబడ్డాయి");
+    } else {
+      officerMap.removeLayer(mandalBordersLayer);
+      if (btn) btn.style.background = 'rgba(148, 163, 184, 0.2)';
+      if (txt) txt.innerText = 'మండలాలు (ఆఫ్)';
+      showToast("మండల బోర్డర్లు ఆఫ్ చేయబడ్డాయి");
+    }
+  };
+
+  // Automatically render mandal boundaries onto the live map
+  initMandalBoundaries();
 
   // Toggle follow mode & recenter
   const btnToggleFollow = document.getElementById('btn-toggle-follow');
@@ -1777,12 +1865,14 @@
       msgId: 'sos_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
       unitId: unit.id || ('FIELD_' + userId),
       unitName: unit.unitName || 'Duty Force',
-      category: unit.category || 'Patrol Force',
+      category: unit.category || 'Route Mobiles',
       categoryKey: unit.categoryKey || 'RM',
-      mandal: unit.mandal || 'Srikakulam',
+      mandal: unit.mandal || (currentLoggedInOfficer ? currentLoggedInOfficer.mandal : 'Srikakulam'),
+      route: unit.route || '',
+      hq: unit.hq || '',
       officer: unit.officer || (currentLoggedInOfficer ? currentLoggedInOfficer.officerName : 'Police Officer'),
       phone: unit.phone || (currentLoggedInOfficer ? currentLoggedInOfficer.phone : ''),
-      message: 'EMERGENCY / SOS: Immediate Police Assistance Required! దగ్గరలోని అధికారులు వెంటనే సహాయం అందించగలరు.',
+      message: `🚨 EMERGENCY / SOS: ${unit.route ? unit.route + ' (' + (unit.mandal || '') + ')' : (unit.mandal || 'రూట్')} బందోబస్తు అధికారి నుండి అత్యవసర సహాయం కోరబడింది!`,
       priority: 'URGENT',
       latitude: curLat,
       longitude: curLng,
@@ -1813,7 +1903,7 @@
     }
 
     playOfficerChime();
-    showToast("🚨 SOS అలర్ట్ కంట్రోల్ రూమ్ & దగ్గరలోని ఆఫీసర్లకు పంపబడింది!");
+    showToast("🚨 SOS అలర్ట్ కంట్రోల్ రూమ్, రూట్ SF, SSF, QRT & దగ్గరలోని ఆఫీసర్లకు పంపబడింది!");
 
     const btn = document.getElementById('btn-instant-sos');
     if (btn) {
@@ -1825,6 +1915,42 @@
       }, 4000);
     }
   };
+
+  // Helper function to match mandals allowing for spelling variations, prefixes & aliases
+  function mandalsMatch(mandalA, mandalB) {
+    if (!mandalA || !mandalB) return false;
+    const clean = str => String(str).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normA = clean(mandalA);
+    const normB = clean(mandalB);
+    if (!normA || !normB) return false;
+    if (normA === normB) return true;
+    if (normA.includes(normB) || normB.includes(normA)) return true;
+
+    const aliases = [
+      ['amadalavalasa', 'amadalavlasa'],
+      ['gsigadam', 'ganguvarisigadam', 'sigadam'],
+      ['lnpeta', 'lakshminarsupeta', 'lakshminarasupeta'],
+      ['ranasthalam', 'ranastalam'],
+      ['srikakulam', 'srikakulamrural', 'srikakulamurban'],
+      ['meliaputty', 'meliaputti'],
+      ['ichapuram', 'ichchapuram'],
+      ['kotabommali', 'kotabommali'],
+      ['santhabommali', 'santabommali']
+    ];
+    for (const group of aliases) {
+      const hasA = group.some(x => normA.includes(x));
+      const hasB = group.some(x => normB.includes(x));
+      if (hasA && hasB) return true;
+    }
+    return false;
+  }
+
+  // Helper to check if a mandal is covered in a list (e.g., QRT's multi-mandal coverage string)
+  function isMandalInList(targetMandal, mandalListStr) {
+    if (!targetMandal || !mandalListStr) return false;
+    const parts = String(mandalListStr).split(/[,;/|]+/).map(s => s.trim()).filter(Boolean);
+    return parts.some(part => mandalsMatch(targetMandal, part));
+  }
 
   function handleIncomingPeerSosAlert(payload) {
     if (!payload || !payload.message) return;
@@ -1843,7 +1969,43 @@
                   msgLower.includes('sos');
     if (!isSos) return;
 
-    // 3. Distance calculation
+    // 3. Current Officer Context & Designation
+    const myUnit = currentSelectedUnit || {};
+    const myCat = (myUnit.category || '').toLowerCase();
+    const myCatKey = (myUnit.categoryKey || '').toUpperCase();
+    const myMandal = (myUnit.mandal || (currentLoggedInOfficer ? currentLoggedInOfficer.mandal : '') || '').trim();
+    const alertMandal = (payload.mandal || '').trim();
+    const alertRoute = (payload.route || payload.unitName || '').trim();
+
+    // Check if THIS logged-in officer is the designated SF, SSF, or QRT for the triggered route/mandal
+    let isTargetSF = false;
+    let isTargetSSF = false;
+    let isTargetQRT = false;
+
+    // Striking Force Incharge (SF)
+    if ((myCat.includes('striking force') && !myCat.includes('special')) || myCatKey === 'SF' || (myUnit.route && myUnit.route.startsWith('SF-'))) {
+      if (mandalsMatch(myMandal, alertMandal)) {
+        isTargetSF = true;
+      }
+    }
+
+    // Special Striking Force Incharge (SSF)
+    if (myCat.includes('special striking') || myCatKey === 'SSF' || (myUnit.route && myUnit.route.startsWith('SSF-'))) {
+      if (mandalsMatch(myMandal, alertMandal)) {
+        isTargetSSF = true;
+      }
+    }
+
+    // Quick Response Team (QRT)
+    if (myCat.includes('qrt') || myCatKey === 'QRT' || (myUnit.route && myUnit.route.startsWith('QRT-'))) {
+      if (isMandalInList(alertMandal, myMandal)) {
+        isTargetQRT = true;
+      }
+    }
+
+    const isDesignatedForce = isTargetSF || isTargetSSF || isTargetQRT;
+
+    // 4. Distance calculation
     let curLat = (typeof lastLat === 'number' && !isNaN(lastLat) && lastLat !== 0) ? lastLat : 0;
     let curLng = (typeof lastLng === 'number' && !isNaN(lastLng) && lastLng !== 0) ? lastLng : 0;
     if ((!curLat || !curLng) && typeof anchorLat === 'number' && anchorLat !== 0) {
@@ -1869,14 +2031,25 @@
       }
     }
 
-    const myMandal = (currentSelectedUnit ? (currentSelectedUnit.mandal || '') : '').trim().toLowerCase();
-    const alertMandal = (payload.mandal || '').trim().toLowerCase();
-    if (myMandal && alertMandal && myMandal === alertMandal) {
+    // Mandal match for proximity
+    if (myMandal && alertMandal && mandalsMatch(myMandal, alertMandal)) {
       isNearby = true;
       if (!distanceBadgeText) distanceBadgeText = `📍 మీ మండల పరిధిలోని అధికారి (${payload.mandal})!`;
     }
 
-    // Default to alert if coordinates are pending
+    // Designated Route Incharges (SF, SSF, QRT) MUST ALWAYS receive the alert regardless of distance!
+    if (isDesignatedForce) {
+      isNearby = true;
+      if (isTargetSF) {
+        distanceBadgeText = `🚨 [SF INCHARGE] మీ మండల పరిధిలోని ${alertRoute || alertMandal} అత్యవసర SOS!`;
+      } else if (isTargetSSF) {
+        distanceBadgeText = `🚨 [SSF INCHARGE] మీ మండల పరిధిలోని ${alertRoute || alertMandal} అత్యవసర SOS!`;
+      } else if (isTargetQRT) {
+        distanceBadgeText = `🚨 [QRT TEAM] మీ సబ్-డివిజన్ పరిధిలోని ${alertRoute || alertMandal} అత్యవసర SOS!`;
+      }
+    }
+
+    // Default to alert if coordinates are pending and receiver is on duty
     if (distKm === null && !myMandal) {
       isNearby = true;
       distanceBadgeText = `📍 ఎన్నికల బందోబస్తు పరిధిలోని అధికారి!`;
@@ -1891,6 +2064,7 @@
 
     // Populate modal
     const modal = document.getElementById('peer-sos-modal');
+    const forceTargetBadge = document.getElementById('peer-sos-force-target-badge');
     const nameEl = document.getElementById('peer-sos-officer-name');
     const dutyEl = document.getElementById('peer-sos-duty');
     const phoneEl = document.getElementById('peer-sos-phone');
@@ -1899,8 +2073,27 @@
     const callBtn = document.getElementById('peer-sos-call-btn');
     const navBtn = document.getElementById('peer-sos-nav-btn');
 
+    // Prominent Target Badge for designated forces (SF / SSF / QRT)
+    if (forceTargetBadge) {
+      if (isTargetSF) {
+        forceTargetBadge.style.display = 'block';
+        forceTargetBadge.innerHTML = `⚡ <b>STRIKING FORCE (SF) INCHARGE ALERT</b><br/><span style="font-size: 11px; font-weight: normal;">మీ మండలంలోని ${alertRoute || 'రూట్ మొబైల్'} అధికారి అత్యవసర సహాయం కోరుతున్నారు!</span>`;
+      } else if (isTargetSSF) {
+        forceTargetBadge.style.display = 'block';
+        forceTargetBadge.innerHTML = `⚡ <b>SPECIAL STRIKING FORCE (SSF) INCHARGE ALERT</b><br/><span style="font-size: 11px; font-weight: normal;">మీ మండలంలోని ${alertRoute || 'రూట్ మొబైల్'} అధికారి అత్యవసర సహాయం కోరుతున్నారు!</span>`;
+      } else if (isTargetQRT) {
+        forceTargetBadge.style.display = 'block';
+        forceTargetBadge.innerHTML = `⚡ <b>QRT (QUICK RESPONSE TEAM) INCHARGE ALERT</b><br/><span style="font-size: 11px; font-weight: normal;">మీ సబ్-డివిజన్ పరిధిలోని ${alertRoute || 'రూట్ మొబైల్'} అధికారి అత్యవసర సహాయం కోరుతున్నారు!</span>`;
+      } else {
+        forceTargetBadge.style.display = 'none';
+      }
+    }
+
     if (nameEl) nameEl.innerText = payload.officer || 'Police Officer';
-    if (dutyEl) dutyEl.innerText = `[${payload.category || ''}] ${payload.mandal || ''} - ${payload.unitName || ''}`;
+    if (dutyEl) {
+      const routeStr = payload.route ? `${payload.route} - ` : '';
+      dutyEl.innerText = `[${payload.category || 'Route Force'}] ${payload.mandal || ''} | ${routeStr}${payload.unitName || ''}`;
+    }
     if (phoneEl) {
       phoneEl.innerHTML = payload.phone
         ? `<button type="button" onclick="triggerPhoneCall('${escapeHtml(payload.phone)}')" style="background:none; border:none; color: #4ade80; text-decoration: underline; font-weight: bold; cursor: pointer; padding:0; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-phone" style="font-size: 11px;"></i> ${escapeHtml(payload.phone)}</button>`
@@ -2982,6 +3175,10 @@
           <div style="font-size: 16px; font-weight: 900; color: #ef4444; letter-spacing: 0.5px;">🚨 ఎమర్జెన్సీ / SOS అలర్ట్!</div>
           <div style="font-size: 11px; color: #fca5a5;">దగ్గరలోని సహచర అధికారి అత్యవసర సహాయం కోరుతున్నారు</div>
         </div>
+      </div>
+
+      <!-- Designated Force Dispatch Target Badge (SF / SSF / QRT) -->
+      <div id="peer-sos-force-target-badge" style="display: none; background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%); border: 1.5px solid #f87171; color: #fff; font-weight: 800; font-size: 12.5px; padding: 9px 12px; border-radius: 8px; margin-bottom: 12px; text-align: center; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.5);">
       </div>
 
       <!-- Distance Badge -->
