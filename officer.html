@@ -759,10 +759,14 @@
 
   <!-- Personal Mini Map (Hidden until logged in) -->
   <div class="card" id="officer-map-card" style="display: none; padding: 12px; margin-bottom: 8px;">
-    <div style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between;">
-      <span><i class="fa-solid fa-map-location-dot" style="color: #38bdf8;"></i> మీ కదలికల లైవ్ మ్యాప్:</span>
+    <div style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px;">
+      <div style="display: flex; align-items: center; gap: 5px;">
+        <i class="fa-solid fa-map-location-dot" style="color: #38bdf8;"></i> 
+        <span id="map-header-title">మీ కదలికల లైవ్ మ్యాప్:</span>
+        <span id="sdpo-live-count-badge" style="display: none; background: #10b981; color: white; font-weight: 800; font-size: 10px; padding: 2px 7px; border-radius: 10px;">● లైవ్: 0</span>
+      </div>
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 10px; color: #10b981;">● ప్రైవేట్ ట్రాక్</span>
+        <span id="map-status-sub-badge" style="font-size: 10px; color: #10b981;">● ప్రైవేట్ ట్రాక్</span>
         <button type="button" id="btn-toggle-mandals" onclick="toggleMandalBorders()" style="background: rgba(14, 165, 233, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="మండల బోర్డర్లు ఆన్ / ఆఫ్ చేయండి">
           <i class="fa-solid fa-draw-polygon"></i> <span id="txt-mandal-borders">మండలాలు</span>
         </button>
@@ -778,6 +782,9 @@
       </button>
       <button class="btn-map-control" id="btn-recenter-map">
         <i class="fa-solid fa-location-arrow"></i> కేంద్రీకరించు
+      </button>
+      <button type="button" class="btn-map-control" id="btn-sdpo-fit-all" onclick="fitSdpoOfficersBounds()" style="display: none; background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #a7f3d0;">
+        <i class="fa-solid fa-users"></i> <span id="txt-sdpo-fit">అందరు (<span id="sdpo-btn-count">0</span>)</span>
       </button>
       <button class="btn-map-control" id="btn-fullscreen-map" onclick="toggleOfficerMapFullscreen()">
         <i class="fa-solid fa-expand" id="icon-fullscreen-map"></i> <span id="txt-fullscreen-map">ఫుల్ స్క్రీన్</span>
@@ -1032,6 +1039,215 @@
   // Automatically render mandal boundaries onto the live map
   initMandalBoundaries();
 
+  // -------------------------------------------------------------
+  // SDPO Srikakulam (6309990804) 11 Mandals Multi-Officer Monitoring
+  // -------------------------------------------------------------
+  const SDPO_PHONE_NUMBER = '6309990804';
+  const SDPO_SRIKAKULAM_MANDALS = [
+    'srikakulam',
+    'amadalavalasa',
+    'amadalavlasa',
+    'burja',
+    'etcherla',
+    'gsigadam',
+    'ganguvarisigadam',
+    'sigadam',
+    'gara',
+    'ranastalam',
+    'ranasthalam',
+    'jrpuram',
+    'laveru',
+    'ponduru',
+    'sarubujjili',
+    'lakshminarsupeta',
+    'lakshminarasupeta',
+    'lnpeta'
+  ];
+
+  let sdpoSubordinateMarkers = {}; // key: unitKey -> { marker, lastUpdated, data }
+
+  function isSdpoLoggedIn() {
+    const p1 = currentLoggedInOfficer ? normalizePhone(currentLoggedInOfficer.phone) : '';
+    const p2 = currentSelectedUnit ? normalizePhone(currentSelectedUnit.phone) : '';
+    return p1.endsWith(SDPO_PHONE_NUMBER) || p2.endsWith(SDPO_PHONE_NUMBER);
+  }
+
+  function isSdpoTargetMandal(mandal) {
+    if (!mandal) return false;
+    const clean = String(mandal).toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!clean) return false;
+    return SDPO_SRIKAKULAM_MANDALS.some(k => clean.includes(k) || k.includes(clean));
+  }
+
+  function setupSdpoMqttSubscriptions() {
+    if (!mqttClient || !mqttClient.connected) return;
+    try {
+      mqttClient.subscribe(`srikakulam_police_tracker/${roomCode}/locations`, { qos: 0 });
+      mqttClient.subscribe(`srikakulam_police_tracker/${roomCode}/officer/+`, { qos: 1 });
+      // Broadcast sync_request so currently online field officers reply with their live positions
+      mqttClient.publish(`srikakulam_police_tracker/${roomCode}/sync_request`, JSON.stringify({ type: 'sync_request' }));
+    } catch(e) {}
+  }
+
+  function updateSdpoActiveOfficerCountUI() {
+    if (!isSdpoLoggedIn()) return;
+    const count = Object.keys(sdpoSubordinateMarkers).length;
+    const badge = document.getElementById('sdpo-live-count-badge');
+    if (badge) {
+      badge.style.display = 'inline-block';
+      badge.innerText = `● లైవ్: ${count}`;
+    }
+    const btnCount = document.getElementById('sdpo-btn-count');
+    if (btnCount) btnCount.innerText = count;
+  }
+
+  function handleSdpoSubordinateLocationUpdate(payload) {
+    if (!payload || !isSdpoLoggedIn()) return;
+
+    // Ignore SDPO's own location
+    const myUnitId = currentSelectedUnit ? currentSelectedUnit.id : '';
+    if (payload.phone && normalizePhone(payload.phone).endsWith(SDPO_PHONE_NUMBER)) return;
+    if (myUnitId && payload.unitId === myUnitId) return;
+
+    const unitKey = payload.unitId || payload.id || (payload.phone ? 'phone_' + normalizePhone(payload.phone) : null);
+    if (!unitKey) return;
+
+    // Filter strictly to the 11 mandals requested by user
+    const mandal = payload.mandal || '';
+    if (!isSdpoTargetMandal(mandal)) return;
+
+    // If officer stopped sharing or no coords
+    if (payload.status === 'stopped' || !payload.lat || !payload.lng) {
+      if (sdpoSubordinateMarkers[unitKey]) {
+        try { officerMap.removeLayer(sdpoSubordinateMarkers[unitKey].marker); } catch (e) {}
+        delete sdpoSubordinateMarkers[unitKey];
+        updateSdpoActiveOfficerCountUI();
+      }
+      return;
+    }
+
+    const lat = parseFloat(payload.lat);
+    const lng = parseFloat(payload.lng);
+    if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return;
+
+    const officerName = payload.officer || 'Police Officer';
+    const unitName = payload.unitName || payload.route || 'Duty Force';
+    const cat = payload.category || 'Duty Force';
+    const phone = payload.phone || '';
+    const speed = parseFloat(payload.speed) || 0;
+    const kmh = speed > 0 ? Math.round(speed * 3.6) : 0;
+    const timeStr = new Date(payload.lastUpdated || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Category styling
+    let catColor = '#2563eb'; // blue for Route Mobiles
+    let catIcon = 'fa-car-side';
+    const catLower = cat.toLowerCase();
+    if (catLower.includes('special striking') || catLower.includes('ssf')) {
+      catColor = '#7c3aed';
+      catIcon = 'fa-shield-halved';
+    } else if (catLower.includes('striking') || catLower.includes('sf')) {
+      catColor = '#d97706';
+      catIcon = 'fa-bolt';
+    } else if (catLower.includes('qrt')) {
+      catColor = '#059669';
+      catIcon = 'fa-person-military-rifle';
+    }
+
+    const popupHtml = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 190px; padding: 2px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom: 5px;">
+          <span style="background: ${catColor}; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">${escapeHtml(cat)}</span>
+          <span style="font-size: 11px; color: #475569; font-weight: 700;">${escapeHtml(mandal)}</span>
+        </div>
+        <div style="font-weight: 800; color: #0f172a; font-size: 13.5px; line-height: 1.3;">${escapeHtml(unitName)}</div>
+        <div style="font-size: 12px; color: #334155; margin-top: 3px;">👤 ${escapeHtml(officerName)}</div>
+        ${phone ? `<div style="font-size: 11.5px; color: #16a34a; font-weight: 700; margin-top: 2px;">📞 ${escapeHtml(phone)}</div>` : ''}
+        <div style="display: flex; gap: 8px; font-size: 11px; color: #64748b; margin-top: 5px; border-top: 1px solid #e2e8f0; padding-top: 4px;">
+          <span>⚡ <b>${kmh}</b> km/h</span>
+          <span>🕒 <b>${timeStr}</b></span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px; margin-top: 8px;">
+          ${phone ? `
+            <button type="button" onclick="triggerPhoneCall('${escapeHtml(phone)}')" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; border: none; padding: 7px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <i class="fa-solid fa-phone"></i> కాల్ చేయండి (${escapeHtml(phone)})
+            </button>
+          ` : ''}
+          <button type="button" onclick="triggerNavigation(null, ${lat}, ${lng}, '${escapeHtml(unitName)}')" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; padding: 7px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <i class="fa-solid fa-diamond-turn-right"></i> నావిగేషన్ రూట్
+          </button>
+        </div>
+      </div>
+    `;
+
+    if (sdpoSubordinateMarkers[unitKey]) {
+      const existing = sdpoSubordinateMarkers[unitKey];
+      existing.marker.setLatLng([lat, lng]);
+      existing.marker.setPopupContent(popupHtml);
+      existing.lastUpdated = Date.now();
+      existing.data = payload;
+    } else {
+      const customIcon = L.divIcon({
+        className: 'custom-sdpo-subordinate-marker',
+        html: `
+          <div style="display:flex; flex-direction:column; align-items:center; transform: translate(-50%, -100%); filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));">
+            <div style="background: ${catColor}; color: white; font-weight: 800; font-size: 9.5px; padding: 1.5px 6px; border-radius: 8px; white-space: nowrap; border: 1.5px solid white;">
+              ${escapeHtml(payload.route || unitName)}
+            </div>
+            <div style="width: 26px; height: 26px; border-radius: 50%; background: ${catColor}; border: 2px solid white; display:flex; align-items:center; justify-content:center; color:white; font-size:11.5px; margin-top: 1px;">
+              <i class="fa-solid ${catIcon}"></i>
+            </div>
+          </div>
+        `,
+        iconSize: [0, 0],
+        iconAnchor: [0, 0]
+      });
+
+      const marker = L.marker([lat, lng], { icon: customIcon }).addTo(officerMap);
+      marker.bindPopup(popupHtml);
+
+      sdpoSubordinateMarkers[unitKey] = {
+        marker: marker,
+        lastUpdated: Date.now(),
+        data: payload
+      };
+      updateSdpoActiveOfficerCountUI();
+    }
+  }
+
+  window.fitSdpoOfficersBounds = function() {
+    if (!officerMap) return;
+    const points = [];
+    if (myMarker) {
+      const myLatLng = myMarker.getLatLng();
+      if (myLatLng) points.push(myLatLng);
+    }
+    for (const key in sdpoSubordinateMarkers) {
+      const latlng = sdpoSubordinateMarkers[key].marker.getLatLng();
+      if (latlng) points.push(latlng);
+    }
+    if (points.length === 0) {
+      showToast("11 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.");
+      return;
+    }
+    const bounds = L.latLngBounds(points);
+    officerMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+  };
+
+  // Periodic cleanup of offline markers (>20 mins)
+  setInterval(() => {
+    if (!isSdpoLoggedIn()) return;
+    const now = Date.now();
+    let changed = false;
+    for (const key in sdpoSubordinateMarkers) {
+      if (now - sdpoSubordinateMarkers[key].lastUpdated > 20 * 60 * 1000) {
+        try { officerMap.removeLayer(sdpoSubordinateMarkers[key].marker); } catch (e) {}
+        delete sdpoSubordinateMarkers[key];
+        changed = true;
+      }
+    }
+    if (changed) updateSdpoActiveOfficerCountUI();
+  }, 30000);
+
   // Toggle follow mode & recenter
   const btnToggleFollow = document.getElementById('btn-toggle-follow');
   const txtFollowMode = document.getElementById('txt-follow-mode');
@@ -1233,13 +1449,34 @@
       // Subscribe to peer officer SOS alerts & messages (Nearby Officer Broadcast)
       mqttClient.subscribe(`srikakulam_police_tracker/${roomCode}/officer_messages`, { qos: 1 });
       mqttClient.subscribe(`srikakulam_police_tracker/${roomCode}/sos_alert`, { qos: 1 });
+
+      // If SDPO 6309990804 is logged in, subscribe to live locations of subordinate officers
+      if (isSdpoLoggedIn()) {
+        setupSdpoMqttSubscriptions();
+      }
     });
 
     mqttClient.on('message', (t, msg) => {
       try {
         const str = msg.toString().trim();
-        if (!str) return;
+        if (!str) {
+          if (isSdpoLoggedIn() && t.includes('/officer/')) {
+            const parts = t.split('/');
+            const unitKey = parts[parts.length - 1];
+            if (unitKey && sdpoSubordinateMarkers[unitKey]) {
+              try { officerMap.removeLayer(sdpoSubordinateMarkers[unitKey].marker); } catch (e) {}
+              delete sdpoSubordinateMarkers[unitKey];
+              updateSdpoActiveOfficerCountUI();
+            }
+          }
+          return;
+        }
         const payload = JSON.parse(str);
+
+        // SDPO 6309990804 Subordinate Officers Live Location Update (11 Mandals)
+        if (isSdpoLoggedIn() && (t.includes('/locations') || t.includes('/officer/'))) {
+          handleSdpoSubordinateLocationUpdate(payload);
+        }
 
         // Control Room reply handling
         if (payload.type === 'control_reply' || t.includes('/control_reply') || t.includes('/reply/')) {
@@ -3082,9 +3319,40 @@
       populateUnits(assignedUnit.category, assignedUnit.mandal, assignedUnit.id);
       renderUnitPreview(assignedUnit);
     }
+
+    // Configure SDPO Srikakulam (6309990804) 11 Mandals Multi-Officer Monitoring
+    if (isSdpoLoggedIn()) {
+      const titleEl = document.getElementById('map-header-title');
+      const badgeEl = document.getElementById('sdpo-live-count-badge');
+      const subBadgeEl = document.getElementById('map-status-sub-badge');
+      const fitBtn = document.getElementById('btn-sdpo-fit-all');
+      if (titleEl) titleEl.innerText = 'SDPO లైవ్ మానిటరింగ్ మ్యాప్:';
+      if (badgeEl) badgeEl.style.display = 'inline-block';
+      if (subBadgeEl) subBadgeEl.innerText = '11 మండలాల ఫోర్స్';
+      if (fitBtn) fitBtn.style.display = 'flex';
+      setupSdpoMqttSubscriptions();
+      updateSdpoActiveOfficerCountUI();
+    } else {
+      const titleEl = document.getElementById('map-header-title');
+      const badgeEl = document.getElementById('sdpo-live-count-badge');
+      const subBadgeEl = document.getElementById('map-status-sub-badge');
+      const fitBtn = document.getElementById('btn-sdpo-fit-all');
+      if (titleEl) titleEl.innerText = 'మీ కదలికల లైవ్ మ్యాప్:';
+      if (badgeEl) badgeEl.style.display = 'none';
+      if (subBadgeEl) subBadgeEl.innerText = '● ప్రైవేట్ ట్రాక్';
+      if (fitBtn) fitBtn.style.display = 'none';
+      for (const k in sdpoSubordinateMarkers) {
+        try { officerMap.removeLayer(sdpoSubordinateMarkers[k].marker); } catch (e) {}
+      }
+      sdpoSubordinateMarkers = {};
+    }
   }
 
   window.handleOfficerLogout = function() {
+    for (const k in sdpoSubordinateMarkers) {
+      try { officerMap.removeLayer(sdpoSubordinateMarkers[k].marker); } catch (e) {}
+    }
+    sdpoSubordinateMarkers = {};
     if (isTracking) {
       const confirmStop = confirm("⚠️ లైవ్ లొకేషన్ ట్రాకింగ్ ఆన్‌లో ఉంది!\n\nలాగౌట్ అయితే మీ లొకేషన్ షేరింగ్ ఆగిపోతుంది. ఖచ్చితంగా లాగౌట్ అవ్వాలనుకుంటున్నారా?");
       if (!confirmStop) return;
