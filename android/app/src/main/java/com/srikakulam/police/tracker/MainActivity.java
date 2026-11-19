@@ -12,6 +12,7 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -46,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
         ws.setDatabaseEnabled(true);
         ws.setCacheMode(WebSettings.LOAD_DEFAULT);
         ws.setAllowFileAccess(true);
+        ws.setJavaScriptCanOpenWindowsAutomatically(true);
+        ws.setSupportMultipleWindows(false);
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -58,51 +61,91 @@ public class MainActivity extends AppCompatActivity {
             @SuppressWarnings("deprecation")
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                return handleSpecialUrl(url);
+                return handleUrlNavigation(url);
             }
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 if (request != null && request.getUrl() != null) {
-                    return handleSpecialUrl(request.getUrl().toString());
+                    return handleUrlNavigation(request.getUrl().toString());
                 }
                 return false;
             }
 
-            private boolean handleSpecialUrl(String url) {
+            private boolean handleUrlNavigation(String url) {
                 if (url == null) return false;
+
+                // 1. App internal URLs load inside WebView
+                if (url.startsWith("https://election-maps.github.io/Municipal-GP/") ||
+                    url.startsWith("http://election-maps.github.io/Municipal-GP/") ||
+                    url.contains("officer.html")) {
+                    return false;
+                }
+
+                // 2. Phone Call Scheme - open dialer
                 if (url.startsWith("tel:")) {
                     try {
                         Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse(url));
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
-                        return true;
                     } catch (Exception e) {
                         Toast.makeText(MainActivity.this, "కాల్ డయలర్ ఓపెన్ కాలేదు", Toast.LENGTH_SHORT).show();
-                        return true;
                     }
+                    return true; // Crucial: Never let WebView load tel: as a web page!
                 }
-                if (url.startsWith("geo:") || url.contains("maps.google.com") || url.contains("google.com/maps")) {
+
+                // 3. Navigation & Maps Schemes
+                if (url.startsWith("geo:") ||
+                    url.startsWith("google.navigation:") ||
+                    url.contains("maps.google.com") ||
+                    url.contains("google.com/maps") ||
+                    url.contains("maps.app.goo.gl")) {
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
-                        return true;
                     } catch (Exception e) {
-                        return false;
+                        Toast.makeText(MainActivity.this, "మ్యాప్స్ ఓపెన్ కాలేదు", Toast.LENGTH_SHORT).show();
                     }
+                    return true; // Crucial: Never let WebView load maps inside itself!
                 }
+
+                // 4. WhatsApp, Mail, Intent Schemes
                 if (url.startsWith("mailto:") || url.startsWith("whatsapp:") || url.startsWith("intent:")) {
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
-                        return true;
-                    } catch (Exception e) {
-                        return false;
+                    } catch (Exception ignored) {}
+                    return true;
+                }
+
+                // 5. Any other external links -> open in external browser
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception ignored) {}
+                return true;
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                if (failingUrl != null && (failingUrl.startsWith("tel:") || failingUrl.startsWith("geo:") || failingUrl.contains("google.com/maps"))) {
+                    return; // Ignore external scheme errors, prevent showing "Webpage not available"
+                }
+                super.onReceivedError(view, errorCode, description, failingUrl);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (request != null && request.getUrl() != null) {
+                    String u = request.getUrl().toString();
+                    if (u.startsWith("tel:") || u.startsWith("geo:") || u.contains("google.com/maps")) {
+                        return; // Ignore external scheme errors
                     }
                 }
-                return false;
+                super.onReceivedError(view, request, error);
             }
         });
 

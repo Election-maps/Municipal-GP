@@ -1,10 +1,12 @@
 package com.srikakulam.police.tracker;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.webkit.JavascriptInterface;
+import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 
@@ -51,26 +53,84 @@ public class WebAppInterface {
     @JavascriptInterface
     public void makePhoneCall(String phoneNumber) {
         if (phoneNumber == null || phoneNumber.trim().isEmpty()) return;
-        try {
-            String clean = phoneNumber.replaceAll("[^0-9+]", "");
-            if (clean.isEmpty()) return;
-            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + clean));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
-        } catch (Exception e) {
-            e.printStackTrace();
+        final String clean = phoneNumber.replaceAll("[^0-9+]", "");
+        if (clean.isEmpty()) return;
+
+        Runnable callAction = () -> {
+            try {
+                Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + clean));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            } catch (Exception e) {
+                Toast.makeText(context, "ఫోన్ డయలర్ ఓపెన్ కాలేదు", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        if (context instanceof Activity) {
+            ((Activity) context).runOnUiThread(callAction);
+        } else {
+            callAction.run();
+        }
+    }
+
+    @JavascriptInterface
+    public void openNavigation(double lat, double lng, String label) {
+        Runnable navAction = () -> {
+            // 1. Try Google Maps App Intent
+            try {
+                Uri gmmIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lng);
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                mapIntent.setPackage("com.google.android.apps.maps");
+                mapIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(mapIntent);
+                return;
+            } catch (Exception ignored) {}
+
+            // 2. Try geo: intent
+            try {
+                String safeLabel = (label != null && !label.isEmpty()) ? label : "Police SOS";
+                Uri geoUri = Uri.parse("geo:" + lat + "," + lng + "?q=" + lat + "," + lng + "(" + Uri.encode(safeLabel) + ")");
+                Intent geoIntent = new Intent(Intent.ACTION_VIEW, geoUri);
+                geoIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(geoIntent);
+                return;
+            } catch (Exception ignored) {}
+
+            // 3. Fallback to external browser with Google Maps URL
+            try {
+                String webUrl = "https://www.google.com/maps/dir/?api=1&destination=" + lat + "," + lng;
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(webUrl));
+                browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(browserIntent);
+            } catch (Exception e) {
+                Toast.makeText(context, "మ్యాప్స్ ఓపెన్ కాలేదు", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        if (context instanceof Activity) {
+            ((Activity) context).runOnUiThread(navAction);
+        } else {
+            navAction.run();
         }
     }
 
     @JavascriptInterface
     public void openNavigation(String url) {
         if (url == null || url.trim().isEmpty()) return;
-        try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
-        } catch (Exception e) {
-            e.printStackTrace();
+        Runnable openAction = () -> {
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            } catch (Exception e) {
+                Toast.makeText(context, "లింక్ తెరవలేకపోయాము", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        if (context instanceof Activity) {
+            ((Activity) context).runOnUiThread(openAction);
+        } else {
+            openAction.run();
         }
     }
 }

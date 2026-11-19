@@ -1626,7 +1626,7 @@
     document.getElementById('disp-officer-name').innerText = unit.officer || '--';
     const phoneEl = document.getElementById('disp-officer-phone');
     if (unit.phone) {
-      phoneEl.innerHTML = `<a href="tel:${escapeHtml(unit.phone)}" onclick="triggerPhoneCall('${escapeHtml(unit.phone)}'); return false;" style="color: #fde047; text-decoration: underline; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-phone" style="font-size: 11px;"></i> ${escapeHtml(unit.phone)}</a>`;
+      phoneEl.innerHTML = `<button type="button" onclick="triggerPhoneCall('${escapeHtml(unit.phone)}')" style="background:none; border:none; color: #fde047; text-decoration: underline; cursor: pointer; padding:0; font-size:12px; font-weight:bold; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-phone" style="font-size: 11px;"></i> ${escapeHtml(unit.phone)}</button>`;
     } else {
       phoneEl.innerText = 'N/A';
     }
@@ -1861,7 +1861,7 @@
     if (dutyEl) dutyEl.innerText = `[${payload.category || ''}] ${payload.mandal || ''} - ${payload.unitName || ''}`;
     if (phoneEl) {
       phoneEl.innerHTML = payload.phone
-        ? `<a href="tel:${escapeHtml(payload.phone)}" onclick="triggerPhoneCall('${escapeHtml(payload.phone)}'); return false;" style="color: #4ade80; text-decoration: underline; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-phone" style="font-size: 11px;"></i> ${escapeHtml(payload.phone)}</a>`
+        ? `<button type="button" onclick="triggerPhoneCall('${escapeHtml(payload.phone)}')" style="background:none; border:none; color: #4ade80; text-decoration: underline; font-weight: bold; cursor: pointer; padding:0; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-phone" style="font-size: 11px;"></i> ${escapeHtml(payload.phone)}</button>`
         : 'N/A';
     }
     if (msgEl) msgEl.innerText = payload.message || 'EMERGENCY / SOS: Immediate Police Assistance Required';
@@ -1869,7 +1869,6 @@
 
     if (callBtn) {
       callBtn.setAttribute('data-phone', payload.phone || '');
-      callBtn.href = payload.phone ? `tel:${payload.phone}` : '#';
       callBtn.innerHTML = `<i class="fa-solid fa-phone-volume"></i> వెంటనే కాల్ చేయండి (${payload.phone || 'Call'})`;
     }
 
@@ -1877,7 +1876,8 @@
       if (payload.latitude && payload.longitude) {
         const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${payload.latitude},${payload.longitude}`;
         navBtn.setAttribute('data-nav-url', navUrl);
-        navBtn.href = navUrl;
+        navBtn.setAttribute('data-lat', payload.latitude);
+        navBtn.setAttribute('data-lng', payload.longitude);
         navBtn.style.display = 'flex';
       } else {
         navBtn.style.display = 'none';
@@ -1901,30 +1901,86 @@
       alert("సరైన ఫోన్ నెంబర్ కాదు: " + phone);
       return;
     }
+
     // 1. Try Native Android Interface first if running in APK
-    if (window.AndroidApp && typeof window.AndroidApp.makePhoneCall === 'function') {
+    if (window.AndroidApp) {
       try {
-        window.AndroidApp.makePhoneCall(clean);
-        return;
+        if (typeof window.AndroidApp.makePhoneCall === 'function') {
+          window.AndroidApp.makePhoneCall(clean);
+          return;
+        }
       } catch (e) {
         console.warn("AndroidApp.makePhoneCall error:", e);
       }
     }
-    // 2. Standard Web fallback (intercepted by custom WebViewClient in APK as well)
-    window.location.href = 'tel:' + clean;
+
+    // 2. Standard Web fallback:
+    // Do NOT navigate main window (window.location.href) to prevent "Webpage not available" in WebViews
+    try {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = 'tel:' + clean;
+      document.body.appendChild(iframe);
+      setTimeout(() => {
+        try { document.body.removeChild(iframe); } catch(e) {}
+      }, 3000);
+    } catch(err) {
+      try {
+        const a = document.createElement('a');
+        a.href = 'tel:' + clean;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          try { document.body.removeChild(a); } catch(e) {}
+        }, 1000);
+      } catch(e) {}
+    }
   };
 
-  window.triggerNavigation = function(url) {
-    if (!url) return;
-    if (window.AndroidApp && typeof window.AndroidApp.openNavigation === 'function') {
+  window.triggerNavigation = function(url, lat, lng, label) {
+    // 1. Try Native Android Interface first if running in APK
+    if (window.AndroidApp) {
       try {
-        window.AndroidApp.openNavigation(url);
-        return;
+        const numLat = parseFloat(lat);
+        const numLng = parseFloat(lng);
+        if (!isNaN(numLat) && !isNaN(numLng) && typeof window.AndroidApp.openNavigation === 'function') {
+          try {
+            window.AndroidApp.openNavigation(numLat, numLng, label || 'Police SOS');
+            return;
+          } catch(err) {
+            window.AndroidApp.openNavigation(url || `https://www.google.com/maps/dir/?api=1&destination=${numLat},${numLng}`);
+            return;
+          }
+        } else if (typeof window.AndroidApp.openNavigation === 'function' && url) {
+          window.AndroidApp.openNavigation(url);
+          return;
+        }
       } catch (e) {
         console.warn("AndroidApp.openNavigation error:", e);
       }
     }
-    window.open(url, '_blank');
+
+    // 2. Standard Browser Fallback: open via hidden anchor with target="_blank"
+    if (!url && lat && lng) {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    }
+    if (url) {
+      try {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          try { document.body.removeChild(a); } catch(e) {}
+        }, 1000);
+      } catch(e) {
+        window.open(url, '_blank');
+      }
+    }
   };
 
   window.triggerPeerSosCall = function() {
@@ -1937,12 +1993,11 @@
 
   window.triggerPeerSosNav = function() {
     const navBtn = document.getElementById('peer-sos-nav-btn');
-    const url = (navBtn && navBtn.getAttribute('data-nav-url')) 
-                ? navBtn.getAttribute('data-nav-url') 
-                : null;
-    if (url) {
-      triggerNavigation(url);
-    }
+    const lat = navBtn ? navBtn.getAttribute('data-lat') : (activePeerSosAlert ? activePeerSosAlert.latitude : null);
+    const lng = navBtn ? navBtn.getAttribute('data-lng') : (activePeerSosAlert ? activePeerSosAlert.longitude : null);
+    const url = navBtn ? navBtn.getAttribute('data-nav-url') : (activePeerSosAlert ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}` : null);
+    const label = activePeerSosAlert ? (activePeerSosAlert.unitName || activePeerSosAlert.officer || 'Police SOS') : 'Police SOS';
+    triggerNavigation(url, lat, lng, label);
   };
 
   window.closePeerSosModal = function() {
@@ -1992,12 +2047,15 @@
       <div style="color:#0f172a; font-size:12px; line-height:1.4;">
         <strong style="color:#dc2626; font-size:13px;">🚨 EMERGENCY / SOS ALERT</strong><br/>
         <strong>ఆఫీసర్:</strong> ${escapeHtml(payload.officer)}<br/>
-        <strong>ఫోన్:</strong> <a href="tel:${escapeHtml(payload.phone)}" onclick="triggerPhoneCall('${escapeHtml(payload.phone)}'); return false;" style="color:#2563eb; font-weight:bold; text-decoration:underline;">📞 ${escapeHtml(payload.phone)}</a><br/>
+        <strong>ఫోన్:</strong> <button type="button" onclick="triggerPhoneCall('${escapeHtml(payload.phone)}')" style="background:none; border:none; color:#2563eb; font-weight:bold; text-decoration:underline; cursor:pointer; padding:0; font-size:12px;">📞 ${escapeHtml(payload.phone)}</button><br/>
         <strong>యూనిట్:</strong> ${escapeHtml(payload.mandal)} - ${escapeHtml(payload.unitName)}<br/>
-        <div style="margin-top:6px;">
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" onclick="triggerNavigation('https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}'); return false;" target="_blank" style="display:inline-block; background:#2563eb; color:#fff; padding:5px 9px; border-radius:5px; text-decoration:none; font-size:11px; font-weight:bold;">
+        <div style="margin-top:8px; display:flex; gap:6px;">
+          <button type="button" onclick="triggerPhoneCall('${escapeHtml(payload.phone)}')" style="flex:1; background:#16a34a; color:#fff; border:none; padding:6px 10px; border-radius:5px; font-size:11px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:4px;">
+            <i class="fa-solid fa-phone"></i> కాల్ చేయండి
+          </button>
+          <button type="button" onclick="triggerNavigation('https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}', ${lat}, ${lng}, '${escapeHtml(payload.unitName || payload.officer || 'Police SOS')}')" style="flex:1; background:#2563eb; color:#fff; border:none; padding:6px 10px; border-radius:5px; font-size:11px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:4px;">
             <i class="fa-solid fa-diamond-turn-right"></i> గూగుల్ మ్యాప్స్ రూట్
-          </a>
+          </button>
         </div>
       </div>
     `);
@@ -2747,14 +2805,14 @@
       <!-- Action Buttons -->
       <div style="display: flex; flex-direction: column; gap: 8px;">
         <!-- 1. Direct Phone Call Button -->
-        <a id="peer-sos-call-btn" href="#" onclick="triggerPeerSosCall(); return false;" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; text-decoration: none; padding: 12px; border-radius: 8px; font-size: 13.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);">
+        <button type="button" id="peer-sos-call-btn" onclick="triggerPeerSosCall()" style="width: 100%; border: none; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; padding: 13px; border-radius: 8px; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);">
           <i class="fa-solid fa-phone-volume"></i> వెంటనే కాల్ చేయండి (Call Officer)
-        </a>
+        </button>
 
         <!-- 2. Google Maps Navigation Route -->
-        <a id="peer-sos-nav-btn" href="#" onclick="triggerPeerSosNav(); return false;" target="_blank" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; text-decoration: none; padding: 11px; border-radius: 8px; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <button type="button" id="peer-sos-nav-btn" onclick="triggerPeerSosNav()" style="width: 100%; border: none; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 12px; border-radius: 8px; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);">
           <i class="fa-solid fa-diamond-turn-right"></i> గూగుల్ మ్యాప్స్ లో రూట్ (Navigate to Location)
-        </a>
+        </button>
 
         <!-- 3. Local Mini Map Zoom Button -->
         <button type="button" onclick="focusPeerSosOnMap()" style="background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid #38bdf8; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
