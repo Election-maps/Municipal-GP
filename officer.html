@@ -1902,84 +1902,91 @@
       return;
     }
 
-    // 1. Try Native Android Interface first if running in APK
-    if (window.AndroidApp) {
+    // 1. Check Native Android App bridge first
+    if (window.AndroidApp && typeof window.AndroidApp.makePhoneCall === 'function') {
       try {
-        if (typeof window.AndroidApp.makePhoneCall === 'function') {
-          window.AndroidApp.makePhoneCall(clean);
-          return;
-        }
+        window.AndroidApp.makePhoneCall(clean);
+        return;
       } catch (e) {
         console.warn("AndroidApp.makePhoneCall error:", e);
       }
     }
 
-    // 2. Standard Web fallback:
-    // Do NOT navigate main window (window.location.href) to prevent "Webpage not available" in WebViews
+    // 2. In Native APK wrapper: NEVER trigger iframe/location.href to prevent "Webpage not available"
+    const isNativeApp = (window.AndroidApp && (window.AndroidApp.isNativeApp || window.AndroidApp.isTrackingRunning)) ||
+                        window.location.search.includes('app=native');
+    if (isNativeApp) {
+      prompt("అధికారి మొబైల్ నెంబర్ (దయచేసి నేరుగా డయలర్‌లో కాల్ చేయండి):", clean);
+      return;
+    }
+
+    // 3. In regular Web Browser (Mobile Chrome / Safari):
     try {
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = 'tel:' + clean;
-      document.body.appendChild(iframe);
+      const a = document.createElement('a');
+      a.href = 'tel:' + clean;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
       setTimeout(() => {
-        try { document.body.removeChild(iframe); } catch(e) {}
-      }, 3000);
-    } catch(err) {
-      try {
-        const a = document.createElement('a');
-        a.href = 'tel:' + clean;
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          try { document.body.removeChild(a); } catch(e) {}
-        }, 1000);
-      } catch(e) {}
+        try { document.body.removeChild(a); } catch(e) {}
+      }, 1000);
+    } catch(e) {
+      window.location.href = 'tel:' + clean;
     }
   };
 
   window.triggerNavigation = function(url, lat, lng, label) {
-    // 1. Try Native Android Interface first if running in APK
+    const numLat = parseFloat(lat);
+    const numLng = parseFloat(lng);
+    const safeUrl = url || (!isNaN(numLat) && !isNaN(numLng) ? `https://www.google.com/maps/dir/?api=1&destination=${numLat},${numLng}` : null);
+    const safeLabel = label || 'Police SOS';
+
+    // 1. Try Native Android App bridge methods
     if (window.AndroidApp) {
-      try {
-        const numLat = parseFloat(lat);
-        const numLng = parseFloat(lng);
-        if (!isNaN(numLat) && !isNaN(numLng) && typeof window.AndroidApp.openNavigation === 'function') {
-          try {
-            window.AndroidApp.openNavigation(numLat, numLng, label || 'Police SOS');
-            return;
-          } catch(err) {
-            window.AndroidApp.openNavigation(url || `https://www.google.com/maps/dir/?api=1&destination=${numLat},${numLng}`);
-            return;
-          }
-        } else if (typeof window.AndroidApp.openNavigation === 'function' && url) {
-          window.AndroidApp.openNavigation(url);
+      // A. Try openMapsNavigation(double, double, String)
+      if (!isNaN(numLat) && !isNaN(numLng) && typeof window.AndroidApp.openMapsNavigation === 'function') {
+        try {
+          window.AndroidApp.openMapsNavigation(numLat, numLng, safeLabel);
           return;
+        } catch (e) {
+          console.warn("AndroidApp.openMapsNavigation error:", e);
         }
-      } catch (e) {
-        console.warn("AndroidApp.openNavigation error:", e);
+      }
+      // B. Try openExternalUrl(String)
+      if (safeUrl && typeof window.AndroidApp.openExternalUrl === 'function') {
+        try {
+          window.AndroidApp.openExternalUrl(safeUrl);
+          return;
+        } catch (e) {
+          console.warn("AndroidApp.openExternalUrl error:", e);
+        }
+      }
+      // C. Legacy openNavigation
+      if (typeof window.AndroidApp.openNavigation === 'function') {
+        try {
+          window.AndroidApp.openNavigation(safeUrl || `https://www.google.com/maps/dir/?api=1&destination=${numLat},${numLng}`);
+          return;
+        } catch (e) {
+          console.warn("AndroidApp.openNavigation error:", e);
+        }
       }
     }
 
-    // 2. Standard Browser Fallback: open via hidden anchor with target="_blank"
-    if (!url && lat && lng) {
-      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    }
-    if (url) {
-      try {
-        const a = document.createElement('a');
-        a.href = url;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          try { document.body.removeChild(a); } catch(e) {}
-        }, 1000);
-      } catch(e) {
-        window.open(url, '_blank');
+    // 2. In Native APK wrapper without bridge methods: NEVER navigate main page
+    const isNativeApp = (window.AndroidApp && (window.AndroidApp.isNativeApp || window.AndroidApp.isTrackingRunning)) ||
+                        window.location.search.includes('app=native');
+    if (isNativeApp) {
+      if (!isNaN(numLat) && !isNaN(numLng)) {
+        prompt("అధికారి GPS లొకేషన్ కోఆర్డినేట్స్ (గూగుల్ మ్యాప్స్ లో వెతకండి):", `${numLat}, ${numLng}`);
+      } else if (safeUrl) {
+        prompt("గూగుల్ మ్యాప్స్ లింక్:", safeUrl);
       }
+      return;
+    }
+
+    // 3. In regular Web Browser:
+    if (safeUrl) {
+      window.open(safeUrl, '_blank');
     }
   };
 

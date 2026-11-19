@@ -58,11 +58,12 @@ public class WebAppInterface {
 
         Runnable callAction = () -> {
             try {
-                Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + clean));
+                Intent intent = new Intent(Intent.ACTION_DIAL);
+                intent.setData(Uri.parse("tel:" + clean));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
             } catch (Exception e) {
-                Toast.makeText(context, "ఫోన్ డయలర్ ఓపెన్ కాలేదు", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "ఫోన్ డయలర్ ఓపెన్ కాలేదు: " + clean, Toast.LENGTH_SHORT).show();
             }
         };
 
@@ -74,7 +75,7 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public void openNavigation(double lat, double lng, String label) {
+    public void openMapsNavigation(double lat, double lng, String label) {
         Runnable navAction = () -> {
             // 1. Try Google Maps App Intent
             try {
@@ -88,7 +89,7 @@ public class WebAppInterface {
 
             // 2. Try geo: intent
             try {
-                String safeLabel = (label != null && !label.isEmpty()) ? label : "Police SOS";
+                String safeLabel = (label != null && !label.isEmpty()) ? label : "Police SOS Location";
                 Uri geoUri = Uri.parse("geo:" + lat + "," + lng + "?q=" + lat + "," + lng + "(" + Uri.encode(safeLabel) + ")");
                 Intent geoIntent = new Intent(Intent.ACTION_VIEW, geoUri);
                 geoIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -115,7 +116,7 @@ public class WebAppInterface {
     }
 
     @JavascriptInterface
-    public void openNavigation(String url) {
+    public void openExternalUrl(String url) {
         if (url == null || url.trim().isEmpty()) return;
         Runnable openAction = () -> {
             try {
@@ -132,5 +133,10 @@ public class WebAppInterface {
         } else {
             openAction.run();
         }
+    }
+
+    @JavascriptInterface
+    public void openNavigation(String url) {
+        openExternalUrl(url);
     }
 }

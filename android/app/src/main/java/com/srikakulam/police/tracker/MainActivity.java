@@ -131,18 +131,20 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                if (failingUrl != null && (failingUrl.startsWith("tel:") || failingUrl.startsWith("geo:") || failingUrl.contains("google.com/maps"))) {
-                    return; // Ignore external scheme errors, prevent showing "Webpage not available"
+                if (failingUrl == null || !failingUrl.contains("officer.html")) {
+                    return; // Ignore sub-resource and external scheme errors, prevent showing "Webpage not available"
                 }
                 super.onReceivedError(view, errorCode, description, failingUrl);
             }
 
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                if (request != null && request.getUrl() != null) {
-                    String u = request.getUrl().toString();
-                    if (u.startsWith("tel:") || u.startsWith("geo:") || u.contains("google.com/maps")) {
-                        return; // Ignore external scheme errors
+                if (request != null) {
+                    if (!request.isForMainFrame()) {
+                        return; // Ignore sub-frame / iframe errors
+                    }
+                    if (request.getUrl() != null && !request.getUrl().toString().contains("officer.html")) {
+                        return; // Ignore non-app errors
                     }
                 }
                 super.onReceivedError(view, request, error);
@@ -155,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
         checkAndRequestPermissions();
         requestBatteryOptimizationExemption();
 
-        String appUrl = "https://election-maps.github.io/Municipal-GP/officer.html?app=native";
+        String appUrl = "https://election-maps.github.io/Municipal-GP/officer.html?app=native&v=1.0.1";
         webView.loadUrl(appUrl);
     }
 
