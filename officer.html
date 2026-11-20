@@ -544,6 +544,9 @@
           <i class="fa-solid fa-eye" id="pwd-eye-icon"></i>
         </button>
       </div>
+      <div id="login-designated-hint" style="display: none; font-size: 11.5px; color: #38bdf8; font-weight: bold; margin-top: 5px;">
+        <i class="fa-solid fa-circle-info"></i> ఈ నంబర్ అధికారిక పాస్‌వర్డ్: <b>Police@123</b>
+      </div>
     </div>
 
     <!-- Set / Change Password Option Row -->
@@ -3370,17 +3373,21 @@
     }
   }
 
-  const DESIGNATED_OFFICER_PASSWORDS = {
-    '6309990804': 'Police@123',
-    '6309990811': 'Police@123',
-    '6309990805': 'Police@123'
-  };
+  const DESIGNATED_OFFICER_PHONES = ['6309990804', '6309990811', '6309990805'];
+  const DESIGNATED_OFFICER_PASSWORD = 'Police@123';
+
+  function isDesignatedOfficer(phone) {
+    if (!phone) return false;
+    const clean = normalizePhone(phone);
+    if (!clean) return false;
+    return DESIGNATED_OFFICER_PHONES.some(p => clean === p || clean.endsWith(p));
+  }
 
   function getCustomPassword(phone) {
     if (!phone) return null;
     const clean = normalizePhone(phone);
-    if (DESIGNATED_OFFICER_PASSWORDS[clean]) {
-      return DESIGNATED_OFFICER_PASSWORDS[clean];
+    if (isDesignatedOfficer(clean)) {
+      return DESIGNATED_OFFICER_PASSWORD;
     }
     try {
       return localStorage.getItem('officer_pwd_' + clean);
@@ -3392,7 +3399,7 @@
   function setCustomPassword(phone, pwd) {
     if (!phone || !pwd) return;
     const clean = normalizePhone(phone);
-    if (DESIGNATED_OFFICER_PASSWORDS[clean]) return;
+    if (isDesignatedOfficer(clean)) return; // Strictly cannot change designated password
     try {
       localStorage.setItem('officer_pwd_' + clean, pwd);
     } catch (e) {}
@@ -3459,14 +3466,12 @@
       return;
     }
 
-    if (DESIGNATED_OFFICER_PASSWORDS[phone]) {
-      if (newPwd !== 'Police@123' && newPwd.toLowerCase() !== 'police@123') {
-        if (errBox && errTxt) {
-          errTxt.innerText = 'ఈ నంబర్‌కు అధికారిక పాస్‌వర్డ్ "Police@123" మాత్రమే కేటాయించబడింది.';
-          errBox.style.display = 'block';
-        }
-        return;
+    if (isDesignatedOfficer(phone)) {
+      if (errBox && errTxt) {
+        errTxt.innerText = 'ఈ నంబర్‌కు అధికారిక పాస్‌వర్డ్ "Police@123" మాత్రమే కేటాయించబడింది. మార్చడం వీలుకాదు.';
+        errBox.style.display = 'block';
       }
+      return;
     }
 
     setCustomPassword(phone, newPwd);
@@ -3502,20 +3507,22 @@
       return;
     }
 
-    // Check custom password or allow officer to set their own password
-    const validMasterPwds = ['police', 'police123', 'admin', 'admin123'];
-    const designatedPwd = DESIGNATED_OFFICER_PASSWORDS[enteredPhone];
-
-    if (designatedPwd) {
-      const isMatch = (enteredPwd === designatedPwd) ||
-                      (enteredPwd.toLowerCase() === designatedPwd.toLowerCase()) ||
-                      validMasterPwds.includes(enteredPwd.toLowerCase());
-      if (!isMatch) {
-        showLoginError('తప్పు పాస్‌వర్డ్! ఈ నంబర్ యొక్క పాస్‌వర్డ్ "Police@123" నమోదు చేయండి.');
-        if (pwdInput) pwdInput.focus();
+    // STRICT CHECK for SDPO numbers: 6309990804, 6309990811, 6309990805
+    // ONLY "Police@123" (case-insensitive) is accepted. Absolutely NO other password or bypass allowed.
+    if (isDesignatedOfficer(enteredPhone)) {
+      const isStrictMatch = (enteredPwd === DESIGNATED_OFFICER_PASSWORD) ||
+                            (enteredPwd.toLowerCase() === DESIGNATED_OFFICER_PASSWORD.toLowerCase());
+      if (!isStrictMatch) {
+        showLoginError('తప్పు పాస్‌వర్డ్! ఈ నంబర్ యొక్క అధికారిక పాస్‌వర్డ్ "Police@123" మాత్రమే నమోదు చేయాలి.');
+        if (pwdInput) {
+          pwdInput.value = '';
+          pwdInput.focus();
+        }
         return;
       }
     } else {
+      // Regular officer authentication
+      const validMasterPwds = ['police', 'police123', 'admin', 'admin123'];
       const savedCustomPwd = getCustomPassword(enteredPhone);
       if (savedCustomPwd) {
         const isMatch = (enteredPwd === savedCustomPwd) || validMasterPwds.includes(enteredPwd.toLowerCase());
@@ -3525,7 +3532,7 @@
           return;
         }
       } else {
-        // First-time login: officer's chosen password is automatically saved!
+        // First-time login for other officers: officer's chosen password is automatically saved!
         if (enteredPwd.length < 3) {
           showLoginError('పాస్‌వర్డ్ కనీసం 3 అక్షరాలు లేదా అంకెలు ఉండాలి.');
           if (pwdInput) pwdInput.focus();
@@ -3729,6 +3736,13 @@
   const phoneInp = document.getElementById('login-phone');
   const pwdInp = document.getElementById('login-password');
   if (phoneInp) {
+    phoneInp.addEventListener('input', () => {
+      const p = normalizePhone(phoneInp.value);
+      const hint = document.getElementById('login-designated-hint');
+      if (hint) {
+        hint.style.display = isDesignatedOfficer(p) ? 'block' : 'none';
+      }
+    });
     phoneInp.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
