@@ -3370,10 +3370,20 @@
     }
   }
 
+  const DESIGNATED_OFFICER_PASSWORDS = {
+    '6309990804': 'Police@123',
+    '6309990811': 'Police@123',
+    '6309990805': 'Police@123'
+  };
+
   function getCustomPassword(phone) {
     if (!phone) return null;
+    const clean = normalizePhone(phone);
+    if (DESIGNATED_OFFICER_PASSWORDS[clean]) {
+      return DESIGNATED_OFFICER_PASSWORDS[clean];
+    }
     try {
-      return localStorage.getItem('officer_pwd_' + phone);
+      return localStorage.getItem('officer_pwd_' + clean);
     } catch (e) {
       return null;
     }
@@ -3381,8 +3391,10 @@
 
   function setCustomPassword(phone, pwd) {
     if (!phone || !pwd) return;
+    const clean = normalizePhone(phone);
+    if (DESIGNATED_OFFICER_PASSWORDS[clean]) return;
     try {
-      localStorage.setItem('officer_pwd_' + phone, pwd);
+      localStorage.setItem('officer_pwd_' + clean, pwd);
     } catch (e) {}
   }
 
@@ -3447,6 +3459,16 @@
       return;
     }
 
+    if (DESIGNATED_OFFICER_PASSWORDS[phone]) {
+      if (newPwd !== 'Police@123' && newPwd.toLowerCase() !== 'police@123') {
+        if (errBox && errTxt) {
+          errTxt.innerText = 'ఈ నంబర్‌కు అధికారిక పాస్‌వర్డ్ "Police@123" మాత్రమే కేటాయించబడింది.';
+          errBox.style.display = 'block';
+        }
+        return;
+      }
+    }
+
     setCustomPassword(phone, newPwd);
     closeSetPasswordModal();
 
@@ -3481,25 +3503,37 @@
     }
 
     // Check custom password or allow officer to set their own password
-    const savedCustomPwd = getCustomPassword(enteredPhone);
     const validMasterPwds = ['police', 'police123', 'admin', 'admin123'];
+    const designatedPwd = DESIGNATED_OFFICER_PASSWORDS[enteredPhone];
 
-    if (savedCustomPwd) {
-      const isMatch = (enteredPwd === savedCustomPwd) || validMasterPwds.includes(enteredPwd.toLowerCase());
+    if (designatedPwd) {
+      const isMatch = (enteredPwd === designatedPwd) ||
+                      (enteredPwd.toLowerCase() === designatedPwd.toLowerCase()) ||
+                      validMasterPwds.includes(enteredPwd.toLowerCase());
       if (!isMatch) {
-        showLoginError('తప్పు పాస్‌వర్డ్! సరైన పాస్‌వర్డ్ నమోదు చేయండి లేదా క్రింద "పాస్‌వర్డ్ మార్చాలా?" క్లిక్ చేయండి.');
+        showLoginError('తప్పు పాస్‌వర్డ్! ఈ నంబర్ యొక్క పాస్‌వర్డ్ "Police@123" నమోదు చేయండి.');
         if (pwdInput) pwdInput.focus();
         return;
       }
     } else {
-      // First-time login: officer's chosen password is automatically saved!
-      if (enteredPwd.length < 3) {
-        showLoginError('పాస్‌వర్డ్ కనీసం 3 అక్షరాలు లేదా అంకెలు ఉండాలి.');
-        if (pwdInput) pwdInput.focus();
-        return;
+      const savedCustomPwd = getCustomPassword(enteredPhone);
+      if (savedCustomPwd) {
+        const isMatch = (enteredPwd === savedCustomPwd) || validMasterPwds.includes(enteredPwd.toLowerCase());
+        if (!isMatch) {
+          showLoginError('తప్పు పాస్‌వర్డ్! సరైన పాస్‌వర్డ్ నమోదు చేయండి లేదా క్రింద "పాస్‌వర్డ్ మార్చాలా?" క్లిక్ చేయండి.');
+          if (pwdInput) pwdInput.focus();
+          return;
+        }
+      } else {
+        // First-time login: officer's chosen password is automatically saved!
+        if (enteredPwd.length < 3) {
+          showLoginError('పాస్‌వర్డ్ కనీసం 3 అక్షరాలు లేదా అంకెలు ఉండాలి.');
+          if (pwdInput) pwdInput.focus();
+          return;
+        }
+        setCustomPassword(enteredPhone, enteredPwd);
+        showToast('మీకు నచ్చిన పాస్‌వర్డ్ సెట్ చేయబడింది!');
       }
-      setCustomPassword(enteredPhone, enteredPwd);
-      showToast('మీకు నచ్చిన పాస్‌వర్డ్ సెట్ చేయబడింది!');
     }
 
     // Match in pre-loaded forces dataset (364 units)
