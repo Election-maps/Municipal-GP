@@ -544,9 +544,6 @@
           <i class="fa-solid fa-eye" id="pwd-eye-icon"></i>
         </button>
       </div>
-      <div id="login-designated-hint" style="display: none; font-size: 11.5px; color: #38bdf8; font-weight: bold; margin-top: 5px;">
-        <i class="fa-solid fa-circle-info"></i> ఈ నంబర్ అధికారిక పాస్‌వర్డ్: <b>Police@123</b>
-      </div>
     </div>
 
     <!-- Set / Change Password Option Row -->
@@ -3383,6 +3380,27 @@
     return DESIGNATED_OFFICER_PHONES.some(p => clean === p || clean.endsWith(p));
   }
 
+  function findMatchingUnitsByPhone(phone) {
+    const clean = normalizePhone(phone);
+    if (!clean || clean.length < 10) return [];
+    const last10 = clean.slice(-10);
+    return (allUnitsData || []).filter(u => {
+      const uPhone = normalizePhone(u.phone);
+      if (uPhone && (uPhone === clean || (uPhone.length >= 10 && uPhone.slice(-10) === last10))) {
+        return true;
+      }
+      const suppStr = String(u.supporting || '');
+      if (suppStr && suppStr.includes(last10)) {
+        return true;
+      }
+      const offStr = String(u.officer || '');
+      if (offStr && offStr.includes(last10)) {
+        return true;
+      }
+      return false;
+    });
+  }
+
   function getCustomPassword(phone) {
     if (!phone) return null;
     const clean = normalizePhone(phone);
@@ -3466,9 +3484,19 @@
       return;
     }
 
-    if (isDesignatedOfficer(phone)) {
+    const matched = findMatchingUnitsByPhone(phone);
+    const isSdpo = isDesignatedOfficer(phone);
+    if (!isSdpo && matched.length === 0) {
       if (errBox && errTxt) {
-        errTxt.innerText = 'ఈ నంబర్‌కు అధికారిక పాస్‌వర్డ్ "Police@123" మాత్రమే కేటాయించబడింది. మార్చడం వీలుకాదు.';
+        errTxt.innerText = 'Does not exist mobile number';
+        errBox.style.display = 'block';
+      }
+      return;
+    }
+
+    if (isSdpo) {
+      if (errBox && errTxt) {
+        errTxt.innerText = 'ఈ నంబర్‌కు అధికారిక పాస్‌వర్డ్ కేటాయించబడింది. మార్చడం వీలుకాదు.';
         errBox.style.display = 'block';
       }
       return;
@@ -3501,6 +3529,16 @@
       return;
     }
 
+    // STRICT CHECK: Phone number MUST exist in official dataset (Routes, SF, SSF, QRTs, Reserve Parties) or SDPO numbers
+    const matchedUnits = findMatchingUnitsByPhone(enteredPhone);
+    const isSdpo = isDesignatedOfficer(enteredPhone);
+
+    if (!isSdpo && matchedUnits.length === 0) {
+      showLoginError('Does not exist mobile number');
+      if (phoneInput) phoneInput.focus();
+      return;
+    }
+
     if (!enteredPwd) {
       showLoginError('దయచేసి పాస్‌వర్డ్ నమోదు చేయండి.');
       if (pwdInput) pwdInput.focus();
@@ -3509,11 +3547,11 @@
 
     // STRICT CHECK for SDPO numbers: 6309990804, 6309990811, 6309990805
     // ONLY "Police@123" (case-insensitive) is accepted. Absolutely NO other password or bypass allowed.
-    if (isDesignatedOfficer(enteredPhone)) {
+    if (isSdpo) {
       const isStrictMatch = (enteredPwd === DESIGNATED_OFFICER_PASSWORD) ||
                             (enteredPwd.toLowerCase() === DESIGNATED_OFFICER_PASSWORD.toLowerCase());
       if (!isStrictMatch) {
-        showLoginError('తప్పు పాస్‌వర్డ్! ఈ నంబర్ యొక్క అధికారిక పాస్‌వర్డ్ "Police@123" మాత్రమే నమోదు చేయాలి.');
+        showLoginError('తప్పు పాస్‌వర్డ్! సరైన పాస్‌వర్డ్ నమోదు చేయండి.');
         if (pwdInput) {
           pwdInput.value = '';
           pwdInput.focus();
@@ -3522,7 +3560,7 @@
       }
     } else {
       // Regular officer authentication
-      const validMasterPwds = ['police', 'police123', 'admin', 'admin123'];
+      const validMasterPwds = ['police', 'police123', 'admin', 'admin123', 'police@123'];
       const savedCustomPwd = getCustomPassword(enteredPhone);
       if (savedCustomPwd) {
         const isMatch = (enteredPwd === savedCustomPwd) || validMasterPwds.includes(enteredPwd.toLowerCase());
@@ -3543,21 +3581,19 @@
       }
     }
 
-    // Match in pre-loaded forces dataset (364 units)
-    const matchedUnits = (allUnitsData || []).filter(u => {
-      const uPhone = normalizePhone(u.phone);
-      const uSupp = normalizePhone(u.supporting);
-      return (uPhone && uPhone.includes(enteredPhone)) ||
-             (uSupp && uSupp.includes(enteredPhone)) ||
-             (enteredPhone.length >= 10 && uPhone.slice(-10) === enteredPhone.slice(-10));
-    });
-
-    let assignedUnit = null;
+    let assignedUnit = matchedUnits.length > 0 ? matchedUnits[0] : null;
     let officerDisplayName = '';
 
-    if (matchedUnits.length > 0) {
-      assignedUnit = matchedUnits[0];
-      officerDisplayName = assignedUnit.officer;
+    if (assignedUnit) {
+      const clean10 = enteredPhone.slice(-10);
+      const suppStr = String(assignedUnit.supporting || '');
+      if (suppStr && suppStr.includes(clean10)) {
+        const parts = suppStr.split(';');
+        const foundPart = parts.find(p => p.includes(clean10));
+        officerDisplayName = foundPart ? foundPart.trim() : assignedUnit.officer;
+      } else {
+        officerDisplayName = assignedUnit.officer;
+      }
     } else {
       officerDisplayName = `పోలీస్ ఆఫీసర్ (${enteredPhone})`;
     }
@@ -3716,12 +3752,12 @@
         const session = JSON.parse(raw);
         if (session && session.phone) {
           currentLoggedInOfficer = session;
-          const matched = (allUnitsData || []).filter(u => {
-            const uPhone = normalizePhone(u.phone);
-            const uSupp = normalizePhone(u.supporting);
-            return (uPhone && uPhone.includes(session.phone)) ||
-                   (uSupp && uSupp.includes(session.phone));
-          });
+          const matched = findMatchingUnitsByPhone(session.phone);
+          const isSdpo = isDesignatedOfficer(session.phone);
+          if (!isSdpo && matched.length === 0) {
+            applyLoggedOutState();
+            return false;
+          }
           const targetUnit = matched.find(u => u.id === session.unitId) || matched[0] || null;
           applyLoggedInState(targetUnit, matched);
           return true;
@@ -3736,13 +3772,6 @@
   const phoneInp = document.getElementById('login-phone');
   const pwdInp = document.getElementById('login-password');
   if (phoneInp) {
-    phoneInp.addEventListener('input', () => {
-      const p = normalizePhone(phoneInp.value);
-      const hint = document.getElementById('login-designated-hint');
-      if (hint) {
-        hint.style.display = isDesignatedOfficer(p) ? 'block' : 'none';
-      }
-    });
     phoneInp.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();

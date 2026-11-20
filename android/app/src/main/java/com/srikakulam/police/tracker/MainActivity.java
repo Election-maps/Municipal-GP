@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
         checkAndRequestPermissions();
         requestBatteryOptimizationExemption();
 
-        String appUrl = "https://election-maps.github.io/Municipal-GP/officer.html?app=native&v=1.1.1";
+        String appUrl = "https://election-maps.github.io/Municipal-GP/officer.html?app=native&v=1.1.2";
         webView.loadUrl(appUrl);
     }
 
