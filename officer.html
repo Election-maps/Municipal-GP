@@ -1043,6 +1043,7 @@
   // SDPO Multi-Officer Live Monitoring:
   // 1. SDPO Srikakulam (6309990804) -> 11 Mandals
   // 2. SDPO Tekkali (6309990811)    -> 12 Mandals
+  // 3. SDPO Kasibugga (6309990805)  -> 7 Mandals
   // -------------------------------------------------------------
   const SDPO_MONITORS = {
     '6309990804': {
@@ -1099,6 +1100,29 @@
         'polaki',
         'saravakota',
         'sarvakota'
+      ]
+    },
+    '6309990805': {
+      phone: '6309990805',
+      name: 'SDPO కాశీబుగ్గ',
+      title: 'SDPO కాశీబుగ్గ లైవ్ మ్యాప్:',
+      subBadge: '7 మండలాల ఫోర్స్',
+      toastMsg: '7 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'kasibugga',
+        'palasa',
+        'palasakasibugga',
+        'ichapuram',
+        'ichchapuram',
+        'ichapuramrural',
+        'ichapuramurban',
+        'kanchili',
+        'kaviti',
+        'mandasa',
+        'sompeta',
+        'vajrapukothuru',
+        'vajrapukothur',
+        'vajrapukotturu'
       ]
     }
   };
@@ -2393,9 +2417,11 @@
       ['ranasthalam', 'ranastalam'],
       ['srikakulam', 'srikakulamrural', 'srikakulamurban'],
       ['meliaputty', 'meliaputti'],
-      ['ichapuram', 'ichchapuram'],
+      ['ichapuram', 'ichchapuram', 'ichapuramrural', 'ichapuramurban'],
       ['kotabommali', 'kotabommali'],
-      ['santhabommali', 'santabommali']
+      ['santhabommali', 'santabommali'],
+      ['palasa', 'kasibugga', 'palasakasibugga'],
+      ['vajrapukothuru', 'vajrapukotturu', 'vajrapukothur']
     ];
     for (const group of aliases) {
       const hasA = group.some(x => normA.includes(x));
