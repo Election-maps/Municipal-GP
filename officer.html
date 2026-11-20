@@ -1040,43 +1040,107 @@
   initMandalBoundaries();
 
   // -------------------------------------------------------------
-  // SDPO Srikakulam (6309990804) 11 Mandals Multi-Officer Monitoring
+  // SDPO Multi-Officer Live Monitoring:
+  // 1. SDPO Srikakulam (6309990804) -> 11 Mandals
+  // 2. SDPO Tekkali (6309990811)    -> 12 Mandals
   // -------------------------------------------------------------
-  const SDPO_PHONE_NUMBER = '6309990804';
-  const SDPO_SRIKAKULAM_MANDALS = [
-    'srikakulam',
-    'amadalavalasa',
-    'amadalavlasa',
-    'burja',
-    'etcherla',
-    'gsigadam',
-    'ganguvarisigadam',
-    'sigadam',
-    'gara',
-    'ranastalam',
-    'ranasthalam',
-    'jrpuram',
-    'laveru',
-    'ponduru',
-    'sarubujjili',
-    'lakshminarsupeta',
-    'lakshminarasupeta',
-    'lnpeta'
-  ];
+  const SDPO_MONITORS = {
+    '6309990804': {
+      phone: '6309990804',
+      name: 'SDPO శ్రీకాకుళం',
+      title: 'SDPO శ్రీకాకుళం లైవ్ మ్యాప్:',
+      subBadge: '11 మండలాల ఫోర్స్',
+      toastMsg: '11 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'srikakulam',
+        'amadalavalasa',
+        'amadalavlasa',
+        'burja',
+        'etcherla',
+        'gsigadam',
+        'ganguvarisigadam',
+        'sigadam',
+        'gara',
+        'ranastalam',
+        'ranasthalam',
+        'jrpuram',
+        'laveru',
+        'ponduru',
+        'sarubujjili',
+        'lakshminarsupeta',
+        'lakshminarasupeta',
+        'lnpeta'
+      ]
+    },
+    '6309990811': {
+      phone: '6309990811',
+      name: 'SDPO టెక్కలి',
+      title: 'SDPO టెక్కలి లైవ్ మ్యాప్:',
+      subBadge: '12 మండలాల ఫోర్స్',
+      toastMsg: '12 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'tekkali',
+        'kotabommali',
+        'santhabommali',
+        'santabommali',
+        'hiramandalam',
+        'heeramandalam',
+        'jalumuru',
+        'jalamuru',
+        'kothuru',
+        'koturu',
+        'meliaputti',
+        'meliaputty',
+        'nandigam',
+        'narasannapeta',
+        'narsannapeta',
+        'pathapatnam',
+        'patapatnam',
+        'polaki',
+        'saravakota',
+        'sarvakota'
+      ]
+    }
+  };
 
   let sdpoSubordinateMarkers = {}; // key: unitKey -> { marker, lastUpdated, data }
 
-  function isSdpoLoggedIn() {
+  function getActiveSdpoConfig() {
     const p1 = currentLoggedInOfficer ? normalizePhone(currentLoggedInOfficer.phone) : '';
     const p2 = currentSelectedUnit ? normalizePhone(currentSelectedUnit.phone) : '';
-    return p1.endsWith(SDPO_PHONE_NUMBER) || p2.endsWith(SDPO_PHONE_NUMBER);
+    for (const phone in SDPO_MONITORS) {
+      if ((p1 && (p1 === phone || p1.endsWith(phone))) || (p2 && (p2 === phone || p2.endsWith(phone)))) {
+        return SDPO_MONITORS[phone];
+      }
+    }
+    return null;
   }
 
-  function isSdpoTargetMandal(mandal) {
+  function isSdpoLoggedIn() {
+    return getActiveSdpoConfig() !== null;
+  }
+
+  function isSdpoTargetMandal(mandal, targetSdpoPhone = null) {
     if (!mandal) return false;
     const clean = String(mandal).toLowerCase().replace(/[^a-z0-9]/g, '');
     if (!clean) return false;
-    return SDPO_SRIKAKULAM_MANDALS.some(k => clean.includes(k) || k.includes(clean));
+
+    if (targetSdpoPhone) {
+      const cfg = SDPO_MONITORS[targetSdpoPhone];
+      return cfg ? cfg.mandals.some(k => clean.includes(k) || k.includes(clean)) : false;
+    }
+
+    const activeCfg = getActiveSdpoConfig();
+    if (activeCfg) {
+      return activeCfg.mandals.some(k => clean.includes(k) || k.includes(clean));
+    }
+
+    for (const phone in SDPO_MONITORS) {
+      if (SDPO_MONITORS[phone].mandals.some(k => clean.includes(k) || k.includes(clean))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function setupSdpoMqttSubscriptions() {
@@ -1102,19 +1166,25 @@
   }
 
   function handleSdpoSubordinateLocationUpdate(payload) {
-    if (!payload || !isSdpoLoggedIn()) return;
+    const activeSdpo = getActiveSdpoConfig();
+    if (!payload || !activeSdpo) return;
 
     // Ignore SDPO's own location
     const myUnitId = currentSelectedUnit ? currentSelectedUnit.id : '';
-    if (payload.phone && normalizePhone(payload.phone).endsWith(SDPO_PHONE_NUMBER)) return;
+    const myPhone = normalizePhone(
+      (currentLoggedInOfficer && currentLoggedInOfficer.phone) ||
+      (currentSelectedUnit && currentSelectedUnit.phone) ||
+      activeSdpo.phone
+    );
+    if (payload.phone && normalizePhone(payload.phone) === myPhone) return;
     if (myUnitId && payload.unitId === myUnitId) return;
 
     const unitKey = payload.unitId || payload.id || (payload.phone ? 'phone_' + normalizePhone(payload.phone) : null);
     if (!unitKey) return;
 
-    // Filter strictly to the 11 mandals requested by user
+    // Filter strictly to the mandals of this logged-in SDPO
     const mandal = payload.mandal || '';
-    if (!isSdpoTargetMandal(mandal)) return;
+    if (!isSdpoTargetMandal(mandal, activeSdpo.phone)) return;
 
     // If officer stopped sharing or no coords
     if (payload.status === 'stopped' || !payload.lat || !payload.lng) {
@@ -1226,7 +1296,8 @@
       if (latlng) points.push(latlng);
     }
     if (points.length === 0) {
-      showToast("11 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.");
+      const activeSdpo = getActiveSdpoConfig();
+      showToast(activeSdpo ? activeSdpo.toastMsg : "ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.");
       return;
     }
     const bounds = L.latLngBounds(points);
@@ -2240,8 +2311,10 @@
         }
       });
 
-      if (isSdpoTargetMandal(alertMandal) && !designatedPhones.includes('6309990804')) {
-        designatedPhones.push('6309990804');
+      for (const p in SDPO_MONITORS) {
+        if (isSdpoTargetMandal(alertMandal, p) && !designatedPhones.includes(p)) {
+          designatedPhones.push(p);
+        }
       }
     }
 
@@ -3030,8 +3103,10 @@
           }
         });
 
-        if (isSdpoTargetMandal(msgMandal) && !msgDesignatedPhones.includes('6309990804')) {
-          msgDesignatedPhones.push('6309990804');
+        for (const p in SDPO_MONITORS) {
+          if (isSdpoTargetMandal(msgMandal, p) && !msgDesignatedPhones.includes(p)) {
+            msgDesignatedPhones.push(p);
+          }
         }
       }
 
@@ -3488,15 +3563,18 @@
       renderUnitPreview(assignedUnit);
     }
 
-    // Configure SDPO Srikakulam (6309990804) 11 Mandals Multi-Officer Monitoring
-    if (isSdpoLoggedIn()) {
+    // Configure SDPO Multi-Officer Live Monitoring:
+    // 1. SDPO Srikakulam (6309990804) -> 11 Mandals
+    // 2. SDPO Tekkali (6309990811)    -> 12 Mandals
+    const activeSdpo = getActiveSdpoConfig();
+    if (activeSdpo) {
       const titleEl = document.getElementById('map-header-title');
       const badgeEl = document.getElementById('sdpo-live-count-badge');
       const subBadgeEl = document.getElementById('map-status-sub-badge');
       const fitBtn = document.getElementById('btn-sdpo-fit-all');
-      if (titleEl) titleEl.innerText = 'SDPO లైవ్ మానిటరింగ్ మ్యాప్:';
+      if (titleEl) titleEl.innerText = activeSdpo.title;
       if (badgeEl) badgeEl.style.display = 'inline-block';
-      if (subBadgeEl) subBadgeEl.innerText = '11 మండలాల ఫోర్స్';
+      if (subBadgeEl) subBadgeEl.innerText = activeSdpo.subBadge;
       if (fitBtn) fitBtn.style.display = 'flex';
       setupSdpoMqttSubscriptions();
       updateSdpoActiveOfficerCountUI();
