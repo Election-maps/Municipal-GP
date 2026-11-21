@@ -1,0 +1,564 @@
+﻿<!DOCTYPE html>
+<html lang="te">
+<head>
+  <meta charset="UTF-8">
+  <title>NETRA - Election Tracking Brief Note</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 12mm 14mm 12mm 14mm;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, 'Noto Sans Telugu', 'Gautami', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #0f172a;
+      background: #ffffff;
+      font-size: 11pt;
+      line-height: 1.5;
+    }
+    .page {
+      width: 100%;
+      height: 268mm;
+      max-height: 268mm;
+      overflow: hidden;
+      position: relative;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      page-break-after: always;
+      break-after: page;
+      padding-bottom: 10mm;
+    }
+    .page:last-child {
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+    /* Header & Footer */
+    .doc-header {
+      border-bottom: 2px solid #b91c1c;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .doc-header img.logo {
+      height: 52px;
+      width: auto;
+      object-fit: contain;
+    }
+    .doc-header .hdr-text {
+      text-align: center;
+      flex: 1;
+    }
+    .doc-header .hdr-dept {
+      font-size: 15pt;
+      font-weight: 900;
+      color: #1e3a8a;
+      letter-spacing: 0.5px;
+      margin: 0;
+      text-transform: uppercase;
+    }
+    .doc-header .hdr-sub {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #b91c1c;
+      margin-top: 1px;
+    }
+    .doc-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-top: 1px solid #cbd5e1;
+      padding-top: 4px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8pt;
+      color: #64748b;
+      font-weight: 600;
+    }
+    
+    /* Hero Title Box */
+    .hero-banner {
+      background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);
+      color: white;
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-align: center;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+      margin-bottom: 14px;
+    }
+    .hero-banner img {
+      max-height: 65px;
+      width: auto;
+      margin: 0 auto 6px auto;
+      display: block;
+    }
+    .hero-banner h1 {
+      font-size: 16pt;
+      font-weight: 900;
+      margin: 0 0 4px 0;
+      color: #fef08a;
+      letter-spacing: 0.5px;
+    }
+    .hero-banner p {
+      margin: 0;
+      font-size: 10pt;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    /* Headings */
+    h2.sec-title {
+      font-size: 12pt;
+      font-weight: 800;
+      color: #1e3a8a;
+      border-left: 4px solid #b91c1c;
+      padding-left: 8px;
+      margin: 12px 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #f8fafc;
+      padding-top: 4px;
+      padding-bottom: 4px;
+      border-radius: 0 4px 4px 0;
+    }
+    h3.sub-title {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 8px 0 4px 0;
+    }
+
+    /* Text & Lists */
+    p {
+      margin: 0 0 6px 0;
+      text-align: justify;
+      font-size: 10pt;
+    }
+    ul, ol {
+      margin: 0 0 8px 0;
+      padding-left: 20px;
+      font-size: 10pt;
+    }
+    li {
+      margin-bottom: 3.5px;
+    }
+
+    /* Cards & Boxes */
+    .info-card {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      font-size: 9.5pt;
+    }
+    .info-card-blue {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-left: 4px solid #2563eb;
+    }
+    .info-card-green {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-left: 4px solid #16a34a;
+    }
+    .info-card-amber {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-left: 4px solid #d97706;
+    }
+
+    /* Screenshot Display */
+    .img-frame {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin: 8px 0 4px 0;
+      text-align: center;
+      background: #f8fafc;
+    }
+    .img-frame img {
+      width: 100%;
+      height: auto;
+      display: block;
+      max-height: 190mm;
+      object-fit: contain;
+    }
+    .img-caption {
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: #475569;
+      padding: 4px 8px;
+      background: #e2e8f0;
+      border-top: 1px solid #cbd5e1;
+    }
+
+    /* Two Column Layout */
+    .row-2col {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .col-half {
+      flex: 1;
+    }
+
+    /* Tables */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0 10px 0;
+      font-size: 9pt;
+    }
+    table.data-table th, table.data-table td {
+      border: 1px solid #cbd5e1;
+      padding: 5px 8px;
+      text-align: left;
+    }
+    table.data-table th {
+      background: #1e3a8a;
+      color: white;
+      font-weight: 800;
+    }
+    table.data-table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    .badge {
+      display: inline-block;
+      padding: 1.5px 6px;
+      font-size: 7.5pt;
+      font-weight: 800;
+      border-radius: 4px;
+      color: white;
+      text-transform: uppercase;
+    }
+    .badge-blue { background: #2563eb; }
+    .badge-purple { background: #7c3aed; }
+    .badge-amber { background: #d97706; }
+    .badge-green { background: #16a34a; }
+    .badge-red { background: #dc2626; }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== PAGE 1: INTRODUCTION & OVERVIEW ==================== -->
+  <div class="page">
+    <div class="doc-header">
+      <img src="doc_assets/netra_logo.png" alt="NETRA Emblem" class="logo" style="border-radius: 50%;" />
+      <div class="hdr-text">
+        <div class="hdr-dept">శ్రీకాకుళం జిల్లా పోలీస్ శాఖ</div>
+        <div class="hdr-sub">గ్రామ పంచాయతీ ఎన్నికలు - 2026 • కమాండ్ &amp; కంట్రోల్ నెట్‌వర్క్</div>
+      </div>
+      <img src="doc_assets/netra_logo.png" alt="AP Police" class="logo" style="border-radius: 50%;" />
+    </div>
+
+    <div class="hero-banner">
+      <img src="doc_assets/netra_title_banner.png" alt="NETRA Official Banner" />
+      <h1>NETRA - ఎన్నికల భద్రత &amp; లైవ్ ట్రాకింగ్ సిస్టమ్</h1>
+      <p><b>Network for Election Tracking Reporting &amp; Action</b> — సంక్షిప్త సమాచార పత్రం (Short Brief Note)</p>
+    </div>
+
+    <h2 class="sec-title">1. వ్యవస్థ పరిచయం &amp; ఉద్దేశం (Introduction &amp; Core Vision)</h2>
+    <p>
+      గ్రామ పంచాయతీ ఎన్నికలను అత్యంత పారదర్శకంగా, శాంతియుతంగా మరియు ప్రశాంత వాతావరణంలో నిర్వహించడానికి శ్రీకాకుళం జిల్లా పోలీస్ ఆధ్వర్యంలో రూపొందించబడిన వినూత్న సాంకేతిక వేదిక <b>NETRA (Network for Election Tracking Reporting &amp; Action)</b>. జిల్లాలోని 30 మండలాల్లో విధులు నిర్వర్తించే అన్ని రకాల పోలీస్ బలగాలను (రూట్ మొబైల్స్, స్ట్రైకింగ్ ఫోర్స్, స్పెషల్ స్ట్రైకింగ్ ఫోర్స్, QRTలు) ఒకే గొడుగు కిందకు తెచ్చి, వారి కదలికలను జీపీఎస్ (GPS) ద్వారా రియల్-టైమ్‌లో పర్యవేక్షించడం దీని ముఖ్య ఉద్దేశం.
+    </p>
+
+    <div class="row-2col">
+      <div class="col-half">
+        <div class="info-card info-card-blue">
+          <h3 class="sub-title" style="color: #1e3a8a; margin-top:0;">🌐 కంట్రోల్ రూమ్ వెబ్ పోర్టల్</h3>
+          <p style="margin-bottom:4px;"><b>లింక్:</b> <span style="color:#2563eb; font-weight:bold;">https://election-maps.github.io/Municipal-GP/</span></p>
+          <p style="margin-bottom:0;">జిల్లా ఎస్పీ, జిల్లా ఎన్నికల సెల్, కంట్రోల్ రూమ్ సిబ్బంది మరియు సూపర్‌వైజరీ అధికారులు జిల్లాలోని మొత్తం 30 మండలాల పోలింగ్ కేంద్రాలు మరియు లైవ్ ఫోర్స్ కదలికలను పెద్ద స్క్రీన్‌పై పర్యవేక్షించే అధికారిక డాష్‌బోర్డ్.</p>
+        </div>
+      </div>
+      <div class="col-half">
+        <div class="info-card info-card-green">
+          <h3 class="sub-title" style="color: #15803d; margin-top:0;">📱 NETRA ఆఫీసర్ మొబైల్ APK</h3>
+          <p style="margin-bottom:4px;"><b>ఉద్దేశం:</b> క్షేత్రస్థాయి అధికారుల లైవ్ లొకేషన్ ప్రసారం</p>
+          <p style="margin-bottom:0;">క్షేత్రస్థాయిలో పెట్రోలింగ్ మరియు స్ట్రైకింగ్ డ్యూటీలు చేసే ఎస్సైలు, సీఐలు, డ్రైవర్లు తమ మొబైల్ ఫోన్ ద్వారా ఒకే ఒక్క క్లిక్‌తో లైవ్ జీపీఎస్ లొకేషన్‌ను కంట్రోల్ రూమ్‌కు మరియు తమ సర్కిల్ / డివిజన్ అధికారులకు చేరవేసే తేలికపాటి యాప్.</p>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="sec-title">2. ఈ వ్యవస్థ ఎన్నికలకు ఏ విధంగా ఉపయోగపడుతుంది? (Strategic Benefits for Elections)</h2>
+    <ul>
+      <li><b>తక్షణ స్పందన (Zero Delay Quick Response - 3 to 5 Minutes):</b> ఏదైనా సమస్యాత్మక పోలింగ్ కేంద్రం వద్ద ఘర్షణ లేదా అవాంఛనీయ సంఘటన జరిగినప్పుడు, ఆ పోలింగ్ బూత్‌కు ఏ పోలీస్ పార్టీ (SF/SSF/RM) అతి దగ్గరలో ఉందో కంట్రోల్ రూమ్ స్క్రీన్‌పై క్షణాల్లో తెలుస్తుంది. తద్వారా 3 నుండి 5 నిమిషాల్లో అదనపు బలగాలు ఘటనా స్థలానికి చేరుకుంటాయి.</li>
+      <li><b>పారదర్శకత మరియు పెట్రోలింగ్ జవాబుదారీతనం (Accountability &amp; Coverage):</b> ఎన్నికల రోజున ప్రతి రూట్ మొబైల్ నిర్దేశిత గ్రామాలు మరియు పోలింగ్ కేంద్రాలలో నిరంతరం తిరుగుతోందా లేదా అనేది లైవ్ స్పీడ్ (km/h) మరియు కిలోమీటర్లతో సహా రికార్డవుతుంది.</li>
+      <li><b>సమస్యాత్మక కేంద్రాలపై ప్రత్యేక దృష్టి (Focused Critical Polling Stations):</b> హైపర్‌సెన్సిటివ్, సెన్సిటివ్ పోలింగ్ కేంద్రాలు మ్యాప్‌లో ప్రత్యేక రంగులతో విభజించబడి ఉంటాయి. ఆ కేంద్రాల సమీపంలో స్ట్రైకింగ్ బలగాల ఉనికిని ఎప్పటికప్పుడు నిర్ధారించుకోవచ్చు.</li>
+      <li><b>అత్యవసర SOS అలర్ట్ సౌలభ్యం:</b> పోలింగ్ బూత్ వద్ద తీవ్ర ఉద్రిక్తత ఏర్పడితే, ఆఫీసర్ యాప్‌లోని "SOS బటన్" నొక్కగానే కంట్రోల్ రూమ్ మరియు సమీపంలోని అన్ని మొబైల్స్‌కు శబ్దంతో కూడిన అత్యవసర అలర్ట్ వెళ్తుంది.</li>
+    </ul>
+
+    <div class="info-card info-card-amber">
+      <b>🎯 నినాదం:</b> <i>"Track Every Move, Respond to Every Issue, Ensure Successful &amp; Peaceful Elections."</i>
+    </div>
+
+    <div class="doc-footer">
+      <span>శ్రీకాకుళం జిల్లా పోలీస్ - NETRA ఎలక్షన్ ట్రాకింగ్ సిస్టమ్</span>
+      <span>పేజీ 1 / 4</span>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 2: WEB PORTAL ==================== -->
+  <div class="page">
+    <div class="doc-header">
+      <img src="doc_assets/netra_logo.png" alt="NETRA Emblem" class="logo" style="border-radius: 50%;" />
+      <div class="hdr-text">
+        <div class="hdr-dept">కంట్రోల్ రూమ్ వెబ్ పోర్టల్ గైడ్</div>
+        <div class="hdr-sub">https://election-maps.github.io/Municipal-GP/</div>
+      </div>
+      <img src="doc_assets/netra_logo.png" alt="AP Police" class="logo" style="border-radius: 50%;" />
+    </div>
+
+    <h2 class="sec-title">3. వెబ్ పోర్టల్ ఉపయోగించే విధానం &amp; ముఖ్య ఫీచర్లు (Web Portal Functions)</h2>
+    <p>
+      కంట్రోల్ రూమ్ వెబ్ పోర్టల్ కంప్యూటర్ లేదా ల్యాప్‌టాప్ బ్రౌజర్‌లో ఎటువంటి ఇన్‌స్టాలేషన్ అవసరం లేకుండా నేరుగా పనిచేస్తుంది. పోర్టల్‌లో ప్రధానంగా క్రింది విభాగాలు ఉన్నాయి:
+    </p>
+
+    <div class="row-2col">
+      <div class="col-half">
+        <ol style="padding-left: 18px; margin-bottom: 0;">
+          <li><b>జిల్లా సమగ్ర మ్యాప్ (District Polling Map):</b> 30 మండలాల్లోని అన్ని పంచాయతీలు, పోలింగ్ కేంద్రాలు, సమస్యాత్మక లొకేషన్లు స్పష్టమైన పిన్లతో కనిపిస్తాయి.</li>
+          <li><b>లైవ్ రూట్ మ్యాప్ (Live Route Map Tab):</b> డ్యూటీలో ఉన్న ఫోర్సెస్ ప్రత్యక్ష కదలికలను నిరంతరం రిఫ్రెష్ చేస్తూ చూపిస్తుంది.</li>
+          <li><b>వన్-క్లిక్ ఫోన్ కాల్ &amp; నావిగేషన్:</b> మ్యాప్‌లోని ఏ అధికారి మార్కర్‌పై క్లిక్ చేసినా వారి మొబైల్ నంబర్, వాహన వేగం, డ్యూటీ వివరాలు కనిపించి వెంటనే కాల్ చేయవచ్చు లేదా గూగుల్ మ్యాప్స్ రూట్ పొందవచ్చు.</li>
+        </ol>
+      </div>
+      <div class="col-half">
+        <ol start="4" style="padding-left: 18px; margin-bottom: 0;">
+          <li><b>ఎమర్జెన్సీ SOS డాష్‌బోర్డ్:</b> ఫీల్డ్ నుండి వచ్చే అత్యవసర సందేశాలను ఎరుపు రంగులో హైలైట్ చేసి పోలీస్ బాధ్యులకు అలర్ట్ చేస్తుంది.</li>
+          <li><b>ఎక్సెల్ రిపోర్ట్ జనరేషన్:</b> ప్రస్తుతం లైవ్‌లో ఉన్న అధికారులు మరియు ఆఫ్‌లైన్‌లో ఉన్న అధికారుల జాబితాను ఒకే క్లిక్‌తో ఎక్సెల్ ఫైల్ రూపంలో ఎగుమతి (Export) చేయవచ్చు.</li>
+          <li><b>రూట్ వారీ ఫిల్టర్లు:</b> నిర్దిష్ట పోలీస్ స్టేషన్ లేదా నిర్దిష్ట రూట్ నంబర్‌ను మాత్రమే ఫిల్టర్ చేసి పరిశీలించవచ్చు.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="img-frame">
+      <img src="doc_assets/doc_screen_portal.png" alt="Control Room Portal Screenshot" style="max-height: 145mm;" />
+      <div class="img-caption">చిత్రం 1: కంట్రోల్ రూమ్ వెబ్ పోర్టల్ ఇంటర్‌ఫేస్ — ఎన్నికల మ్యాప్, రియల్-టైమ్ మానిటరింగ్ మరియు రూట్ అనలిటిక్స్</div>
+    </div>
+
+    <div class="info-card info-card-blue" style="margin-top: 8px;">
+      <b>💡 కంట్రోల్ రూమ్ ఉపయోగం:</b> ఎన్నికల రోజున జిల్లా కంట్రోల్ రూమ్‌లో ఉన్న అధికారులు పెద్ద స్క్రీన్లపై ఈ పోర్టల్‌ను డిస్‌ప్లే ఉంచి, జిల్లా వ్యాప్తంగా శాంతిభద్రతలను పర్యవేక్షిస్తారు.
+    </div>
+
+    <div class="doc-footer">
+      <span>శ్రీకాకుళం జిల్లా పోలీస్ - NETRA ఎలక్షన్ ట్రాకింగ్ సిస్టమ్</span>
+      <span>పేజీ 2 / 4</span>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 3: OFFICER MOBILE APK ==================== -->
+  <div class="page">
+    <div class="doc-header">
+      <img src="doc_assets/netra_logo.png" alt="NETRA Emblem" class="logo" style="border-radius: 50%;" />
+      <div class="hdr-text">
+        <div class="hdr-dept">NETRA ఆఫీసర్ మొబైల్ APK గైడ్</div>
+        <div class="hdr-sub">ఫీల్డ్ ఫోర్స్ లైవ్ ట్రాకింగ్ &amp; సూపర్‌వైజరీ లాగిన్</div>
+      </div>
+      <img src="doc_assets/netra_logo.png" alt="AP Police" class="logo" style="border-radius: 50%;" />
+    </div>
+
+    <h2 class="sec-title">4. NETRA మొబైల్ APK ఎలా ఉపయోగించాలి? (Mobile App User Guide)</h2>
+    <p>
+      క్షేత్రస్థాయిలో విధులు నిర్వహించే అధికారులు తమ ఆండ్రాయిడ్ మొబైల్‌లో NETRA APK ని ఇన్‌స్టాల్ చేసుకుని క్రింది సులభమైన దశల ద్వారా ఉపయోగించవచ్చు:
+    </p>
+
+    <div class="row-2col">
+      <div class="col-half">
+        <div class="info-card">
+          <b>దశ 1: సులభ లాగిన్</b><br/>
+          అధికారి తమ అధికారిక మొబైల్ నంబర్ మరియు పాస్‌వర్డ్ నమోదు చేసి లాగిన్ అవ్వాలి.
+        </div>
+        <div class="info-card">
+          <b>దశ 2: లైవ్ లొకేషన్ ప్రారంభం</b><br/>
+          లాగిన్ అయిన వెంటనే <b>"లైవ్ లొకేషన్ ప్రారంభించండి"</b> అనే బటన్ నొక్కగానే జీపీఎస్ కనెక్ట్ అయి లొకేషన్ షేరింగ్ ప్రారంభమవుతుంది.
+        </div>
+        <div class="info-card">
+          <b>దశ 3: హోమ్ బటన్ సౌలభ్యం</b><br/>
+          లొకేషన్ ప్రారంభమైన తర్వాత మొబైల్ <b>HOME బటన్</b> నొక్కి వాట్సాప్ లేదా ఇతర ఫోన్ పనులు చేసుకోవచ్చు. బ్రౌజర్ బ్యాక్‌గ్రౌండ్‌లో ఉన్నా లొకేషన్ నిరంతరం ప్రసారమవుతుంది.
+        </div>
+      </div>
+      <div class="col-half">
+        <div class="info-card">
+          <b>దశ 4: అత్యవసర SOS అలర్ట్</b><br/>
+          ఏదైనా ఆపద లేదా గొడవ జరిగినప్పుడు రెడ్ కలర్ <b>"🚨 అత్యవసర SOS అలర్ట్"</b> బటన్ నొక్కితే కంట్రోల్ రూమ్‌కు తక్షణ హెచ్చరిక వెళ్తుంది.
+        </div>
+        <div class="info-card info-card-green">
+          <b>మార్కర్ లేబుల్ (2-Tier Marker Pill):</b><br/>
+          మ్యాప్‌పై అధికారుల మార్కర్ల వద్ద పై వరుసలో ఫోర్స్ విభాగం పేరు (ఉదా: <code>SF-1 (Srikurmam)</code>), క్రింది వరుసలో నలుపు బోల్డ్ ఫాంట్‌లో హోదా &amp; పోలీస్ స్టేషన్ (ఉదా: <b>SI, Gara PS</b>) స్పష్టంగా కనిపిస్తాయి.
+        </div>
+      </div>
+    </div>
+
+    <h2 class="sec-title">5. సూపర్‌వైజరీ అధికారులు (3 SDPOలు + 12 CIలు) స్పెషల్ మానిటరింగ్</h2>
+    <p>
+      సూపర్‌వైజరీ అధికారులు తమ మొబైల్ నంబర్లతో లాగిన్ అయినప్పుడు, వారి పరిధిలోని మండలాల అధికారులు ఎవరైతే లైవ్ లొకేషన్ షేర్ చేస్తున్నారో వారి లొకేషన్లు మాత్రమే వారి మ్యాప్‌లో ఆటోమేటిక్‌గా కనిపిస్తాయి:
+    </p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>హోదా</th>
+          <th>లాగిన్ నంబర్</th>
+          <th>మ్యాప్‌లో కనిపించే పరిధిలోని మండలాలు</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>SDPO శ్రీకాకుళం</b></td>
+          <td><code>6309990804</code></td>
+          <td>శ్రీకాకుళం, ఆమదాలవలస, బూర్జ, ఎచ్చెర్ల, జి.సిగడాం, గార, రణస్థలం, లావేరు, పొందూరు, సరుబుజ్జిలి, ఎల్.ఎన్.పేట (11 మండలాలు)</td>
+        </tr>
+        <tr>
+          <td><b>SDPO టెక్కలి</b></td>
+          <td><code>6309990811</code></td>
+          <td>టెక్కలి, కోటబొమ్మాళి, సంతబొమ్మాళి, హిరమండలం, జలుమూరు, కొత్తూరు, మెళియాపుట్టి, నందిగాం, నరసన్నపేట, పాతపట్నం, పోలాకి, సారవకోట (12 మండలాలు)</td>
+        </tr>
+        <tr>
+          <td><b>SDPO కాశీబుగ్గ</b></td>
+          <td><code>6309990805</code></td>
+          <td>కాశీబుగ్గ (పలాస), ఇచ్ఛాపురం రూరల్, కంచిలి, కవిటి, మందస, సోంపేట, వజ్రపుకొత్తూరు (7 మండలాలు)</td>
+        </tr>
+        <tr>
+          <td><b>12 సర్కిల్ ఇన్‌స్పెక్టర్లు</b></td>
+          <td><code>6309990814 - 6309990828</code></td>
+          <td>ఆయా సర్కిల్ పరిధిలోని నిర్దిష్ట మండలాలు (ఉదా: CI ఆమదాలవలస, CI రూరల్, CI జేఆర్ పురం, CI టెక్కలి, CI కొత్తూరు మొదలైనవి)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="row-2col" style="align-items: center; margin-top: 6px;">
+      <div class="col-half">
+        <div class="img-frame" style="margin: 0;">
+          <img src="doc_assets/doc_screen_officer.png" alt="Officer App Screenshot" style="max-height: 52mm;" />
+          <div class="img-caption">చిత్రం 2: NETRA ఆఫీసర్ లాగిన్ &amp; ట్రాకింగ్ స్క్రీన్</div>
+        </div>
+      </div>
+      <div class="col-half">
+        <div class="img-frame" style="margin: 0;">
+          <img src="doc_assets/map_markers_sample.png" alt="Map Markers Sample" style="max-height: 52mm;" />
+          <div class="img-caption">చిత్రం 3: లైవ్ మ్యాప్‌లో 2-Tier మార్కర్ పిన్స్ (SF/SSF &amp; Rank/PS)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-footer">
+      <span>శ్రీకాకుళం జిల్లా పోలీస్ - NETRA ఎలక్షన్ ట్రాకింగ్ సిస్టమ్</span>
+      <span>పేజీ 3 / 4</span>
+    </div>
+  </div>
+
+  <!-- ==================== PAGE 4: ELECTION IMPACT & SUMMARY ==================== -->
+  <div class="page">
+    <div class="doc-header">
+      <img src="doc_assets/netra_logo.png" alt="NETRA Emblem" class="logo" style="border-radius: 50%;" />
+      <div class="hdr-text">
+        <div class="hdr-dept">ఎన్నికల భద్రతా ప్రభావం &amp; ముగింపు</div>
+        <div class="hdr-sub">Election Impact Analysis &amp; Operational Summary</div>
+      </div>
+      <img src="doc_assets/netra_logo.png" alt="AP Police" class="logo" style="border-radius: 50%;" />
+    </div>
+
+    <h2 class="sec-title">6. సాంప్రదాయ ఎన్నికల పర్యవేక్షణ vs NETRA ఆధునిక పర్యవేక్షణ</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 25%;">అంశం</th>
+          <th style="width: 37%;">గత సాంప్రదాయ పద్ధతి</th>
+          <th style="width: 38%;">NETRA డిజిటల్ సిస్టమ్ ద్వారా</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>పోలీస్ పార్టీ లొకేషన్</b></td>
+          <td>వైర్‌లెస్ / ఫోన్ కాల్ ద్వారా మాత్రమే అడిగి తెలుసుకోవాలి.</td>
+          <td>మ్యాప్‌పై నిరంతరం ప్రత్యక్షంగా (Live GPS) కనిపిస్తుంది.</td>
+        </tr>
+        <tr>
+          <td><b>ఘటనా స్థలానికి చేరే సమయం</b></td>
+          <td>ఎవరు ఎక్కడున్నారో స్పష్టత లేక 20 నుండి 30 నిమిషాలు పట్టేది.</td>
+          <td>సమీప పార్టీ వెంటనే గుర్తించబడి 3-5 నిమిషాల్లో చేరుకుంటుంది.</td>
+        </tr>
+        <tr>
+          <td><b>రూట్ పర్యవేక్షణ</b></td>
+          <td>అధికారులు పూర్తి రూట్ తిరిగారా లేదా అనేది ధృవీకరణ కష్టం.</td>
+          <td>తిరిగిన కిలోమీటర్లు, వేగం మరియు కదలికలు నమోదవుతాయి.</td>
+        </tr>
+        <tr>
+          <td><b>అత్యవసర సమాచారం</b></td>
+          <td>ఫోన్ నెట్‌వర్క్ బిజీ ఉంటే కంట్రోల్ రూమ్‌కు చేరడం ఆలస్యం.</td>
+          <td>ఒకే టచ్‌తో SOS అలర్ట్ నేరుగా కంట్రోల్ రూమ్ స్క్రీన్‌పై మోగుతుంది.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 class="sec-title">7. సమగ్ర కార్యాచరణ సారాంశం (System Architecture Snapshot)</h2>
+    <div class="info-card info-card-blue">
+      <table style="width:100%; font-size:9.5pt; border:none;">
+        <tr style="background:transparent;">
+          <td style="border:none; padding:3px 0; width:28%;"><b>సిస్టమ్ పేరు:</b></td>
+          <td style="border:none; padding:3px 0; color:#1e3a8a; font-weight:bold;">NETRA (Network for Election Tracking Reporting &amp; Action)</td>
+        </tr>
+        <tr style="background:transparent;">
+          <td style="border:none; padding:3px 0;"><b>కంట్రోల్ రూమ్ పోర్టల్:</b></td>
+          <td style="border:none; padding:3px 0;"><a href="https://election-maps.github.io/Municipal-GP/" style="color:#2563eb; text-decoration:none; font-weight:bold;">https://election-maps.github.io/Municipal-GP/</a></td>
+        </tr>
+        <tr style="background:transparent;">
+          <td style="border:none; padding:3px 0;"><b>ఫీల్డ్ ఆఫీసర్ APK:</b></td>
+          <td style="border:none; padding:3px 0;">NETRA.apk (ఆండ్రాయిడ్ యాప్ - బ్యాక్‌గ్రౌండ్ జీపీఎస్ ట్రాకర్)</td>
+        </tr>
+        <tr style="background:transparent;">
+          <td style="border:none; padding:3px 0;"><b>పరిధి:</b></td>
+          <td style="border:none; padding:3px 0;">శ్రీకాకుళం జిల్లాలోని మొత్తం 30 మండలాలు, అన్ని గ్రామ పంచాయతీలు</td>
+        </tr>
+        <tr style="background:transparent;">
+          <td style="border:none; padding:3px 0;"><b>ట్రాకింగ్ అయ్యే విభాగాలు:</b></td>
+          <td style="border:none; padding:3px 0;">
+            <span class="badge badge-blue">Route Mobiles</span>
+            <span class="badge badge-amber">Striking Force</span>
+            <span class="badge badge-purple">Special Striking Force</span>
+            <span class="badge badge-green">QRTs</span>
+          </td>
+        </tr>
+        <tr style="background:transparent;">
+          <td style="border:none; padding:3px 0;"><b>సూపర్‌వైజరీ యాక్సెస్:</b></td>
+          <td style="border:none; padding:3px 0;">3 SDPOలు, 12 సర్కిల్ ఇన్‌స్పెక్టర్లు మరియు జిల్లా ఎస్పీ ప్రత్యేక డాష్‌బోర్డ్స్</td>
+        </tr>
+      </table>
+    </div>
+
+    <h2 class="sec-title">8. ముగింపు (Conclusion)</h2>
+    <p>
+      ఆధునిక సాంకేతిక పరిజ్ఞానాన్ని పోలీసింగ్ మరియు ఎన్నికల విధులకు అనుసంధానించడం ద్వారా రూపొందించబడిన <b>NETRA ప్రాజెక్ట్</b>, ఎన్నికల బందోబస్తులో మానవ వనరుల సమర్థవంతమైన నిర్వహణకు, శాంతిభద్రతల పరిరక్షణకు మరియు సత్వర అత్యవసర స్పందనకు అత్యంత కీలకమైన ఆయుధంగా నిలుస్తుంది. జిల్లా ఎన్నికల కంట్రోల్ రూమ్ మరియు ఫీల్డ్ ఫోర్స్ మధ్య నిరంతర రియల్-టైమ్ కమ్యూనికేషన్ నెలకొల్పడం ద్వారా శ్రీకాకుళం జిల్లాలో గ్రామ పంచాయతీ ఎన్నికలను విజయవంతంగా, నిష్పాక్షికంగా నిర్వహించడంలో NETRA అత్యుత్తమ సేవలందిస్తుంది.
+    </p>
+
+    <div style="margin-top: 18px; display:flex; justify-content: space-between; align-items:flex-end;">
+      <div>
+        <span style="font-size: 8.5pt; color:#64748b; font-weight:bold;">తేదీ: 21 నవంబర్ 2026</span><br/>
+        <span style="font-size: 8.5pt; color:#64748b;">శ్రీకాకుళం, ఆంధ్రప్రదేశ్</span>
+      </div>
+      <div style="text-align: right;">
+        <span style="font-size: 10pt; font-weight:800; color:#1e3a8a;">పోలీస్ సూపరింటెండెంట్ కార్యాలయం</span><br/>
+        <span style="font-size: 9pt; font-weight:700; color:#b91c1c;">శ్రీకాకుళం జిల్లా పోలీస్ శాఖ</span>
+      </div>
+    </div>
+
+    <div class="doc-footer">
+      <span>శ్రీకాకుళం జిల్లా పోలీస్ - NETRA ఎలక్షన్ ట్రాకింగ్ సిస్టమ్</span>
+      <span>పేజీ 4 / 4</span>
+    </div>
+  </div>
+
+</body>
+</html>
+
