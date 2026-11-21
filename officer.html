@@ -1345,6 +1345,62 @@
         'vajrapukothur',
         'vajrapukotturu'
       ]
+    },
+
+    // DSP Division / Special Wing Monitors (3 DSPs)
+    '6309990810': {
+      phone: '6309990810',
+      name: 'N. Bhaskara Reddy, DSP (Mahila UPS)',
+      title: 'DSP పరిధి లైవ్ మ్యాప్ (5 మండలాలు):',
+      subBadge: '5 మండలాల ఫోర్స్',
+      toastMsg: '5 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
+      mandals: [
+        'ponduru',
+        'ranastalam',
+        'ranasthalam',
+        'jrpuram',
+        'etcherla',
+        'laveru',
+        'gsigadam',
+        'ganguvarisigadam',
+        'sigadam'
+      ]
+    },
+    '7036228899': {
+      phone: '7036228899',
+      name: 'N.Kalidas, DSP (CID VSP)',
+      title: 'DSP పరిధి లైవ్ మ్యాప్ (4 మండలాలు):',
+      subBadge: '4 మండలాల ఫోర్స్',
+      toastMsg: '4 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
+      mandals: [
+        'pathapatnam',
+        'patapatnam',
+        'meliaputti',
+        'meliaputty',
+        'kothuru',
+        'koturu',
+        'hiramandalam',
+        'heeramandalam'
+      ]
+    },
+    '6309990813': {
+      phone: '6309990813',
+      name: 'N.V.Ramana, DSP (AR DAR)',
+      title: 'DSP పరిధి లైవ్ మ్యాప్ (4 మండలాలు):',
+      subBadge: '4 మండలాల ఫోర్స్',
+      toastMsg: '4 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
+      mandals: [
+        'sompeta',
+        'kanchili',
+        'ichapuram',
+        'ichchapuram',
+        'ichapuramrural',
+        'ichapuramurban',
+        'kaviti'
+      ]
     }
   };
 
@@ -1353,10 +1409,57 @@
   function getActiveSdpoConfig() {
     const p1 = currentLoggedInOfficer ? normalizePhone(currentLoggedInOfficer.phone) : '';
     const p2 = currentSelectedUnit ? normalizePhone(currentSelectedUnit.phone) : '';
+
+    // 1. Explicit SDPO / SP / DSP / CI Monitors
     for (const phone in SDPO_MONITORS) {
       if ((p1 && (p1 === phone || p1.endsWith(phone))) || (p2 && (p2 === phone || p2.endsWith(phone)))) {
         return SDPO_MONITORS[phone];
       }
+    }
+
+    // 2. Dynamic Monitor for ANY logged-in officer (SI, WSI, Field Officer) based on their assigned mandal!
+    const unit = currentSelectedUnit ||
+                 (currentLoggedInOfficer && currentLoggedInOfficer.unitId ? (typeof allUnitsData !== 'undefined' && allUnitsData ? allUnitsData.find(u => u.id === currentLoggedInOfficer.unitId) : null) : null) ||
+                 (currentLoggedInOfficer && currentLoggedInOfficer.phone ? findMatchingUnitsByPhone(currentLoggedInOfficer.phone)[0] : null);
+
+    const mandalStr = (unit && unit.mandal) ? String(unit.mandal).trim() : '';
+    if (mandalStr && mandalStr.toLowerCase() !== 'district hq') {
+      const rawTokens = mandalStr.split(/[,/]/).map(m => m.trim()).filter(Boolean);
+      const cleanTokens = [];
+      rawTokens.forEach(m => {
+        const c = m.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (c && !cleanTokens.includes(c)) {
+          cleanTokens.push(c);
+          if (c === 'srikakulam') cleanTokens.push('srikakulamrural');
+          if (c === 'amadalavalasa') cleanTokens.push('amadalavlasa');
+          if (c === 'gsigadam') { cleanTokens.push('sigadam'); cleanTokens.push('ganguvarisigadam'); }
+          if (c === 'ranastalam') { cleanTokens.push('ranasthalam'); cleanTokens.push('jrpuram'); }
+          if (c === 'lakshminarsupeta') { cleanTokens.push('lakshminarasupeta'); cleanTokens.push('lnpeta'); }
+          if (c === 'santhabommali') cleanTokens.push('santabommali');
+          if (c === 'hiramandalam') cleanTokens.push('heeramandalam');
+          if (c === 'jalumuru') cleanTokens.push('jalamuru');
+          if (c === 'kothuru') cleanTokens.push('koturu');
+          if (c === 'meliaputti') cleanTokens.push('meliaputty');
+          if (c === 'narasannapeta') cleanTokens.push('narsannapeta');
+          if (c === 'pathapatnam') cleanTokens.push('patapatnam');
+          if (c === 'saravakota') cleanTokens.push('sarvakota');
+          if (c === 'kasibugga') { cleanTokens.push('palasa'); cleanTokens.push('palasakasibugga'); }
+          if (c === 'ichapuram') { cleanTokens.push('ichchapuram'); cleanTokens.push('ichapuramrural'); }
+          if (c === 'kaviti') cleanTokens.push('kavithi');
+          if (c === 'vajrapukothuru') { cleanTokens.push('vajrapukothur'); cleanTokens.push('vajrapukotturu'); }
+        }
+      });
+
+      const displayMandal = rawTokens.join(', ');
+      return {
+        phone: p1 || p2 || (currentLoggedInOfficer ? currentLoggedInOfficer.phone : ''),
+        name: (currentLoggedInOfficer && currentLoggedInOfficer.officerName) || (unit && unit.officer) || 'పోలీస్ అధికారి',
+        title: `${displayMandal} లైవ్ మ్యాప్:`,
+        subBadge: `${displayMandal} ఫోర్స్`,
+        toastMsg: `${displayMandal} మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.`,
+        allMandals: false,
+        mandals: cleanTokens
+      };
     }
     return null;
   }
@@ -1367,28 +1470,29 @@
 
   function isSdpoTargetMandal(mandal, targetSdpoPhone = null) {
     if (!mandal) return false;
-    const clean = String(mandal).toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (!clean) return false;
-
+    let cfg = null;
     if (targetSdpoPhone) {
-      const cfg = SDPO_MONITORS[targetSdpoPhone];
-      if (cfg && cfg.allMandals) return true;
-      return cfg ? cfg.mandals.some(k => clean.includes(k) || k.includes(clean)) : false;
-    }
-
-    const activeCfg = getActiveSdpoConfig();
-    if (activeCfg) {
-      if (activeCfg.allMandals) return true;
-      return activeCfg.mandals.some(k => clean.includes(k) || k.includes(clean));
-    }
-
-    for (const phone in SDPO_MONITORS) {
-      if (SDPO_MONITORS[phone].allMandals) return true;
-      if (SDPO_MONITORS[phone].mandals.some(k => clean.includes(k) || k.includes(clean))) {
-        return true;
+      const cleanTarget = normalizePhone(targetSdpoPhone);
+      cfg = SDPO_MONITORS[cleanTarget];
+      if (!cfg) {
+        const active = getActiveSdpoConfig();
+        if (active && normalizePhone(active.phone) === cleanTarget) {
+          cfg = active;
+        }
       }
+    } else {
+      cfg = getActiveSdpoConfig();
     }
-    return false;
+
+    if (!cfg) return false;
+    if (cfg.allMandals) return true;
+
+    const incomingMandals = String(mandal).split(/[,/]/).map(m => m.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
+    if (incomingMandals.length === 0) return false;
+
+    return incomingMandals.some(clean => {
+      return cfg.mandals.some(k => clean.includes(k) || k.includes(clean));
+    });
   }
 
   function setupSdpoMqttSubscriptions() {
@@ -1421,6 +1525,99 @@
         fitSdpoOfficersBounds();
       }, 700);
     }
+  }
+
+  function getOfficerRankPillLabel(payload) {
+    if (!payload) return 'Duty Force';
+    const phone = normalizePhone(payload.phone || '');
+    const id = payload.id || payload.unitId || '';
+    const rawOfficer = payload.officer || '';
+    const unitName = payload.unitName || '';
+    const route = payload.route || '';
+
+    // 1. Explicit District & Division Heads
+    if (phone === '9704452107' || id === 'SP_Srikakulam') return 'SP, Srikakulam';
+    if (phone === '6309990804' || id === 'QRT_1') return 'SDPO, Srikakulam';
+    if (phone === '6309990811' || id === 'QRT_3') return 'SDPO, Tekkali';
+    if (phone === '6309990805' || id === 'QRT_4') return 'SDPO, Kasibugga';
+
+    // 2. Explicit DSPs
+    if (phone === '6309990810' || id === 'QRT_2') return 'DSP, Mahila UPS';
+    if (phone === '7036228899' || id === 'QRT_5') return 'DSP, CID VSP';
+    if (phone === '6309990813' || id === 'QRT_6') return 'DSP (AR), DAR';
+
+    // 3. Explicit Circle Inspectors (12 Circles)
+    if (cleanP_match(phone, '6309990814') || id === 'SSF_Srikakulam_1' || String(unitName).includes('Singupuram') || String(route).includes('Singupuram')) return 'CI, Srikakulam Rural';
+    if (cleanP_match(phone, '6309990823') || id === 'SSF_Amadalavalasa_7') return 'CI, Amadalavalasa';
+    if (cleanP_match(phone, '6309990816') || id === 'SSF_Etcherla_4') return 'CI, JR Puram';
+    if (cleanP_match(phone, '6309990860') || id === 'SSF_Tekkali_16') return 'Inspector, Tekkali PS';
+    if (cleanP_match(phone, '6309990817') || id === 'SSF_Kotabommali_17') return 'CI, Tekkali Rural';
+    if (cleanP_match(phone, '6309990828') || id === 'SSF_Kothuru_22') return 'CI, Kothuru';
+    if (cleanP_match(phone, '6309990822') || id === 'SSF_Pathapatnam_20') return 'CI, Pathapatnam';
+    if (cleanP_match(phone, '6309990815') || id === 'SSF_Narasannapeta_12') return 'CI, Narasannapeta';
+    if (cleanP_match(phone, '6309990825') || id === 'SSF_Palasa_24') return 'CI, Kasibugga PS';
+    if (cleanP_match(phone, '6309990827') || id === 'SSF_Ichapuram_29') return 'CI, Ichapuram';
+    if (cleanP_match(phone, '6309990819') || id === 'SSF_Sompeta_27') return 'CI, Sompeta';
+    if (cleanP_match(phone, '6309990818') || id === 'SSF_Mandasa_26') return 'CI, Kasibugga Rural';
+
+    // 4. Look up in allUnitsData if officer string is generic
+    let officerStr = rawOfficer;
+    if ((!officerStr || officerStr === 'Police Officer' || officerStr === 'Duty Force') && (id || phone)) {
+      const match = (typeof allUnitsData !== 'undefined' && allUnitsData ? allUnitsData : []).find(u =>
+        (id && u.id === id) || (phone && normalizePhone(u.phone) === phone)
+      );
+      if (match && match.officer) officerStr = match.officer;
+    }
+
+    // 5. Dynamic Rank Extraction from officer string:
+    if (officerStr) {
+      const parts = officerStr.split(',').map(p => p.trim()).filter(Boolean);
+      const textParts = parts.filter(p => !/^\d{10}$/.test(p.replace(/\s+/g, '')));
+
+      // Check DSP
+      const dspIdx = textParts.findIndex(p => /\bDSP\b/i.test(p));
+      if (dspIdx !== -1) {
+        const rank = textParts[dspIdx].trim();
+        const wing = textParts[dspIdx + 1] ? textParts[dspIdx + 1].trim() : '';
+        return wing ? `${rank}, ${wing}` : rank;
+      }
+
+      // Check CI or Inspector
+      const ciIdx = textParts.findIndex(p => /\b(CI|Inspector)\b/i.test(p));
+      if (ciIdx !== -1) {
+        const rank = textParts[ciIdx].trim();
+        const ps = textParts[ciIdx + 1] ? textParts[ciIdx + 1].trim() : '';
+        return ps ? `${rank}, ${ps}` : rank;
+      }
+
+      // Check SI / WSI / Sub Inspector
+      const siIdx = textParts.findIndex(p => /\b(SI|WSI|Sub\s*Inspector)\b/i.test(p));
+      if (siIdx !== -1) {
+        const rank = textParts[siIdx].trim();
+        const ps = textParts[siIdx + 1] ? textParts[siIdx + 1].trim() : '';
+        return ps ? `${rank}, ${ps}` : rank;
+      }
+
+      // Check ASI
+      const asiIdx = textParts.findIndex(p => /\b(ASI)\b/i.test(p));
+      if (asiIdx !== -1) {
+        const rank = textParts[asiIdx].trim();
+        const ps = textParts[asiIdx + 1] ? textParts[asiIdx + 1].trim() : '';
+        return ps ? `${rank}, ${ps}` : rank;
+      }
+    }
+
+    // 6. Check if route or unitName already contains SI, DSP, CI
+    if (route && (/\b(SI|DSP|CI|WSI|Inspector)\b/i.test(route))) return route;
+    if (unitName && (/\b(SI|DSP|CI|WSI|Inspector)\b/i.test(unitName))) return unitName;
+
+    // 7. Fallback to route or unitName
+    return route || unitName || 'Duty Force';
+  }
+
+  function cleanP_match(p, target) {
+    if (!p) return false;
+    return p === target || p.endsWith(target);
   }
 
   function handleSdpoSubordinateLocationUpdate(payload) {
@@ -1466,42 +1663,8 @@
     const kmh = speed > 0 ? Math.round(speed * 3.6) : 0;
     const timeStr = new Date(payload.lastUpdated || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // Determine clean label for marker pill (e.g. CI, Srikakulam Rural instead of SSF (Singupuram))
-    let pillLabel = payload.route || unitName;
-    const cleanP = normalizePhone(phone);
-    if (cleanP === '6309990814' || payload.id === 'SSF_Srikakulam_1' || String(unitName).includes('Singupuram') || String(payload.route).includes('Singupuram')) {
-      pillLabel = 'CI, Srikakulam Rural';
-    } else if (cleanP === '6309990823' || payload.id === 'SSF_Amadalavalasa_7') {
-      pillLabel = 'CI, Amadalavalasa';
-    } else if (cleanP === '6309990816' || payload.id === 'SSF_Etcherla_4') {
-      pillLabel = 'CI, JR Puram';
-    } else if (cleanP === '6309990860' || payload.id === 'SSF_Tekkali_16') {
-      pillLabel = 'Inspector, Tekkali PS';
-    } else if (cleanP === '6309990817' || payload.id === 'SSF_Kotabommali_17') {
-      pillLabel = 'CI, Tekkali Rural';
-    } else if (cleanP === '6309990828' || payload.id === 'SSF_Kothuru_22') {
-      pillLabel = 'CI, Kothuru';
-    } else if (cleanP === '6309990822' || payload.id === 'SSF_Pathapatnam_20') {
-      pillLabel = 'CI, Pathapatnam';
-    } else if (cleanP === '6309990815' || payload.id === 'SSF_Narasannapeta_12') {
-      pillLabel = 'CI, Narasannapeta';
-    } else if (cleanP === '6309990825' || payload.id === 'SSF_Palasa_24') {
-      pillLabel = 'CI, Kasibugga PS';
-    } else if (cleanP === '6309990827' || payload.id === 'SSF_Ichapuram_29') {
-      pillLabel = 'CI, Ichapuram';
-    } else if (cleanP === '6309990819' || payload.id === 'SSF_Sompeta_27') {
-      pillLabel = 'CI, Sompeta';
-    } else if (cleanP === '6309990818' || payload.id === 'SSF_Mandasa_26') {
-      pillLabel = 'CI, Kasibugga Rural';
-    } else if (cleanP === '6309990804' || payload.id === 'QRT_1') {
-      pillLabel = 'SDPO, Srikakulam';
-    } else if (cleanP === '6309990811' || payload.id === 'QRT_3') {
-      pillLabel = 'SDPO, Tekkali';
-    } else if (cleanP === '6309990805' || payload.id === 'QRT_4') {
-      pillLabel = 'SDPO, Kasibugga';
-    } else if (cleanP === '9704452107' || payload.id === 'SP_Srikakulam') {
-      pillLabel = 'SP, Srikakulam';
-    }
+    // Determine clean label for marker pill (SI, DSP, CI designations)
+    const pillLabel = getOfficerRankPillLabel(payload);
 
     // Category styling
     let catColor = '#2563eb'; // blue for Route Mobiles
@@ -3658,6 +3821,10 @@
     '6309990804', // SDPO Srikakulam (11 Mandals)
     '6309990811', // SDPO Tekkali (12 Mandals)
     '6309990805', // SDPO Kasibugga (7 Mandals)
+    // DSP Special Wing / Division Incharges (3)
+    '6309990810', // DSP Mahila UPS (5 Mandals: Ponduru, Ranasthalam, Etcherla, Laveru, G.Sigadam)
+    '7036228899', // DSP CID VSP (4 Mandals: Pathapatnam, Meliaputti, Kothuru, Hiramandalam)
+    '6309990813', // DSP (AR) DAR (4 Mandals: Sompeta, Kanchili, Ichapuram, Kaviti)
     // Circle Incharges (12)
     '6309990823', // CI Amadalavalasa (5 Mandals: Amadalavalasa, Burja, Sarubujjili, Lakshminarsupeta, Ponduru)
     '6309990814', // CI Srikakulam Rural (2 Mandals: Gara, Srikakulam)
@@ -3933,6 +4100,7 @@
   };
 
   function applyLoggedInState(assignedUnit, matchedUnits = []) {
+    if (assignedUnit) currentSelectedUnit = assignedUnit;
     const loginCard = document.getElementById('login-card');
     const profileBar = document.getElementById('officer-profile-bar');
     const selCard = document.getElementById('selection-card');
