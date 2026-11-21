@@ -34,20 +34,21 @@ jobs:
 
       - name: Copy APK to root for GitHub Pages
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk ./SrikakulamPoliceTracker.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk ./NETRA.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk ./MunicipalPoliceTracker.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk ./SrikakulamPoliceTracker.apk
           ls -la *.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MunicipalPoliceTracker
-          path: MunicipalPoliceTracker.apk
+          name: NETRA
+          path: NETRA.apk
 
       - name: Commit APK to repository
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add SrikakulamPoliceTracker.apk MunicipalPoliceTracker.apk
-          git commit -m "Automated build: MunicipalPoliceTracker.apk [skip ci]" || echo "No changes to commit"
+          git add NETRA.apk MunicipalPoliceTracker.apk SrikakulamPoliceTracker.apk
+          git commit -m "Automated build: NETRA.apk [skip ci]" || echo "No changes to commit"
           git push origin main

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">మున్సిపల్-GP పోలీస్ లైవ్ ట్రాకర్</string>
+    <string name="app_name">NETRA</string>
     <string name="notification_channel_name">పోలీస్ డ్యూటీ లొకేషన్ సర్వీస్</string>
     <string name="notification_channel_desc">ఎన్నికల బందోబస్తు లైవ్ లొకేషన్ ట్రాకింగ్</string>
     <string name="tracking_active">శ్రీకాకుళం పోలీస్ ఎన్నికల బందోబస్తు</string>
