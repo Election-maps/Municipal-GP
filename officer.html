@@ -1501,10 +1501,18 @@
   }
 
   function setupSdpoMqttSubscriptions() {
-    if (!mqttClient || !mqttClient.connected) return;
+    if (!mqttClient || !mqttClient.connected) {
+      setTimeout(() => {
+        if (mqttClient && mqttClient.connected && isSdpoLoggedIn()) {
+          setupSdpoMqttSubscriptions();
+        }
+      }, 1200);
+      return;
+    }
     try {
       mqttClient.subscribe(`srikakulam_police_tracker/${roomCode}/locations`, { qos: 0 });
       mqttClient.subscribe(`srikakulam_police_tracker/${roomCode}/officer/+`, { qos: 1 });
+      mqttClient.subscribe(`srikakulam_police_tracker/${roomCode}/units_sync`, { qos: 1 });
       // Broadcast sync_request so currently online field officers reply with their live positions
       mqttClient.publish(`srikakulam_police_tracker/${roomCode}/sync_request`, JSON.stringify({ type: 'sync_request' }));
     } catch(e) {}
@@ -1657,8 +1665,18 @@
     const unitKey = payload.unitId || payload.id || (payload.phone ? 'phone_' + normalizePhone(payload.phone) : null);
     if (!unitKey) return;
 
-    // Filter strictly to the mandals of this logged-in SDPO
-    const mandal = payload.mandal || '';
+    // Filter strictly to the mandals of this logged-in SDPO / CI Monitor
+    let mandal = payload.mandal || '';
+    let resolvedUnit = null;
+    if (typeof allUnitsData !== 'undefined' && allUnitsData) {
+      resolvedUnit = allUnitsData.find(x =>
+        (payload.unitId && (x.id === payload.unitId || x.unitId === payload.unitId)) ||
+        (payload.phone && normalizePhone(x.phone) === normalizePhone(payload.phone))
+      );
+    }
+    if (!mandal && resolvedUnit && resolvedUnit.mandal) {
+      mandal = resolvedUnit.mandal;
+    }
     if (!isSdpoTargetMandal(mandal, activeSdpo.phone)) return;
 
     // If officer stopped sharing or no coords
@@ -1780,6 +1798,11 @@
 
   window.fitSdpoOfficersBounds = function() {
     if (!officerMap) return;
+    if (mqttClient && mqttClient.connected) {
+      try {
+        mqttClient.publish(`srikakulam_police_tracker/${roomCode}/sync_request`, JSON.stringify({ type: 'sync_request' }));
+      } catch(e) {}
+    }
     const points = [];
     if (myMarker) {
       const myLatLng = myMarker.getLatLng();
@@ -1797,6 +1820,15 @@
     const bounds = L.latLngBounds(points);
     officerMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
   };
+
+  // Periodic SDPO / CI live sync request (every 45s) to keep live positions refreshed
+  setInterval(() => {
+    if (isSdpoLoggedIn() && mqttClient && mqttClient.connected) {
+      try {
+        mqttClient.publish(`srikakulam_police_tracker/${roomCode}/sync_request`, JSON.stringify({ type: 'sync_request' }));
+      } catch (e) {}
+    }
+  }, 45000);
 
   // Periodic cleanup of offline markers (>20 mins)
   setInterval(() => {
@@ -2026,9 +2058,20 @@
         }
         const payload = JSON.parse(str);
 
-        // SDPO 6309990804 Subordinate Officers Live Location Update (11 Mandals)
-        if (isSdpoLoggedIn() && (t.includes('/locations') || t.includes('/officer/'))) {
-          handleSdpoSubordinateLocationUpdate(payload);
+        // SDPO & Circle Inspectors Subordinate Officers Live Location Update
+        if (isSdpoLoggedIn()) {
+          if (t.includes('/locations') || t.includes('/officer/')) {
+            handleSdpoSubordinateLocationUpdate(payload);
+          } else if ((t.includes('/units_sync') || payload.type === 'units_snapshot') && payload.units) {
+            const uMap = payload.units;
+            if (Array.isArray(uMap)) {
+              uMap.forEach(u => handleSdpoSubordinateLocationUpdate(u));
+            } else {
+              for (const k in uMap) {
+                handleSdpoSubordinateLocationUpdate(uMap[k]);
+              }
+            }
+          }
         }
 
         // Control Room reply handling
