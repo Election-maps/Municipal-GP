@@ -1041,9 +1041,34 @@
 
   // -------------------------------------------------------------
   // Supervisory Multi-Officer Live Monitoring (SDPO & Circle Inspectors):
-  // 3 SDPOs (Division level) + 12 CIs/Inspectors (Circle level)
+  // 1 District Head (SP - All 30 Mandals) + 3 SDPOs (Division level) + 12 CIs/Inspectors (Circle level)
   // -------------------------------------------------------------
   const SDPO_MONITORS = {
+    // District Level Monitor (All 30 Mandals - District Wide)
+    '9704452107': {
+      phone: '9704452107',
+      name: 'SP శ్రీకాకుళం / జిల్లా ఇన్-చార్జ్',
+      title: 'జిల్లా వ్యాప్త లైవ్ మ్యాప్ (అన్ని మండలాలు):',
+      subBadge: '30 మండలాల ఫోర్స్ (జిల్లా వ్యాప్తం)',
+      toastMsg: 'జిల్లాలోని మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: true,
+      mandals: [
+        'all',
+        'srikakulam', 'srikakulamrural', 'amadalavalasa', 'amadalavlasa', 'burja',
+        'etcherla', 'gsigadam', 'ganguvarisigadam', 'sigadam', 'gara',
+        'ranastalam', 'ranasthalam', 'jrpuram', 'laveru', 'ponduru',
+        'sarubujjili', 'lakshminarsupeta', 'lakshminarasupeta', 'lnpeta',
+        'tekkali', 'kotabommali', 'santhabommali', 'santabommali',
+        'hiramandalam', 'heeramandalam', 'jalumuru', 'jalamuru',
+        'kothuru', 'koturu', 'meliaputti', 'meliaputty', 'nandigam',
+        'narasannapeta', 'narsannapeta', 'pathapatnam', 'patapatnam',
+        'polaki', 'saravakota', 'sarvakota', 'kasibugga', 'palasa',
+        'palasakasibugga', 'ichapuram', 'ichchapuram', 'ichapuramrural',
+        'ichapuramurban', 'kanchili', 'kaviti', 'mandasa', 'sompeta',
+        'vajrapukothuru', 'vajrapukothur', 'vajrapukotturu'
+      ]
+    },
+
     // SDPO Division Level Monitors (3 Sub-Divisions)
     '6309990804': {
       phone: '6309990804',
@@ -1325,15 +1350,18 @@
 
     if (targetSdpoPhone) {
       const cfg = SDPO_MONITORS[targetSdpoPhone];
+      if (cfg && cfg.allMandals) return true;
       return cfg ? cfg.mandals.some(k => clean.includes(k) || k.includes(clean)) : false;
     }
 
     const activeCfg = getActiveSdpoConfig();
     if (activeCfg) {
+      if (activeCfg.allMandals) return true;
       return activeCfg.mandals.some(k => clean.includes(k) || k.includes(clean));
     }
 
     for (const phone in SDPO_MONITORS) {
+      if (SDPO_MONITORS[phone].allMandals) return true;
       if (SDPO_MONITORS[phone].mandals.some(k => clean.includes(k) || k.includes(clean))) {
         return true;
       }
@@ -3545,6 +3573,8 @@
   }
 
   const DESIGNATED_OFFICER_PHONES = [
+    // District Level Monitor (SP - All 30 Mandals)
+    '9704452107', // SP Srikakulam / District Incharge (All Mandals)
     // SDPO Division Incharges (3)
     '6309990804', // SDPO Srikakulam (11 Mandals)
     '6309990811', // SDPO Tekkali (12 Mandals)
@@ -3786,6 +3816,21 @@
       } else {
         officerDisplayName = assignedUnit.officer;
       }
+    } else if (isSdpo) {
+      const monCfg = SDPO_MONITORS[enteredPhone];
+      const monName = monCfg ? monCfg.name : 'సూపర్‌వైజరీ అధికారి';
+      assignedUnit = {
+        id: 'SUPV_' + enteredPhone,
+        category: 'Reserve Parties',
+        categoryKey: 'RESERVE',
+        mandal: 'District HQ',
+        route: 'District Head',
+        unitName: monName,
+        officer: `${monName}, ${enteredPhone}`,
+        phone: enteredPhone,
+        supporting: ''
+      };
+      officerDisplayName = `${monName} (${enteredPhone})`;
     } else {
       officerDisplayName = `పోలీస్ ఆఫీసర్ (${enteredPhone})`;
     }
@@ -3950,7 +3995,22 @@
             applyLoggedOutState();
             return false;
           }
-          const targetUnit = matched.find(u => u.id === session.unitId) || matched[0] || null;
+          let targetUnit = matched.find(u => u.id === session.unitId) || matched[0] || null;
+          if (!targetUnit && isSdpo) {
+            const monCfg = SDPO_MONITORS[session.phone];
+            const monName = monCfg ? monCfg.name : 'సూపర్‌వైజరీ అధికారి';
+            targetUnit = {
+              id: 'SUPV_' + session.phone,
+              category: 'Reserve Parties',
+              categoryKey: 'RESERVE',
+              mandal: 'District HQ',
+              route: 'District Head',
+              unitName: monName,
+              officer: `${monName}, ${session.phone}`,
+              phone: session.phone,
+              supporting: ''
+            };
+          }
           applyLoggedInState(targetUnit, matched);
           return true;
         }

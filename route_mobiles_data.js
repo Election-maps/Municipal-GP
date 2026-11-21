@@ -4730,5 +4730,18 @@
         "phone":  "6309990939",
         "supporting":  "Md. Bhasa (RSI 9493267097); G.Chakradhar (CPC 9676019261); G.Ramu (CPC 7095227708); S.Kiran kumar (CPC 8686639871); V.Pradeep (CPC 7675999430); G.Janardhana rao (CPC 9494690870); K.Tata rao (CPC 8317670928); M.Dali naidu (CPC 9912448019); S.Domburu (CPC 9581253609); A.Naveen Kumar (CPC 8106593061); Biddika.Anil (CPC 7993004052);",
         "pollingStations":  ""
+    },
+    {
+        "id":  "SP_Srikakulam",
+        "category":  "Reserve Parties",
+        "categoryKey":  "RESERVE",
+        "mandal":  "District HQ",
+        "route":  "SP Office / District Incharge",
+        "unitName":  "SP Office (District HQ)",
+        "hq":  "DPO Srikakulam",
+        "officer":  "Superintendent of Police, Srikakulam, 9704452107",
+        "phone":  "9704452107",
+        "supporting":  "",
+        "pollingStations":  ""
     }
 ];
