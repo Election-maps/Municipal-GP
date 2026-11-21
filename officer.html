@@ -1532,97 +1532,112 @@
     }
   }
 
-  function getOfficerRankPillLabel(payload) {
-    if (!payload) return 'Duty Force';
-    const phone = normalizePhone(payload.phone || '');
-    const id = payload.id || payload.unitId || '';
-    const rawOfficer = payload.officer || '';
-    const unitName = payload.unitName || '';
-    const route = payload.route || '';
+  function cleanP_match(p, target) {
+    if (!p) return false;
+    return p === target || p.endsWith(target);
+  }
+
+  // Format Officer: No Person Names; display Rank and Police Station (Rank, PS Name)
+  function formatOfficerRankAndPs(rawOfficer, mandal = '', unitName = '', route = '', phone = '', id = '') {
+    const cleanPhone = normalizePhone(phone || '');
+    const cleanId = String(id || '').trim();
 
     // 1. Explicit District & Division Heads
-    if (phone === '9704452107' || id === 'SP_Srikakulam') return 'SP, Srikakulam';
-    if (phone === '6309990804' || id === 'QRT_1') return 'SDPO, Srikakulam';
-    if (phone === '6309990811' || id === 'QRT_3') return 'SDPO, Tekkali';
-    if (phone === '6309990805' || id === 'QRT_4') return 'SDPO, Kasibugga';
+    if (cleanPhone === '9704452107' || cleanId === 'SP_Srikakulam') return 'SP, Srikakulam';
+    if (cleanPhone === '6309990804' || cleanId === 'QRT_1') return 'SDPO, Srikakulam';
+    if (cleanPhone === '6309990811' || cleanId === 'QRT_3') return 'SDPO, Tekkali';
+    if (cleanPhone === '6309990805' || cleanId === 'QRT_4') return 'SDPO, Kasibugga';
 
     // 2. Explicit DSPs
-    if (phone === '6309990810' || id === 'QRT_2') return 'DSP, Mahila UPS';
-    if (phone === '7036228899' || id === 'QRT_5') return 'DSP, CID VSP';
-    if (phone === '6309990813' || id === 'QRT_6') return 'DSP (AR), DAR';
+    if (cleanPhone === '6309990810' || cleanId === 'QRT_2') return 'DSP, Mahila UPS';
+    if (cleanPhone === '7036228899' || cleanId === 'QRT_5') return 'DSP, CID VSP';
+    if (cleanPhone === '6309990813' || cleanId === 'QRT_6') return 'DSP (AR), DAR';
 
     // 3. Explicit Circle Inspectors (12 Circles)
-    if (cleanP_match(phone, '6309990814') || id === 'SSF_Srikakulam_1' || String(unitName).includes('Singupuram') || String(route).includes('Singupuram')) return 'CI, Srikakulam Rural';
-    if (cleanP_match(phone, '6309990823') || id === 'SSF_Amadalavalasa_7') return 'CI, Amadalavalasa';
-    if (cleanP_match(phone, '6309990816') || id === 'SSF_Etcherla_4') return 'CI, JR Puram';
-    if (cleanP_match(phone, '6309990860') || id === 'SSF_Tekkali_16') return 'Inspector, Tekkali PS';
-    if (cleanP_match(phone, '6309990817') || id === 'SSF_Kotabommali_17') return 'CI, Tekkali Rural';
-    if (cleanP_match(phone, '6309990828') || id === 'SSF_Kothuru_22') return 'CI, Kothuru';
-    if (cleanP_match(phone, '6309990822') || id === 'SSF_Pathapatnam_20') return 'CI, Pathapatnam';
-    if (cleanP_match(phone, '6309990815') || id === 'SSF_Narasannapeta_12') return 'CI, Narasannapeta';
-    if (cleanP_match(phone, '6309990825') || id === 'SSF_Palasa_24') return 'CI, Kasibugga PS';
-    if (cleanP_match(phone, '6309990827') || id === 'SSF_Ichapuram_29') return 'CI, Ichapuram';
-    if (cleanP_match(phone, '6309990819') || id === 'SSF_Sompeta_27') return 'CI, Sompeta';
-    if (cleanP_match(phone, '6309990818') || id === 'SSF_Mandasa_26') return 'CI, Kasibugga Rural';
+    if (cleanP_match(cleanPhone, '6309990814') || cleanId === 'SSF_Srikakulam_1' || String(unitName).includes('Singupuram') || String(route).includes('Singupuram')) return 'CI, Srikakulam Rural';
+    if (cleanP_match(cleanPhone, '6309990823') || cleanId === 'SSF_Amadalavalasa_7') return 'CI, Amadalavalasa';
+    if (cleanP_match(cleanPhone, '6309990816') || cleanId === 'SSF_Etcherla_4') return 'CI, JR Puram';
+    if (cleanP_match(cleanPhone, '6309990860') || cleanId === 'SSF_Tekkali_16') return 'Inspector, Tekkali PS';
+    if (cleanP_match(cleanPhone, '6309990817') || cleanId === 'SSF_Kotabommali_17') return 'CI, Tekkali Rural';
+    if (cleanP_match(cleanPhone, '6309990828') || cleanId === 'SSF_Kothuru_22') return 'CI, Kothuru';
+    if (cleanP_match(cleanPhone, '6309990822') || cleanId === 'SSF_Pathapatnam_20') return 'CI, Pathapatnam';
+    if (cleanP_match(cleanPhone, '6309990815') || cleanId === 'SSF_Narasannapeta_12') return 'CI, Narasannapeta';
+    if (cleanP_match(cleanPhone, '6309990825') || cleanId === 'SSF_Palasa_24') return 'CI, Kasibugga PS';
+    if (cleanP_match(cleanPhone, '6309990827') || cleanId === 'SSF_Ichapuram_29') return 'CI, Ichapuram';
+    if (cleanP_match(cleanPhone, '6309990819') || cleanId === 'SSF_Sompeta_27') return 'CI, Sompeta';
+    if (cleanP_match(cleanPhone, '6309990818') || cleanId === 'SSF_Mandasa_26') return 'CI, Kasibugga Rural';
 
-    // 4. Look up in allUnitsData if officer string is generic
-    let officerStr = rawOfficer;
-    if ((!officerStr || officerStr === 'Police Officer' || officerStr === 'Duty Force') && (id || phone)) {
+    const defaultPs = mandal ? (mandal.endsWith('PS') ? mandal : `${mandal} PS`) : '';
+
+    let officerStr = rawOfficer || '';
+    if ((!officerStr || officerStr === 'Police Officer' || officerStr === 'Duty Force' || officerStr === 'Officer') && (cleanId || cleanPhone)) {
       const match = (typeof allUnitsData !== 'undefined' && allUnitsData ? allUnitsData : []).find(u =>
-        (id && u.id === id) || (phone && normalizePhone(u.phone) === phone)
+        (cleanId && (u.id === cleanId || u.unitId === cleanId)) || (cleanPhone && normalizePhone(u.phone) === cleanPhone)
       );
       if (match && match.officer) officerStr = match.officer;
     }
 
-    // 5. Dynamic Rank Extraction from officer string:
     if (officerStr) {
-      const parts = officerStr.split(',').map(p => p.trim()).filter(Boolean);
-      const textParts = parts.filter(p => !/^\d{10}$/.test(p.replace(/\s+/g, '')));
+      const rawParts = officerStr.replace(/[\r\n]+/g, ' ').split(/[,;-]/).map(p => p.trim()).filter(p =>
+        p && !/^\d{10}$/.test(p) && !/^\+?91/.test(p) && !/^\d{5,}$/.test(p)
+      );
 
-      // Check DSP
-      const dspIdx = textParts.findIndex(p => /\bDSP\b/i.test(p));
-      if (dspIdx !== -1) {
-        const rank = textParts[dspIdx].trim();
-        const wing = textParts[dspIdx + 1] ? textParts[dspIdx + 1].trim() : '';
-        return wing ? `${rank}, ${wing}` : rank;
+      const rankOrder = ['SDPO', 'Addl SP', 'DSP', 'CI', 'Inspector', 'IOP', 'WCI', 'SI', 'WSI', 'Sub Inspector', 'ASI', 'WASI', 'HC', 'WHC', 'PC', 'WPC'];
+      let rankIdx = -1;
+      let rankName = '';
+
+      for (let i = 0; i < rawParts.length; i++) {
+        const p = rawParts[i];
+        for (let r = 0; r < rankOrder.length; r++) {
+          const targetRank = rankOrder[r];
+          const re = new RegExp('\\b' + targetRank.replace('.', '\\.') + '\\b', 'i');
+          if (re.test(p)) {
+            rankIdx = i;
+            if (targetRank === 'IOP') rankName = 'CI';
+            else if (/Sub Inspector/i.test(targetRank)) rankName = 'SI';
+            else rankName = targetRank;
+            break;
+          }
+        }
+        if (rankIdx !== -1) break;
       }
 
-      // Check CI or Inspector
-      const ciIdx = textParts.findIndex(p => /\b(CI|Inspector)\b/i.test(p));
-      if (ciIdx !== -1) {
-        const rank = textParts[ciIdx].trim();
-        const ps = textParts[ciIdx + 1] ? textParts[ciIdx + 1].trim() : '';
-        return ps ? `${rank}, ${ps}` : rank;
-      }
-
-      // Check SI / WSI / Sub Inspector
-      const siIdx = textParts.findIndex(p => /\b(SI|WSI|Sub\s*Inspector)\b/i.test(p));
-      if (siIdx !== -1) {
-        const rank = textParts[siIdx].trim();
-        const ps = textParts[siIdx + 1] ? textParts[siIdx + 1].trim() : '';
-        return ps ? `${rank}, ${ps}` : rank;
-      }
-
-      // Check ASI
-      const asiIdx = textParts.findIndex(p => /\b(ASI)\b/i.test(p));
-      if (asiIdx !== -1) {
-        const rank = textParts[asiIdx].trim();
-        const ps = textParts[asiIdx + 1] ? textParts[asiIdx + 1].trim() : '';
-        return ps ? `${rank}, ${ps}` : rank;
+      if (rankIdx !== -1) {
+        let psName = '';
+        for (let j = rankIdx + 1; j < rawParts.length; j++) {
+          const cand = rawParts[j].trim();
+          if (cand && !/^\d+$/.test(cand) && !/^(SPF|HG)$/i.test(cand)) {
+            psName = cand;
+            break;
+          }
+        }
+        if (!psName) {
+          psName = defaultPs;
+        } else {
+          if (!/(PS|Rural|Town|Traffic|CID|DCRB|DAR|VR|PCR|SB|UPS|Cell)$/i.test(psName)) {
+            psName = psName + ' PS';
+          }
+        }
+        return `${rankName}, ${psName}`;
       }
     }
 
-    // 6. Check if route or unitName already contains SI, DSP, CI
-    if (route && (/\b(SI|DSP|CI|WSI|Inspector)\b/i.test(route))) return route;
-    if (unitName && (/\b(SI|DSP|CI|WSI|Inspector)\b/i.test(unitName))) return unitName;
+    if (unitName && /\b(CI|SI|DSP|Inspector|ASI|HC|PC)\b/i.test(unitName)) return unitName;
+    if (route && /\b(CI|SI|DSP|Inspector|ASI|HC|PC)\b/i.test(route)) return route;
 
-    // 7. Fallback to route or unitName
-    return route || unitName || 'Duty Force';
+    return defaultPs || 'Police';
   }
 
-  function cleanP_match(p, target) {
-    if (!p) return false;
-    return p === target || p.endsWith(target);
+  function getOfficerRankPillLabel(payload) {
+    if (!payload) return 'Duty Force';
+    const phone = normalizePhone(payload.phone || '');
+    const id = payload.id || payload.unitId || '';
+    const rawOfficer = payload.officer || payload.name || '';
+    const unitName = payload.unitName || '';
+    const route = payload.route || '';
+    const mandal = payload.mandal || '';
+
+    return formatOfficerRankAndPs(rawOfficer, mandal, unitName, route, phone, id);
   }
 
   function handleSdpoSubordinateLocationUpdate(payload) {
@@ -1671,6 +1686,10 @@
     // Determine clean label for marker pill (SI, DSP, CI designations)
     const pillLabel = getOfficerRankPillLabel(payload);
 
+    let cleanUnitName = (payload.unitName || payload.route || 'Duty Force').trim();
+    cleanUnitName = cleanUnitName.replace(/^(SSF|SF|RM|QRT)\s*:\s*\1\b/i, '$1');
+    cleanUnitName = cleanUnitName.replace(/^(SSF|SF|RM|QRT)\s*:\s*(\1-)/i, '$2');
+
     // Category styling
     let catColor = '#2563eb'; // blue for Route Mobiles
     let catIcon = 'fa-car-side';
@@ -1693,7 +1712,7 @@
           <span style="font-size: 11px; color: #475569; font-weight: 700;">${escapeHtml(mandal)}</span>
         </div>
         <div style="font-weight: 800; color: #0f172a; font-size: 13.5px; line-height: 1.3;">${escapeHtml(pillLabel)}</div>
-        <div style="font-size: 12px; color: #334155; margin-top: 3px;">👤 ${escapeHtml(officerName)}</div>
+        <div style="font-size: 11.5px; color: #475569; font-weight: 600; margin-top: 2px;">📍 ${escapeHtml(cleanUnitName)}</div>
         ${phone ? `<div style="font-size: 11.5px; color: #16a34a; font-weight: 700; margin-top: 2px;">📞 ${escapeHtml(phone)}</div>` : ''}
         <div style="display: flex; gap: 8px; font-size: 11px; color: #64748b; margin-top: 5px; border-top: 1px solid #e2e8f0; padding-top: 4px;">
           <span>⚡ <b>${kmh}</b> km/h</span>
@@ -1841,38 +1860,17 @@
   let curOfficerLat = null;
   let curOfficerLng = null;
 
-  function formatOfficerInchargeDisplay(officerStr, mandal = '') {
-    const defaultPs = mandal ? (mandal.endsWith('PS') ? mandal : `${mandal} PS`) : '';
-    if (!officerStr) return defaultPs;
-    const parts = officerStr.split(',').map(p => p.trim()).filter(Boolean);
-    if (parts.length === 0) return defaultPs;
-    const cleaned = parts.filter(p => !/^\d{10}$/.test(p.replace(/\s+/g, '')));
-    
-    let nameAndRank = '';
-    let psPart = '';
-
-    if (cleaned.length >= 3) {
-      nameAndRank = `${cleaned[0]}, ${cleaned[1]}`;
-      psPart = cleaned[2];
-    } else if (cleaned.length === 2) {
-      nameAndRank = `${cleaned[0]}, ${cleaned[1]}`;
-      psPart = defaultPs;
-    } else if (cleaned.length === 1) {
-      nameAndRank = cleaned[0];
-      psPart = defaultPs;
-    }
-
-    if (nameAndRank && psPart) {
-      return `${nameAndRank} (${psPart})`;
-    }
-    return nameAndRank || psPart || officerStr;
+  function formatOfficerInchargeDisplay(officerStr, mandal = '', unitName = '', route = '', phone = '', id = '') {
+    return formatOfficerRankAndPs(officerStr, mandal, unitName, route, phone, id);
   }
 
   function updateMyMarkerOnMap(lat, lng, accuracy, labelText, bearing, isMoving, kmh, rawOfficer, mandal = '') {
+    let cleanLabelText = (labelText || 'మీరు ఇక్కడ ఉన్నారు').replace(/^(SSF|SF|RM|QRT)\s*:\s*\1\b/i, '$1');
+    cleanLabelText = cleanLabelText.replace(/^(SSF|SF|RM|QRT)\s*:\s*(\1-)/i, '$2');
     if (!myMarker) {
       curOfficerLat = lat;
       curOfficerLng = lng;
-      const offDisp = formatOfficerInchargeDisplay(rawOfficer, mandal);
+      const offDisp = formatOfficerInchargeDisplay(rawOfficer, mandal, '', cleanLabelText);
       const icon = L.divIcon({
         className: 'my-location-marker',
         html: `
@@ -1880,7 +1878,7 @@
             <div style="background:#0b1a2e; color:#fff; font-weight:bold; font-size:10px; padding:3px 8px; border-radius:8px; border:1px solid #10b981; white-space:nowrap; position:absolute; bottom:38px; left:50%; transform:translateX(-50%); box-shadow:0 3px 8px rgba(0,0,0,0.6); display:flex; flex-direction:column; align-items:center; gap:1px;">
               <div style="display:flex; align-items:center; gap:4px;">
                 <span style="color:#10b981;">●</span>
-                <span>${labelText || 'మీరు ఇక్కడ ఉన్నారు'}</span>
+                <span>${cleanLabelText}</span>
                 ${kmh > 0 ? `<span style="background:rgba(56,189,248,0.25); color:#38bdf8; padding:1px 5px; border-radius:10px; font-size:9px;">${kmh} km/h</span>` : `<span style="color:#94a3b8; font-size:9px; font-weight:normal;">(Stopped)</span>`}
               </div>
               ${offDisp ? `<div style="font-size:9.5px; color:#fde047; font-weight:600; border-top:1px solid rgba(255,255,255,0.15); padding-top:1px;"><i class="fa-solid fa-user-shield"></i> ${offDisp}</div>` : ''}

@@ -15,13 +15,15 @@ const liveUserId = 'control_room_gp_' + Math.random().toString(36).substring(2, 
 const LIVE_UNIT_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes active threshold for live field units
 
 // Forces metadata lookup from route_mobiles_data.js
-function getPartyUnitMeta(unitId) {
+function getPartyUnitMeta(unitId, phone) {
     if (!window.ROUTE_MOBILES_DATA || !Array.isArray(window.ROUTE_MOBILES_DATA)) return null;
     const cleanId = String(unitId || '').trim().toLowerCase();
+    const cleanPh = String(phone || '').replace(/\D/g, '').slice(-10);
     return window.ROUTE_MOBILES_DATA.find(function(u) {
         if (!u) return false;
-        if (String(u.id || '').trim().toLowerCase() === cleanId) return true;
-        if (String(u.unitId || '').trim().toLowerCase() === cleanId) return true;
+        if (cleanId && String(u.id || '').trim().toLowerCase() === cleanId) return true;
+        if (cleanId && String(u.unitId || '').trim().toLowerCase() === cleanId) return true;
+        if (cleanPh && String(u.phone || '').replace(/\D/g, '').slice(-10) === cleanPh) return true;
         return false;
     }) || null;
 }
@@ -39,6 +41,98 @@ function getLivePartyCategoryTheme(catKey) {
         default:
             return { color: '#3b82f6', icon: 'fa-car-side', label: 'Route Mobile', badgeClass: 'bg-blue-100 text-blue-800 border-blue-300' };
     }
+}
+
+// Format Officer: No Person Names; display Rank and Police Station (Rank, PS Name)
+function formatOfficerRankAndPs(rawOfficer, mandal, unitName, route, phone, id) {
+    const cleanPhone = String(phone || '').replace(/\D/g, '').slice(-10);
+    const cleanId = String(id || '').trim();
+
+    // 1. Explicit District & Division Heads / DSPs
+    if (cleanPhone === '9704452107' || cleanId === 'SP_Srikakulam') return 'SP, Srikakulam';
+    if (cleanPhone === '6309990804' || cleanId === 'QRT_1') return 'SDPO, Srikakulam';
+    if (cleanPhone === '6309990811' || cleanId === 'QRT_3') return 'SDPO, Tekkali';
+    if (cleanPhone === '6309990805' || cleanId === 'QRT_4') return 'SDPO, Kasibugga';
+    if (cleanPhone === '6309990810' || cleanId === 'QRT_2') return 'DSP, Mahila UPS';
+    if (cleanPhone === '7036228899' || cleanId === 'QRT_5') return 'DSP, CID VSP';
+    if (cleanPhone === '6309990813' || cleanId === 'QRT_6') return 'DSP (AR), DAR';
+
+    // 2. 12 Circle Inspectors
+    if (cleanPhone === '6309990814' || cleanId === 'SSF_Srikakulam_1' || /Singupuram/i.test(unitName || '') || /Singupuram/i.test(route || '')) return 'CI, Srikakulam Rural';
+    if (cleanPhone === '6309990823' || cleanId === 'SSF_Amadalavalasa_7') return 'CI, Amadalavalasa';
+    if (cleanPhone === '6309990816' || cleanId === 'SSF_Etcherla_4') return 'CI, JR Puram';
+    if (cleanPhone === '6309990860' || cleanId === 'SSF_Tekkali_16') return 'Inspector, Tekkali PS';
+    if (cleanPhone === '6309990817' || cleanId === 'SSF_Kotabommali_17') return 'CI, Tekkali Rural';
+    if (cleanPhone === '6309990828' || cleanId === 'SSF_Kothuru_22') return 'CI, Kothuru';
+    if (cleanPhone === '6309990822' || cleanId === 'SSF_Pathapatnam_20') return 'CI, Pathapatnam';
+    if (cleanPhone === '6309990815' || cleanId === 'SSF_Narasannapeta_12') return 'CI, Narasannapeta';
+    if (cleanPhone === '6309990825' || cleanId === 'SSF_Palasa_24') return 'CI, Kasibugga PS';
+    if (cleanPhone === '6309990827' || cleanId === 'SSF_Ichapuram_29') return 'CI, Ichapuram';
+    if (cleanPhone === '6309990819' || cleanId === 'SSF_Sompeta_27') return 'CI, Sompeta';
+    if (cleanPhone === '6309990818' || cleanId === 'SSF_Mandasa_26') return 'CI, Kasibugga Rural';
+
+    const defaultPs = mandal ? (mandal.endsWith('PS') ? mandal : (mandal + ' PS')) : '';
+
+    let officerStr = rawOfficer || '';
+    if ((!officerStr || officerStr === 'Police Officer' || officerStr === 'Duty Force' || officerStr === 'Officer') && window.ROUTE_MOBILES_DATA) {
+        const match = window.ROUTE_MOBILES_DATA.find(function(u) {
+            if (!u) return false;
+            if (cleanId && (u.id === cleanId || u.unitId === cleanId)) return true;
+            if (cleanPhone && String(u.phone || '').replace(/\D/g, '').slice(-10) === cleanPhone) return true;
+            return false;
+        });
+        if (match && match.officer) officerStr = match.officer;
+    }
+
+    if (officerStr) {
+        const rawParts = officerStr.replace(/[\r\n]+/g, ' ').split(/[,;-]/).map(function(p) { return p.trim(); }).filter(function(p) {
+            return p && !/^\d{10}$/.test(p) && !/^\+?91/.test(p) && !/^\d{5,}$/.test(p);
+        });
+
+        const rankOrder = ['SDPO', 'Addl SP', 'DSP', 'CI', 'Inspector', 'IOP', 'WCI', 'SI', 'WSI', 'Sub Inspector', 'ASI', 'WASI', 'HC', 'WHC', 'PC', 'WPC'];
+        let rankIdx = -1;
+        let rankName = '';
+
+        for (let i = 0; i < rawParts.length; i++) {
+            const p = rawParts[i];
+            for (let r = 0; r < rankOrder.length; r++) {
+                const targetRank = rankOrder[r];
+                const re = new RegExp('\\b' + targetRank.replace('.', '\\.') + '\\b', 'i');
+                if (re.test(p)) {
+                    rankIdx = i;
+                    if (targetRank === 'IOP') rankName = 'CI';
+                    else if (/Sub Inspector/i.test(targetRank)) rankName = 'SI';
+                    else rankName = targetRank;
+                    break;
+                }
+            }
+            if (rankIdx !== -1) break;
+        }
+
+        if (rankIdx !== -1) {
+            let psName = '';
+            for (let j = rankIdx + 1; j < rawParts.length; j++) {
+                const cand = rawParts[j].trim();
+                if (cand && !/^\d+$/.test(cand) && !/^(SPF|HG)$/i.test(cand)) {
+                    psName = cand;
+                    break;
+                }
+            }
+            if (!psName) {
+                psName = defaultPs;
+            } else {
+                if (!/(PS|Rural|Town|Traffic|CID|DCRB|DAR|VR|PCR|SB|UPS|Cell)$/i.test(psName)) {
+                    psName = psName + ' PS';
+                }
+            }
+            return rankName + ', ' + psName;
+        }
+    }
+
+    if (unitName && /\b(CI|SI|DSP|Inspector|ASI|HC|PC)\b/i.test(unitName)) return unitName;
+    if (route && /\b(CI|SI|DSP|Inspector|ASI|HC|PC)\b/i.test(route)) return route;
+
+    return defaultPs || 'Police';
 }
 
 window.initLivePartyTracking = function() {
@@ -259,7 +353,7 @@ function updateLivePartyUnitOnMap(key, data) {
     let unit = window.livePartyMarkers[key];
     if (!unit) {
         // Create new marker with compact sizing
-        const icon = createLivePoliceMarkerIcon(catKey, mandal, unitName, true, isMoving, bearing, speedKmh, officer);
+        const icon = createLivePoliceMarkerIcon(catKey, mandal, unitName, true, isMoving, bearing, speedKmh, officer, phone, key);
         const marker = L.marker([lat, lng], { icon: icon, zIndexOffset: 1000 });
         
         const circle = L.circle([lat, lng], {
@@ -324,7 +418,7 @@ function updateLivePartyUnitOnMap(key, data) {
         unit.circle.setRadius(Math.max(8, accuracy));
 
         // Icon update
-        unit.marker.setIcon(createLivePoliceMarkerIcon(catKey, mandal, unitName, true, isMoving, bearing, speedKmh, officer));
+        unit.marker.setIcon(createLivePoliceMarkerIcon(catKey, mandal, unitName, true, isMoving, bearing, speedKmh, officer, phone, key));
 
         // Update popup if open
         if (unit.marker.getPopup() && unit.marker.isPopupOpen()) {
@@ -350,10 +444,20 @@ function removeLivePartyUnit(key) {
 }
 
 // Compact police icon creator
-function createLivePoliceMarkerIcon(catKey, mandal, unitName, isLive, isMoving, bearing, speedKmh, rawOfficer) {
+function createLivePoliceMarkerIcon(catKey, mandal, unitName, isLive, isMoving, bearing, speedKmh, rawOfficer, phone, key) {
     const theme = getLivePartyCategoryTheme(catKey);
-    const badgeText = catKey + ': ' + (unitName || mandal);
-    const officerDisp = formatOfficerDisplay(rawOfficer, mandal);
+
+    // Clean badgeText: ensure NO duplicate "SF: SF" or "SSF: SSF"
+    let badgeText = (unitName || mandal || catKey).trim();
+    if (!badgeText.toUpperCase().startsWith(catKey.toUpperCase()) && 
+        !/\b(SSF|SF|RM|QRT|CI|SI|DSP|SDPO|SP|Inspector)\b/i.test(badgeText)) {
+        badgeText = catKey + ': ' + badgeText;
+    }
+    badgeText = badgeText.replace(/^(SSF|SF|RM|QRT)\s*:\s*\1\b/i, '$1');
+    badgeText = badgeText.replace(/^(SSF|SF|RM|QRT)\s*:\s*(\1-)/i, '$2');
+
+    // Officer Display: NO person names; format as "Rank, PS Name"
+    const officerDisp = formatOfficerRankAndPs(rawOfficer, mandal, unitName, '', phone, key);
     const officerHtml = officerDisp 
         ? '<div class="officer-incharge-badge"><i class="fa-solid fa-user-shield text-[8px] text-yellow-300"></i><span>' + officerDisp + '</span></div>' 
         : '';
@@ -407,26 +511,23 @@ function createLivePoliceMarkerIcon(catKey, mandal, unitName, isLive, isMoving, 
     });
 }
 
-function formatOfficerDisplay(rawOfficer, mandal) {
-    if (!rawOfficer) return mandal ? (mandal + ' PS') : '';
-    const parts = rawOfficer.split(',').map(function(p) { return p.trim(); }).filter(Boolean);
-    const cleaned = parts.filter(function(p) { return !/^\d{10}$/.test(p.replace(/\s+/g, '')); });
-    if (cleaned.length >= 2) {
-        return cleaned[0] + ', ' + cleaned[1];
-    }
-    return cleaned[0] || rawOfficer;
+function formatOfficerDisplay(rawOfficer, mandal, unitName, route, phone, id) {
+    return formatOfficerRankAndPs(rawOfficer, mandal, unitName, route, phone, id);
 }
 
 // Hover Tooltip: Displays officer details immediately on hover
 function buildLivePartyTooltipHtml(key, unit, meta) {
     const theme = getLivePartyCategoryTheme(unit.catKey);
     const speedText = unit.speedKmh > 0 ? (unit.speedKmh + ' km/h (Moving)') : '(Stopped)';
+    const rankPs = formatOfficerRankAndPs(unit.officer, unit.mandal, unit.unitName, meta && meta.route, unit.phone, key);
+    let title = (unit.unitName || key);
+    title = title.replace(/^(SSF|SF|RM|QRT)\s*:\s*\1\b/i, '$1');
     return '<div style="font-family:sans-serif; font-size:11px; line-height:1.35; color:#0f172a; min-width:180px;">' +
                 '<div style="font-weight:bold; color:' + theme.color + '; border-bottom:1px solid #cbd5e1; padding-bottom:3px; margin-bottom:3px; display:flex; justify-content:space-between; align-items:center;">' +
-                    '<span>[' + unit.catKey + '] ' + (unit.unitName || key) + '</span>' +
+                    '<span>' + title + '</span>' +
                     '<span style="color:#10b981; font-size:9px;">● LIVE</span>' +
                 '</div>' +
-                '<div><strong>Officer:</strong> ' + (unit.officer || '-') + '</div>' +
+                '<div><strong>Designation:</strong> <span style="font-weight:700; color:#1e3a8a;">' + rankPs + '</span></div>' +
                 (unit.phone ? '<div><strong>Phone:</strong> <span style="color:#2563eb; font-weight:bold;">' + unit.phone + '</span></div>' : '') +
                 (unit.mandal ? '<div><strong>PS:</strong> ' + unit.mandal + ' PS</div>' : '') +
                 '<div><strong>Status:</strong> <span style="font-weight:600; color:' + (unit.speedKmh > 0 ? '#16a34a' : '#d97706') + ';">' + speedText + '</span></div>' +
@@ -437,6 +538,9 @@ function buildLivePartyPopupHtml(key, unit, meta) {
     const theme = getLivePartyCategoryTheme(unit.catKey);
     const phone = unit.phone || meta.phone || '';
     const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+    const rankPs = formatOfficerRankAndPs(unit.officer, unit.mandal, unit.unitName, meta && meta.route, unit.phone, key);
+    let title = (unit.unitName || key);
+    title = title.replace(/^(SSF|SF|RM|QRT)\s*:\s*\1\b/i, '$1');
     
     const callBtn = cleanPhone ? '<a href="tel:' + cleanPhone + '" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold text-xs flex items-center gap-1 shadow-sm"><i class="fa-solid fa-phone"></i> Call</a>' : '';
     const waBtn = cleanPhone ? '<a href="https://wa.me/91${cleanPhone}" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold text-xs flex items-center gap-1 shadow-sm"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>' : '';
@@ -459,12 +563,15 @@ function buildLivePartyPopupHtml(key, unit, meta) {
                 '</div>' +
 
                 '<div>' +
-                    '<div class="text-sm font-black text-slate-900">' + (unit.unitName || key) + '</div>' +
+                    '<div class="text-sm font-black text-slate-900">' + title + '</div>' +
                     '<div class="text-xs text-slate-600 font-semibold">' + (unit.mandal ? unit.mandal + ' PS' : '') + '</div>' +
                 '</div>' +
 
                 '<div class="bg-slate-50 p-2 rounded border border-slate-200 text-xs space-y-1">' +
-                    '<div><strong class="text-slate-700">Incharge:</strong> <span class="text-slate-900 font-bold">' + (unit.officer || '-') + '</span></div>' +
+                    '<div><strong class="text-slate-700">Rank & PS:</strong> <span class="text-slate-900 font-bold">' + rankPs + '</span></div>' +
+                    (unit.phone ? '<div><strong class="text-slate-700">Phone:</strong> <span class="text-blue-700 font-bold">' + unit.phone + '</span></div>' : '') +
+                    (meta.supporting ? '<div><strong class="text-slate-700">Supporting:</strong> <span class="text-slate-600">' + meta.supporting + '</span></div>' : '') +
+                    (meta.hq ? '<div><strong class="text-slate-700">HQ:</strong> <span class="text-slate-800 font-semibold">' + meta.hq + '</span></div>' : '') +
                     (unit.phone ? '<div><strong class="text-slate-700">Phone:</strong> <span class="text-blue-700 font-bold">' + unit.phone + '</span></div>' : '') +
                     (meta.supporting ? '<div><strong class="text-slate-700">Supporting:</strong> <span class="text-slate-600">' + meta.supporting + '</span></div>' : '') +
                     (meta.hq ? '<div><strong class="text-slate-700">HQ:</strong> <span class="text-slate-800 font-semibold">' + meta.hq + '</span></div>' : '') +
