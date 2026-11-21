@@ -1040,12 +1040,11 @@
   initMandalBoundaries();
 
   // -------------------------------------------------------------
-  // SDPO Multi-Officer Live Monitoring:
-  // 1. SDPO Srikakulam (6309990804) -> 11 Mandals
-  // 2. SDPO Tekkali (6309990811)    -> 12 Mandals
-  // 3. SDPO Kasibugga (6309990805)  -> 7 Mandals
+  // Supervisory Multi-Officer Live Monitoring (SDPO & Circle Inspectors):
+  // 3 SDPOs (Division level) + 12 CIs/Inspectors (Circle level)
   // -------------------------------------------------------------
   const SDPO_MONITORS = {
+    // SDPO Division Level Monitors (3 Sub-Divisions)
     '6309990804': {
       phone: '6309990804',
       name: 'SDPO శ్రీకాకుళం',
@@ -1120,6 +1119,181 @@
         'kaviti',
         'mandasa',
         'sompeta',
+        'vajrapukothuru',
+        'vajrapukothur',
+        'vajrapukotturu'
+      ]
+    },
+
+    // Circle Level Monitors (12 Circle Incharges)
+    // 1. Amadalavalasa Circle: Amadalavalasa, Burja, Sarubujjili, Lakshminarsupeta, Ponduru
+    '6309990823': {
+      phone: '6309990823',
+      name: 'CI ఆమదాలవలస',
+      title: 'CI ఆమదాలవలస సర్కిల్ లైవ్ మ్యాప్:',
+      subBadge: '5 మండలాల ఫోర్స్',
+      toastMsg: '5 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'amadalavalasa',
+        'amadalavlasa',
+        'burja',
+        'sarubujjili',
+        'lakshminarsupeta',
+        'lakshminarasupeta',
+        'lnpeta',
+        'ponduru'
+      ]
+    },
+    // 2. Srikakulam Rural Circle: Gara, Srikakulam
+    '6309990814': {
+      phone: '6309990814',
+      name: 'CI శ్రీకాకుళం రూరల్',
+      title: 'CI శ్రీకాకుళం రూరల్ సర్కిల్ లైవ్ మ్యాప్:',
+      subBadge: '2 మండలాల ఫోర్స్',
+      toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'gara',
+        'srikakulam',
+        'srikakulamrural'
+      ]
+    },
+    // 3. JR Puram / Etcherla Circle: Ranastalam, Laveru, Etcherla, G.Sigadam
+    '6309990816': {
+      phone: '6309990816',
+      name: 'CI జేఆర్ పురం / ఎచ్చెర్ల',
+      title: 'CI జేఆర్ పురం సర్కిల్ లైవ్ మ్యాప్:',
+      subBadge: '4 మండలాల ఫోర్స్',
+      toastMsg: '4 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'ranastalam',
+        'ranasthalam',
+        'jrpuram',
+        'laveru',
+        'etcherla',
+        'gsigadam',
+        'ganguvarisigadam',
+        'sigadam'
+      ]
+    },
+    // 4. Tekkali PS: Tekkali
+    '6309990860': {
+      phone: '6309990860',
+      name: 'ఇన్‌స్పెక్టర్ టెక్కలి',
+      title: 'ఇన్‌స్పెక్టర్ టెక్కలి లైవ్ మ్యాప్:',
+      subBadge: 'టెక్కలి మండల ఫోర్స్',
+      toastMsg: 'టెక్కలి మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'tekkali'
+      ]
+    },
+    // 5. Tekkali Rural / Kotabommali Circle: Kotabommali, Santhabommali, Nandigam
+    '6309990817': {
+      phone: '6309990817',
+      name: 'CI కోటబొమ్మాళి / టెక్కలి రూరల్',
+      title: 'CI కోటబొమ్మాళి సర్కిల్ లైవ్ మ్యాప్:',
+      subBadge: '3 మండలాల ఫోర్స్',
+      toastMsg: '3 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'kotabommali',
+        'santhabommali',
+        'santabommali',
+        'nandigam'
+      ]
+    },
+    // 6. Kothuru Circle: Hiramandalam, Kothuru
+    '6309990828': {
+      phone: '6309990828',
+      name: 'CI కొత్తూరు',
+      title: 'CI కొత్తూరు సర్కిల్ లైవ్ మ్యాప్:',
+      subBadge: '2 మండలాల ఫోర్స్',
+      toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'hiramandalam',
+        'heeramandalam',
+        'kothuru',
+        'koturu'
+      ]
+    },
+    // 7. Pathapatnam Circle: Meliaputti, Pathapatnam
+    '6309990822': {
+      phone: '6309990822',
+      name: 'CI పాతపట్నం',
+      title: 'CI పాతపట్నం సర్కిల్ లైవ్ మ్యాప్:',
+      subBadge: '2 మండలాల ఫోర్స్',
+      toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'meliaputti',
+        'meliaputty',
+        'pathapatnam',
+        'patapatnam'
+      ]
+    },
+    // 8. Narasannapeta Circle: Narasannapeta, Polaki, Saravakota, Jalumuru
+    '6309990815': {
+      phone: '6309990815',
+      name: 'CI నరసన్నపేట',
+      title: 'CI నరసన్నపేట సర్కిల్ లైవ్ మ్యాప్:',
+      subBadge: '4 మండలాల ఫోర్స్',
+      toastMsg: '4 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'narasannapeta',
+        'narsannapeta',
+        'polaki',
+        'saravakota',
+        'sarvakota',
+        'jalumuru',
+        'jalamuru'
+      ]
+    },
+    // 9. Kasibugga PS: Kasibugga
+    '6309990825': {
+      phone: '6309990825',
+      name: 'CI కాశీబుగ్గ',
+      title: 'CI కాశీబుగ్గ సర్కిల్ లైవ్ మ్యాప్:',
+      subBadge: 'కాశీబుగ్గ మండల ఫోర్స్',
+      toastMsg: 'కాశీబుగ్గ మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'kasibugga',
+        'palasa',
+        'palasakasibugga'
+      ]
+    },
+    // 10. Ichapuram Circle: Ichapuram Rural, Kaviti
+    '6309990827': {
+      phone: '6309990827',
+      name: 'CI ఇచ్ఛాపురం',
+      title: 'CI ఇచ్ఛాపురం సర్కిల్ లైవ్ మ్యాప్:',
+      subBadge: '2 మండలాల ఫోర్స్',
+      toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'ichapuram',
+        'ichchapuram',
+        'ichapuramrural',
+        'ichapuramurban',
+        'kaviti'
+      ]
+    },
+    // 11. Sompeta Circle: Kanchili, Sompeta
+    '6309990819': {
+      phone: '6309990819',
+      name: 'CI సోంపేట',
+      title: 'CI సోంపేట సర్కిల్ లైవ్ మ్యాప్:',
+      subBadge: '2 మండలాల ఫోర్స్',
+      toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'kanchili',
+        'sompeta'
+      ]
+    },
+    // 12. Kasibugga Rural / Mandasa Circle: Mandasa, Vajrapukothuru
+    '6309990818': {
+      phone: '6309990818',
+      name: 'CI కాశీబుగ్గ రూరల్ / మందస',
+      title: 'CI మందస / వజ్రపుకొత్తూరు సర్కిల్ లైవ్ మ్యాప్:',
+      subBadge: '2 మండలాల ఫోర్స్',
+      toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      mandals: [
+        'mandasa',
         'vajrapukothuru',
         'vajrapukothur',
         'vajrapukotturu'
@@ -3370,7 +3544,25 @@
     }
   }
 
-  const DESIGNATED_OFFICER_PHONES = ['6309990804', '6309990811', '6309990805'];
+  const DESIGNATED_OFFICER_PHONES = [
+    // SDPO Division Incharges (3)
+    '6309990804', // SDPO Srikakulam (11 Mandals)
+    '6309990811', // SDPO Tekkali (12 Mandals)
+    '6309990805', // SDPO Kasibugga (7 Mandals)
+    // Circle Incharges (12)
+    '6309990823', // CI Amadalavalasa (5 Mandals: Amadalavalasa, Burja, Sarubujjili, Lakshminarsupeta, Ponduru)
+    '6309990814', // CI Srikakulam Rural (2 Mandals: Gara, Srikakulam)
+    '6309990816', // CI JR Puram / Etcherla (4 Mandals: Ranastalam, Laveru, Etcherla, G.Sigadam)
+    '6309990860', // Inspector Tekkali PS (1 Mandal: Tekkali)
+    '6309990817', // CI Tekkali Rural (3 Mandals: Kotabommali, Santhabommali, Nandigam)
+    '6309990828', // CI Kothuru (2 Mandals: Hiramandalam, Kothuru)
+    '6309990822', // CI Pathapatnam (2 Mandals: Meliaputti, Pathapatnam)
+    '6309990815', // CI Narasannapeta (4 Mandals: Narasannapeta, Polaki, Saravakota, Jalumuru)
+    '6309990825', // CI Kasibugga (1 Mandal: Kasibugga)
+    '6309990827', // CI Ichapuram (2 Mandals: Ichapuram Rural, Kaviti)
+    '6309990819', // CI Sompeta (2 Mandals: Kanchili, Sompeta)
+    '6309990818'  // CI Kasibugga Rural / Mandasa (2 Mandals: Mandasa, Vajrapukothuru)
+  ];
   const DESIGNATED_OFFICER_PASSWORD = 'Police@123';
 
   function isDesignatedOfficer(phone) {
