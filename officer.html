@@ -1067,8 +1067,89 @@
   initMandalBoundaries();
 
   // -------------------------------------------------------------
+  // Canonical Mandal Mapping for 30 Mandals of Srikakulam District
+  // -------------------------------------------------------------
+  function getCanonicalMandalTokens(mandalStr) {
+    if (!mandalStr) return [];
+    const cleanStr = String(mandalStr).toLowerCase();
+    if (cleanStr === 'district hq') return [];
+
+    const parts = cleanStr.split(/[,/]/).map(p => p.trim()).filter(Boolean);
+    const tokens = [];
+
+    parts.forEach(p => {
+      const c = p.replace(/[^a-z0-9]/g, '');
+      if (!c) return;
+
+      if (c.includes('vajrapu')) {
+        tokens.push('vajrapukothuru');
+      } else if (c === 'kothuru' || c === 'koturu') {
+        tokens.push('kothuru');
+      } else if (c.includes('hiramandalam') || c.includes('heeramandalam')) {
+        tokens.push('hiramandalam');
+      } else if (c.includes('amadalav')) {
+        tokens.push('amadalavalasa');
+      } else if (c === 'burja') {
+        tokens.push('burja');
+      } else if (c === 'etcherla') {
+        tokens.push('etcherla');
+      } else if (c.includes('sigadam')) {
+        tokens.push('gsigadam');
+      } else if (c === 'gara') {
+        tokens.push('gara');
+      } else if (c.includes('ranast') || c.includes('ranasth') || c === 'jrpuram') {
+        tokens.push('ranastalam');
+      } else if (c === 'laveru') {
+        tokens.push('laveru');
+      } else if (c === 'ponduru') {
+        tokens.push('ponduru');
+      } else if (c === 'sarubujjili') {
+        tokens.push('sarubujjili');
+      } else if (c.includes('lakshminars') || c.includes('lakshminaras') || c.includes('lnpeta')) {
+        tokens.push('lakshminarsupeta');
+      } else if (c === 'tekkali') {
+        tokens.push('tekkali');
+      } else if (c.includes('kotabomm')) {
+        tokens.push('kotabommali');
+      } else if (c.includes('santabomm') || c.includes('santhabomm')) {
+        tokens.push('santhabommali');
+      } else if (c.includes('jalmuru') || c.includes('jalumuru')) {
+        tokens.push('jalumuru');
+      } else if (c.includes('meliaputt')) {
+        tokens.push('meliaputti');
+      } else if (c.includes('nandigam')) {
+        tokens.push('nandigam');
+      } else if (c.includes('narsannapeta') || c.includes('narasannapeta')) {
+        tokens.push('narasannapeta');
+      } else if (c.includes('pathapatnam') || c.includes('patapatnam')) {
+        tokens.push('pathapatnam');
+      } else if (c === 'polaki') {
+        tokens.push('polaki');
+      } else if (c.includes('sarvakota') || c.includes('saravakota')) {
+        tokens.push('saravakota');
+      } else if (c.includes('kasibugga') || c === 'palasa' || c === 'palasakasibugga') {
+        tokens.push('kasibugga');
+      } else if (c.includes('ichapuram') || c.includes('ichchapuram')) {
+        tokens.push('ichapuram');
+      } else if (c === 'kanchili') {
+        tokens.push('kanchili');
+      } else if (c.includes('kaviti') || c.includes('kavithi')) {
+        tokens.push('kaviti');
+      } else if (c === 'mandasa') {
+        tokens.push('mandasa');
+      } else if (c === 'sompeta') {
+        tokens.push('sompeta');
+      } else if (c.includes('srikakulam')) {
+        tokens.push('srikakulam');
+      }
+    });
+
+    return Array.from(new Set(tokens));
+  }
+
+  // -------------------------------------------------------------
   // Supervisory Multi-Officer Live Monitoring (SDPO & Circle Inspectors):
-  // 1 District Head (SP - All 30 Mandals) + 3 SDPOs (Division level) + 12 CIs/Inspectors (Circle level)
+  // 1 District Head (SP - All 30 Mandals) + 3 SDPOs (Division level) + 12 CIs/Inspectors (Circle level) + 3 DSPs
   // -------------------------------------------------------------
   const SDPO_MONITORS = {
     // District Level Monitor (All 30 Mandals - District Wide)
@@ -1080,19 +1161,12 @@
       toastMsg: 'జిల్లాలోని మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
       allMandals: true,
       mandals: [
-        'all',
-        'srikakulam', 'srikakulamrural', 'amadalavalasa', 'amadalavlasa', 'burja',
-        'etcherla', 'gsigadam', 'ganguvarisigadam', 'sigadam', 'gara',
-        'ranastalam', 'ranasthalam', 'jrpuram', 'laveru', 'ponduru',
-        'sarubujjili', 'lakshminarsupeta', 'lakshminarasupeta', 'lnpeta',
-        'tekkali', 'kotabommali', 'santhabommali', 'santabommali',
-        'hiramandalam', 'heeramandalam', 'jalumuru', 'jalamuru',
-        'kothuru', 'koturu', 'meliaputti', 'meliaputty', 'nandigam',
-        'narasannapeta', 'narsannapeta', 'pathapatnam', 'patapatnam',
-        'polaki', 'saravakota', 'sarvakota', 'kasibugga', 'palasa',
-        'palasakasibugga', 'ichapuram', 'ichchapuram', 'ichapuramrural',
-        'ichapuramurban', 'kanchili', 'kaviti', 'mandasa', 'sompeta',
-        'vajrapukothuru', 'vajrapukothur', 'vajrapukotturu'
+        'srikakulam', 'amadalavalasa', 'burja', 'etcherla', 'gsigadam', 'gara',
+        'ranastalam', 'laveru', 'ponduru', 'sarubujjili', 'lakshminarsupeta',
+        'tekkali', 'kotabommali', 'santhabommali', 'hiramandalam', 'jalumuru',
+        'kothuru', 'meliaputti', 'nandigam', 'narasannapeta', 'pathapatnam',
+        'polaki', 'saravakota', 'kasibugga', 'ichapuram', 'kanchili', 'kaviti',
+        'mandasa', 'sompeta', 'vajrapukothuru'
       ]
     },
 
@@ -1100,80 +1174,38 @@
     '6309990804': {
       phone: '6309990804',
       name: 'SDPO శ్రీకాకుళం',
-      title: 'SDPO శ్రీకాకుళం లైవ్ మ్యాప్:',
+      title: 'SDPO శ్రీకాకుళం లైవ్ మ్యాప్ (11 మండలాలు):',
       subBadge: '11 మండలాల ఫోర్స్',
       toastMsg: '11 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'srikakulam',
-        'amadalavalasa',
-        'amadalavlasa',
-        'burja',
-        'etcherla',
-        'gsigadam',
-        'ganguvarisigadam',
-        'sigadam',
-        'gara',
-        'ranastalam',
-        'ranasthalam',
-        'jrpuram',
-        'laveru',
-        'ponduru',
-        'sarubujjili',
-        'lakshminarsupeta',
-        'lakshminarasupeta',
-        'lnpeta'
+        'srikakulam', 'amadalavalasa', 'burja', 'etcherla', 'gsigadam',
+        'gara', 'ranastalam', 'laveru', 'ponduru', 'sarubujjili', 'lakshminarsupeta'
       ]
     },
     '6309990811': {
       phone: '6309990811',
       name: 'SDPO టెక్కలి',
-      title: 'SDPO టెక్కలి లైవ్ మ్యాప్:',
+      title: 'SDPO టెక్కలి లైవ్ మ్యాప్ (12 మండలాలు):',
       subBadge: '12 మండలాల ఫోర్స్',
       toastMsg: '12 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'tekkali',
-        'kotabommali',
-        'santhabommali',
-        'santabommali',
-        'hiramandalam',
-        'heeramandalam',
-        'jalumuru',
-        'jalamuru',
-        'kothuru',
-        'koturu',
-        'meliaputti',
-        'meliaputty',
-        'nandigam',
-        'narasannapeta',
-        'narsannapeta',
-        'pathapatnam',
-        'patapatnam',
-        'polaki',
-        'saravakota',
-        'sarvakota'
+        'tekkali', 'kotabommali', 'santhabommali', 'hiramandalam', 'jalumuru',
+        'kothuru', 'meliaputti', 'nandigam', 'narasannapeta', 'pathapatnam',
+        'polaki', 'saravakota'
       ]
     },
     '6309990805': {
       phone: '6309990805',
       name: 'SDPO కాశీబుగ్గ',
-      title: 'SDPO కాశీబుగ్గ లైవ్ మ్యాప్:',
+      title: 'SDPO కాశీబుగ్గ లైవ్ మ్యాప్ (7 మండలాలు):',
       subBadge: '7 మండలాల ఫోర్స్',
       toastMsg: '7 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'kasibugga',
-        'palasa',
-        'palasakasibugga',
-        'ichapuram',
-        'ichchapuram',
-        'ichapuramrural',
-        'ichapuramurban',
-        'kanchili',
-        'kaviti',
-        'mandasa',
-        'sompeta',
-        'vajrapukothuru',
-        'vajrapukothur',
-        'vajrapukotturu'
+        'kasibugga', 'ichapuram', 'kanchili', 'kaviti', 'mandasa',
+        'sompeta', 'vajrapukothuru'
       ]
     },
 
@@ -1182,58 +1214,46 @@
     '6309990823': {
       phone: '6309990823',
       name: 'CI ఆమదాలవలస',
-      title: 'CI ఆమదాలవలస సర్కిల్ లైవ్ మ్యాప్:',
+      title: 'CI ఆమదాలవలస సర్కిల్ లైవ్ మ్యాప్ (5 మండలాలు):',
       subBadge: '5 మండలాల ఫోర్స్',
       toastMsg: '5 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'amadalavalasa',
-        'amadalavlasa',
-        'burja',
-        'sarubujjili',
-        'lakshminarsupeta',
-        'lakshminarasupeta',
-        'lnpeta',
-        'ponduru'
+        'amadalavalasa', 'burja', 'sarubujjili', 'lakshminarsupeta', 'ponduru'
       ]
     },
     // 2. Srikakulam Rural Circle: Gara, Srikakulam
     '6309990814': {
       phone: '6309990814',
       name: 'CI శ్రీకాకుళం రూరల్',
-      title: 'CI శ్రీకాకుళం రూరల్ సర్కిల్ లైవ్ మ్యాప్:',
+      title: 'CI శ్రీకాకుళం రూరల్ సర్కిల్ లైవ్ మ్యాప్ (2 మండలాలు):',
       subBadge: '2 మండలాల ఫోర్స్',
       toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'gara',
-        'srikakulam',
-        'srikakulamrural'
+        'gara', 'srikakulam'
       ]
     },
     // 3. JR Puram / Etcherla Circle: Ranastalam, Laveru, Etcherla, G.Sigadam
     '6309990816': {
       phone: '6309990816',
       name: 'CI జేఆర్ పురం / ఎచ్చెర్ల',
-      title: 'CI జేఆర్ పురం సర్కిల్ లైవ్ మ్యాప్:',
+      title: 'CI జేఆర్ పురం సర్కిల్ లైవ్ మ్యాప్ (4 మండలాలు):',
       subBadge: '4 మండలాల ఫోర్స్',
       toastMsg: '4 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'ranastalam',
-        'ranasthalam',
-        'jrpuram',
-        'laveru',
-        'etcherla',
-        'gsigadam',
-        'ganguvarisigadam',
-        'sigadam'
+        'ranastalam', 'laveru', 'etcherla', 'gsigadam'
       ]
     },
     // 4. Tekkali PS: Tekkali
     '6309990860': {
       phone: '6309990860',
       name: 'ఇన్‌స్పెక్టర్ టెక్కలి',
-      title: 'ఇన్‌స్పెక్టర్ టెక్కలి లైవ్ మ్యాప్:',
+      title: 'ఇన్‌స్పెక్టర్ టెక్కలి లైవ్ మ్యాప్ (టెక్కలి మండలం):',
       subBadge: 'టెక్కలి మండల ఫోర్స్',
       toastMsg: 'టెక్కలి మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
         'tekkali'
       ]
@@ -1242,113 +1262,96 @@
     '6309990817': {
       phone: '6309990817',
       name: 'CI కోటబొమ్మాళి / టెక్కలి రూరల్',
-      title: 'CI కోటబొమ్మాళి సర్కిల్ లైవ్ మ్యాప్:',
+      title: 'CI కోటబొమ్మాళి సర్కిల్ లైవ్ మ్యాప్ (3 మండలాలు):',
       subBadge: '3 మండలాల ఫోర్స్',
       toastMsg: '3 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'kotabommali',
-        'santhabommali',
-        'santabommali',
-        'nandigam'
+        'kotabommali', 'santhabommali', 'nandigam'
       ]
     },
     // 6. Kothuru Circle: Hiramandalam, Kothuru
     '6309990828': {
       phone: '6309990828',
       name: 'CI కొత్తూరు',
-      title: 'CI కొత్తూరు సర్కిల్ లైవ్ మ్యాప్:',
+      title: 'CI కొత్తూరు సర్కిల్ లైవ్ మ్యాప్ (2 మండలాలు):',
       subBadge: '2 మండలాల ఫోర్స్',
       toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'hiramandalam',
-        'heeramandalam',
-        'kothuru',
-        'koturu'
+        'hiramandalam', 'kothuru'
       ]
     },
     // 7. Pathapatnam Circle: Meliaputti, Pathapatnam
     '6309990822': {
       phone: '6309990822',
       name: 'CI పాతపట్నం',
-      title: 'CI పాతపట్నం సర్కిల్ లైవ్ మ్యాప్:',
+      title: 'CI పాతపట్నం సర్కిల్ లైవ్ మ్యాప్ (2 మండలాలు):',
       subBadge: '2 మండలాల ఫోర్స్',
       toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'meliaputti',
-        'meliaputty',
-        'pathapatnam',
-        'patapatnam'
+        'meliaputti', 'pathapatnam'
       ]
     },
     // 8. Narasannapeta Circle: Narasannapeta, Polaki, Saravakota, Jalumuru
     '6309990815': {
       phone: '6309990815',
       name: 'CI నరసన్నపేట',
-      title: 'CI నరసన్నపేట సర్కిల్ లైవ్ మ్యాప్:',
+      title: 'CI నరసన్నపేట సర్కిల్ లైవ్ మ్యాప్ (4 మండలాలు):',
       subBadge: '4 మండలాల ఫోర్స్',
       toastMsg: '4 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'narasannapeta',
-        'narsannapeta',
-        'polaki',
-        'saravakota',
-        'sarvakota',
-        'jalumuru',
-        'jalamuru'
+        'narasannapeta', 'polaki', 'saravakota', 'jalumuru'
       ]
     },
     // 9. Kasibugga PS: Kasibugga
     '6309990825': {
       phone: '6309990825',
-      name: 'CI కాశీబుగ్గ',
-      title: 'CI కాశీబుగ్గ సర్కిల్ లైవ్ మ్యాప్:',
+      name: 'ఇన్‌స్పెక్టర్ కాశీబుగ్గ',
+      title: 'ఇన్‌స్పెక్టర్ కాశీబుగ్గ లైవ్ మ్యాప్ (కాశీబుగ్గ మండలం):',
       subBadge: 'కాశీబుగ్గ మండల ఫోర్స్',
       toastMsg: 'కాశీబుగ్గ మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'kasibugga',
-        'palasa',
-        'palasakasibugga'
+        'kasibugga'
       ]
     },
     // 10. Ichapuram Circle: Ichapuram Rural, Kaviti
     '6309990827': {
       phone: '6309990827',
-      name: 'CI ఇచ్ఛాపురం',
-      title: 'CI ఇచ్ఛాపురం సర్కిల్ లైవ్ మ్యాప్:',
+      name: 'CI ఇచ్చాపురం',
+      title: 'CI ఇచ్చాపురం సర్కిల్ లైవ్ మ్యాప్ (2 మండలాలు):',
       subBadge: '2 మండలాల ఫోర్స్',
       toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'ichapuram',
-        'ichchapuram',
-        'ichapuramrural',
-        'ichapuramurban',
-        'kaviti'
+        'ichapuram', 'kaviti'
       ]
     },
     // 11. Sompeta Circle: Kanchili, Sompeta
     '6309990819': {
       phone: '6309990819',
       name: 'CI సోంపేట',
-      title: 'CI సోంపేట సర్కిల్ లైవ్ మ్యాప్:',
+      title: 'CI సోంపేట సర్కిల్ లైవ్ మ్యాప్ (2 మండలాలు):',
       subBadge: '2 మండలాల ఫోర్స్',
       toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'kanchili',
-        'sompeta'
+        'kanchili', 'sompeta'
       ]
     },
     // 12. Kasibugga Rural / Mandasa Circle: Mandasa, Vajrapukothuru
     '6309990818': {
       phone: '6309990818',
       name: 'CI కాశీబుగ్గ రూరల్ / మందస',
-      title: 'CI మందస / వజ్రపుకొత్తూరు సర్కిల్ లైవ్ మ్యాప్:',
+      title: 'CI మందస / వజ్రపుకొత్తూరు సర్కిల్ లైవ్ మ్యాప్ (2 మండలాలు):',
       subBadge: '2 మండలాల ఫోర్స్',
       toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
       mandals: [
-        'mandasa',
-        'vajrapukothuru',
-        'vajrapukothur',
-        'vajrapukotturu'
+        'mandasa', 'vajrapukothuru'
       ]
     },
 
@@ -1361,15 +1364,7 @@
       toastMsg: '5 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
       allMandals: false,
       mandals: [
-        'ponduru',
-        'ranastalam',
-        'ranasthalam',
-        'jrpuram',
-        'etcherla',
-        'laveru',
-        'gsigadam',
-        'ganguvarisigadam',
-        'sigadam'
+        'ponduru', 'ranastalam', 'etcherla', 'laveru', 'gsigadam'
       ]
     },
     '7036228899': {
@@ -1380,14 +1375,7 @@
       toastMsg: '4 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
       allMandals: false,
       mandals: [
-        'pathapatnam',
-        'patapatnam',
-        'meliaputti',
-        'meliaputty',
-        'kothuru',
-        'koturu',
-        'hiramandalam',
-        'heeramandalam'
+        'pathapatnam', 'meliaputti', 'kothuru', 'hiramandalam'
       ]
     },
     '6309990813': {
@@ -1398,13 +1386,7 @@
       toastMsg: '4 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
       allMandals: false,
       mandals: [
-        'sompeta',
-        'kanchili',
-        'ichapuram',
-        'ichchapuram',
-        'ichapuramrural',
-        'ichapuramurban',
-        'kaviti'
+        'sompeta', 'kanchili', 'ichapuram', 'kaviti'
       ]
     }
   };
@@ -1412,59 +1394,41 @@
   let sdpoSubordinateMarkers = {}; // key: unitKey -> { marker, lastUpdated, data }
 
   function getActiveSdpoConfig() {
-    const p1 = currentLoggedInOfficer ? normalizePhone(currentLoggedInOfficer.phone) : '';
-    const p2 = currentSelectedUnit ? normalizePhone(currentSelectedUnit.phone) : '';
+    // Only return a configuration when an officer is ACTIVELY logged in
+    if (!currentLoggedInOfficer || !currentLoggedInOfficer.phone) {
+      return null;
+    }
+    const cleanPhone = normalizePhone(currentLoggedInOfficer.phone);
+    if (!cleanPhone) return null;
 
-    // 1. Explicit SDPO / SP / DSP / CI Monitors
+    // 1. Explicit SDPO / SP / DSP / CI Monitors (Strictly match logged-in phone)
     for (const phone in SDPO_MONITORS) {
-      if ((p1 && (p1 === phone || p1.endsWith(phone))) || (p2 && (p2 === phone || p2.endsWith(phone)))) {
+      if (cleanPhone === phone || cleanPhone.endsWith(phone)) {
         return SDPO_MONITORS[phone];
       }
     }
 
-    // 2. Dynamic Monitor for ANY logged-in officer (SI, WSI, Field Officer) based on their assigned mandal!
+    // 2. Dynamic Monitor for ANY logged-in field officer (SI, ASI, Route Mobiles) based on their assigned unit mandal!
     const unit = currentSelectedUnit ||
                  (currentLoggedInOfficer && currentLoggedInOfficer.unitId ? (typeof allUnitsData !== 'undefined' && allUnitsData ? allUnitsData.find(u => u.id === currentLoggedInOfficer.unitId) : null) : null) ||
-                 (currentLoggedInOfficer && currentLoggedInOfficer.phone ? findMatchingUnitsByPhone(currentLoggedInOfficer.phone)[0] : null);
+                 (findMatchingUnitsByPhone(cleanPhone)[0] || null);
 
-    const mandalStr = (unit && unit.mandal) ? String(unit.mandal).trim() : '';
+    const mandalStr = (unit && unit.mandal) ? String(unit.mandal).trim() : (currentLoggedInOfficer.mandal || '');
     if (mandalStr && mandalStr.toLowerCase() !== 'district hq') {
-      const rawTokens = mandalStr.split(/[,/]/).map(m => m.trim()).filter(Boolean);
-      const cleanTokens = [];
-      rawTokens.forEach(m => {
-        const c = m.toLowerCase().replace(/[^a-z0-9]/g, '');
-        if (c && !cleanTokens.includes(c)) {
-          cleanTokens.push(c);
-          if (c === 'srikakulam') cleanTokens.push('srikakulamrural');
-          if (c === 'amadalavalasa') cleanTokens.push('amadalavlasa');
-          if (c === 'gsigadam') { cleanTokens.push('sigadam'); cleanTokens.push('ganguvarisigadam'); }
-          if (c === 'ranastalam') { cleanTokens.push('ranasthalam'); cleanTokens.push('jrpuram'); }
-          if (c === 'lakshminarsupeta') { cleanTokens.push('lakshminarasupeta'); cleanTokens.push('lnpeta'); }
-          if (c === 'santhabommali') cleanTokens.push('santabommali');
-          if (c === 'hiramandalam') cleanTokens.push('heeramandalam');
-          if (c === 'jalumuru') cleanTokens.push('jalamuru');
-          if (c === 'kothuru') cleanTokens.push('koturu');
-          if (c === 'meliaputti') cleanTokens.push('meliaputty');
-          if (c === 'narasannapeta') cleanTokens.push('narsannapeta');
-          if (c === 'pathapatnam') cleanTokens.push('patapatnam');
-          if (c === 'saravakota') cleanTokens.push('sarvakota');
-          if (c === 'kasibugga') { cleanTokens.push('palasa'); cleanTokens.push('palasakasibugga'); }
-          if (c === 'ichapuram') { cleanTokens.push('ichchapuram'); cleanTokens.push('ichapuramrural'); }
-          if (c === 'kaviti') cleanTokens.push('kavithi');
-          if (c === 'vajrapukothuru') { cleanTokens.push('vajrapukothur'); cleanTokens.push('vajrapukotturu'); }
-        }
-      });
-
-      const displayMandal = rawTokens.join(', ');
-      return {
-        phone: p1 || p2 || (currentLoggedInOfficer ? currentLoggedInOfficer.phone : ''),
-        name: (currentLoggedInOfficer && currentLoggedInOfficer.officerName) || (unit && unit.officer) || 'పోలీస్ అధికారి',
-        title: `${displayMandal} లైవ్ మ్యాప్:`,
-        subBadge: `${displayMandal} ఫోర్స్`,
-        toastMsg: `${displayMandal} మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.`,
-        allMandals: false,
-        mandals: cleanTokens
-      };
+      const canonicalTokens = getCanonicalMandalTokens(mandalStr);
+      if (canonicalTokens.length > 0) {
+        const rawTokens = mandalStr.split(/[,/]/).map(m => m.trim()).filter(Boolean);
+        const displayMandal = rawTokens.join(', ');
+        return {
+          phone: cleanPhone,
+          name: (currentLoggedInOfficer && currentLoggedInOfficer.officerName) || (unit && unit.officer) || 'పోలీస్ అధికారి',
+          title: ${displayMandal} లైవ్ మ్యాప్:,
+          subBadge: ${displayMandal} ఫోర్స్,
+          toastMsg: ${displayMandal} పరిధిలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.,
+          allMandals: false,
+          mandals: canonicalTokens
+        };
+      }
     }
     return null;
   }
@@ -1492,12 +1456,11 @@
     if (!cfg) return false;
     if (cfg.allMandals) return true;
 
-    const incomingMandals = String(mandal).split(/[,/]/).map(m => m.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(Boolean);
-    if (incomingMandals.length === 0) return false;
+    const unitTokens = getCanonicalMandalTokens(mandal);
+    if (!unitTokens || unitTokens.length === 0) return false;
 
-    return incomingMandals.some(clean => {
-      return cfg.mandals.some(k => clean.includes(k) || k.includes(clean));
-    });
+    // Strict exact canonical token match - prevents substring bleed (e.g. kothuru vs vajrapukothuru)
+    return unitTokens.some(tok => cfg.mandals.includes(tok));
   }
 
   function setupSdpoMqttSubscriptions() {
@@ -1660,10 +1623,15 @@
       activeSdpo.phone
     );
     if (payload.phone && normalizePhone(payload.phone) === myPhone) return;
-    if (myUnitId && payload.unitId === myUnitId) return;
+    if (myUnitId && (payload.unitId === myUnitId || payload.id === myUnitId)) return;
 
     const unitKey = payload.unitId || payload.id || (payload.phone ? 'phone_' + normalizePhone(payload.phone) : null);
     if (!unitKey) return;
+
+    const rawLat = payload.lat !== undefined ? payload.lat : payload.latitude;
+    const rawLng = payload.lng !== undefined ? payload.lng : payload.longitude;
+    const lat = parseFloat(rawLat);
+    const lng = parseFloat(rawLng);
 
     // Filter strictly to the mandals of this logged-in SDPO / CI Monitor
     let mandal = payload.mandal || '';
@@ -1674,13 +1642,11 @@
         (payload.phone && normalizePhone(x.phone) === normalizePhone(payload.phone))
       );
     }
-    if (!mandal && resolvedUnit && resolvedUnit.mandal) {
+    if ((!mandal || mandal.toLowerCase() === 'district hq') && resolvedUnit && resolvedUnit.mandal) {
       mandal = resolvedUnit.mandal;
     }
-    if (!isSdpoTargetMandal(mandal, activeSdpo.phone)) return;
 
-    // If officer stopped sharing or no coords
-    if (payload.status === 'stopped' || !payload.lat || !payload.lng) {
+    if (!isSdpoTargetMandal(mandal, activeSdpo.phone)) {
       if (sdpoSubordinateMarkers[unitKey]) {
         try { officerMap.removeLayer(sdpoSubordinateMarkers[unitKey].marker); } catch (e) {}
         delete sdpoSubordinateMarkers[unitKey];
@@ -1689,9 +1655,15 @@
       return;
     }
 
-    const lat = parseFloat(payload.lat);
-    const lng = parseFloat(payload.lng);
-    if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return;
+    // If officer stopped sharing or no coords
+    if (payload.status === 'stopped' || isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
+      if (sdpoSubordinateMarkers[unitKey]) {
+        try { officerMap.removeLayer(sdpoSubordinateMarkers[unitKey].marker); } catch (e) {}
+        delete sdpoSubordinateMarkers[unitKey];
+        updateSdpoActiveOfficerCountUI();
+      }
+      return;
+    }
 
     const officerName = payload.officer || 'Police Officer';
     const unitName = payload.unitName || payload.route || 'Duty Force';
@@ -4207,6 +4179,12 @@
       renderUnitPreview(assignedUnit);
     }
 
+    // Purge any stale subordinate markers on login to guarantee completely clean map
+    for (const k in sdpoSubordinateMarkers) {
+      try { officerMap.removeLayer(sdpoSubordinateMarkers[k].marker); } catch (e) {}
+    }
+    sdpoSubordinateMarkers = {};
+
     // Configure SDPO Multi-Officer Live Monitoring:
     // 1. SDPO Srikakulam (6309990804) -> 11 Mandals
     // 2. SDPO Tekkali (6309990811)    -> 12 Mandals
@@ -4496,3 +4474,4 @@
   </div>
 </body>
 </html>
+
