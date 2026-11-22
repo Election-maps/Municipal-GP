@@ -12,7 +12,7 @@ window.liveMqttClient = null;
 const LIVE_MQTT_BROKER = 'wss://broker.emqx.io:8084/mqtt';
 const LIVE_ROOM_CODE = 'SrikakulamPolice';
 const liveUserId = 'control_room_gp_' + Math.random().toString(36).substring(2, 9);
-const LIVE_UNIT_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes active threshold for live field units
+const LIVE_UNIT_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours active threshold for live field units (matches NETRA APK duty cycle)
 
 // Forces metadata lookup from route_mobiles_data.js
 function getPartyUnitMeta(unitId, phone) {

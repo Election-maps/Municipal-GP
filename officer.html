@@ -780,6 +780,34 @@
         </button>
       </div>
     </div>
+        <!-- Online Officer Search Bar (Just like on Web Dashboard) -->
+    <div id="live-officer-search-container" style="position: relative; margin: 8px 0 6px 0;">
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <div style="position: relative; flex: 1;">
+          <i class="fa-solid fa-user-shield" style="position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: #38bdf8; font-size: 12px; pointer-events: none;"></i>
+          <input type="text" id="live-officer-search-text" 
+            oninput="onLiveOfficerSearchInput(this.value)" 
+            onfocus="onLiveOfficerSearchFocus()" 
+            onkeydown="if(event.key==='Enter'){ triggerOnlineOfficerSearch(); } else if(event.key==='Escape'){ hideOnlineOfficerSuggestions(); }" 
+            placeholder="ఆఫీసర్ పేరు / మొబైల్ / స్టేషన్ సెర్చ్..." 
+            autocomplete="off" 
+            style="width: 100%; box-sizing: border-box; background: rgba(15, 23, 42, 0.9); border: 1.5px solid #0284c7; border-radius: 6px; padding: 6px 26px 6px 28px; color: #f8fafc; font-size: 11.5px; font-weight: 600; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);">
+          <button type="button" onclick="clearLiveOfficerSearch()" id="btn-clear-live-officer-search" 
+            style="display: none; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; font-size: 12px; cursor: pointer; padding: 2px 4px;" title="Clear">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <button type="button" onclick="triggerOnlineOfficerSearch()" id="btn-search-live-officer" 
+          style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.3);" title="Search Online Officers by Name or Mobile">
+          <i class="fa-solid fa-magnifying-glass"></i> <span>Search</span>
+        </button>
+      </div>
+      <!-- Suggestions dropdown for Officers -->
+      <div id="live-officer-suggestions" 
+        style="display: none; position: absolute; left: 0; right: 0; top: calc(100% + 4px); background: #0f172a; border: 1.5px solid #0284c7; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.85); z-index: 99999; max-height: 280px; overflow-y: auto;">
+      </div>
+    </div>
+
     <div id="officer-map"></div>
     <div class="map-controls-row">
       <button class="btn-map-control active" id="btn-toggle-follow">
@@ -787,6 +815,9 @@
       </button>
       <button class="btn-map-control" id="btn-recenter-map">
         <i class="fa-solid fa-location-arrow"></i> కేంద్రీకరించు
+      </button>
+      <button type="button" class="btn-map-control" id="btn-quick-search-officer" onclick="focusLiveOfficerSearch()" style="background: rgba(14, 165, 233, 0.2); border-color: #0284c7; color: #7dd3fc;">
+        <i class="fa-solid fa-magnifying-glass"></i> <span>ఆఫీసర్ సెర్చ్</span>
       </button>
       <button type="button" class="btn-map-control" id="btn-sdpo-fit-all" onclick="fitSdpoOfficersBounds()" style="display: none; background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #a7f3d0;">
         <i class="fa-solid fa-users"></i> <span id="txt-sdpo-fit">అందరు (<span id="sdpo-btn-count">0</span>)</span>
@@ -1793,6 +1824,251 @@
     officerMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
   };
 
+  // -------------------------------------------------------------
+  // Live Officer Search at Map (Just like on Web Dashboard)
+  // -------------------------------------------------------------
+  window.onLiveOfficerSearchInput = function(val) {
+    const clearBtn = document.getElementById('btn-clear-live-officer-search');
+    if (clearBtn) {
+      if (val && val.trim().length > 0) {
+        clearBtn.style.display = 'block';
+      } else {
+        clearBtn.style.display = 'none';
+      }
+    }
+    renderOnlineOfficerSuggestions(val);
+  };
+
+  window.onLiveOfficerSearchFocus = function() {
+    const input = document.getElementById('live-officer-search-text');
+    const q = input ? input.value : '';
+    renderOnlineOfficerSuggestions(q);
+  };
+
+  window.clearLiveOfficerSearch = function() {
+    const input = document.getElementById('live-officer-search-text');
+    if (input) input.value = '';
+    const clearBtn = document.getElementById('btn-clear-live-officer-search');
+    if (clearBtn) clearBtn.style.display = 'none';
+    hideOnlineOfficerSuggestions();
+  };
+
+  window.hideOnlineOfficerSuggestions = function() {
+    const box = document.getElementById('live-officer-suggestions');
+    if (box) box.style.display = 'none';
+  };
+
+  window.focusLiveOfficerSearch = function() {
+    const input = document.getElementById('live-officer-search-text');
+    if (input) {
+      input.focus();
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      renderOnlineOfficerSuggestions(input.value);
+    }
+  };
+
+  window.triggerOnlineOfficerSearch = function() {
+    const input = document.getElementById('live-officer-search-text');
+    const query = input ? input.value.trim().toLowerCase() : '';
+    renderOnlineOfficerSuggestions(query);
+
+    if (query) {
+      const cleanDigits = query.replace(/\D/g, '');
+      const activeList = Object.keys(sdpoSubordinateMarkers).map(k => ({
+        key: k,
+        ...sdpoSubordinateMarkers[k]
+      }));
+
+      const matches = activeList.filter(item => {
+        const d = item.data || {};
+        const nameMatch = String(d.officer || '').toLowerCase().includes(query);
+        const phone = String(d.phone || '');
+        const phoneMatch = cleanDigits ? phone.replace(/\D/g, '').includes(cleanDigits) : phone.toLowerCase().includes(query);
+        const unitMatch = String(d.unitName || d.route || '').toLowerCase().includes(query);
+        const mandalMatch = String(d.mandal || '').toLowerCase().includes(query);
+        return nameMatch || phoneMatch || unitMatch || mandalMatch;
+      });
+
+      if (matches.length === 1) {
+        selectOnlineOfficerSearchResult(matches[0].key);
+      }
+    }
+  };
+
+  window.selectOnlineOfficerSearchResult = function(key) {
+    hideOnlineOfficerSuggestions();
+    if (!sdpoSubordinateMarkers[key]) return;
+    const item = sdpoSubordinateMarkers[key];
+    const marker = item.marker;
+    const latlng = marker.getLatLng();
+    if (officerMap && latlng) {
+      officerMap.flyTo(latlng, 16, { duration: 1.0 });
+      setTimeout(() => {
+        marker.openPopup();
+      }, 500);
+    }
+    const input = document.getElementById('live-officer-search-text');
+    const d = item.data || {};
+    const pillLabel = getOfficerRankPillLabel(d);
+    if (input) {
+      input.value = `${pillLabel} (${d.phone || d.unitName || ''})`.trim();
+      const clearBtn = document.getElementById('btn-clear-live-officer-search');
+      if (clearBtn) clearBtn.style.display = 'block';
+    }
+  };
+
+  window.selectOfflineOfficerSearchResult = function(unitId) {
+    hideOnlineOfficerSuggestions();
+    const unit = (typeof allUnitsData !== 'undefined' && allUnitsData) ? allUnitsData.find(u => u.id === unitId) : null;
+    if (!unit) return;
+    alert(`ఈ ఆఫీసర్ (${unit.officer || unit.unitName}) ప్రస్తుతం ఆఫ్‌లైన్‌లో ఉన్నారు.\n\nపోలీస్ స్టేషన్ / మండలం: ${unit.mandal || '-'}\nరూట్: ${unit.unitName || unit.route || '-'}\nమొబైల్ నం: ${unit.phone || '-'}\n\n(GPS Tracker Not Transmitting Currently)`);
+  };
+
+  function renderOnlineOfficerSuggestions(query) {
+    const box = document.getElementById('live-officer-suggestions');
+    if (!box) return;
+
+    const q = (query || '').trim().toLowerCase();
+    const cleanDigits = q.replace(/\D/g, '');
+    const activeSdpo = getActiveSdpoConfig();
+
+    const activeList = [];
+    for (const k in sdpoSubordinateMarkers) {
+      const item = sdpoSubordinateMarkers[k];
+      activeList.push({
+        key: k,
+        marker: item.marker,
+        lastUpdated: item.lastUpdated,
+        data: item.data || {}
+      });
+    }
+
+    const filteredOnline = activeList.filter(item => {
+      if (!q) return true;
+      const d = item.data || {};
+      const nameMatch = String(d.officer || '').toLowerCase().includes(q);
+      const phone = String(d.phone || '');
+      const phoneMatch = cleanDigits ? phone.replace(/\D/g, '').includes(cleanDigits) : phone.toLowerCase().includes(q);
+      const unitMatch = String(d.unitName || d.route || '').toLowerCase().includes(q);
+      const mandalMatch = String(d.mandal || '').toLowerCase().includes(q);
+      const rankMatch = String(getOfficerRankPillLabel(d)).toLowerCase().includes(q);
+      return nameMatch || phoneMatch || unitMatch || mandalMatch || rankMatch;
+    });
+
+    // Offline units matching search query
+    let filteredOffline = [];
+    if (q && q.length >= 2 && typeof allUnitsData !== 'undefined' && allUnitsData) {
+      const activeUnitKeys = new Set(activeList.map(a => a.key));
+      const activePhones = new Set(activeList.map(a => normalizePhone(a.data.phone || '')));
+
+      filteredOffline = allUnitsData.filter(u => {
+        if (activeUnitKeys.has(u.id)) return false;
+        if (u.phone && activePhones.has(normalizePhone(u.phone))) return false;
+        if (activeSdpo && !activeSdpo.allMandals && !isSdpoTargetMandal(u.mandal, activeSdpo.phone)) return false;
+
+        const nameMatch = String(u.officer || '').toLowerCase().includes(q);
+        const phone = String(u.phone || '');
+        const phoneMatch = cleanDigits ? phone.replace(/\D/g, '').includes(cleanDigits) : phone.toLowerCase().includes(q);
+        const unitMatch = String(u.unitName || u.route || '').toLowerCase().includes(q);
+        const mandalMatch = String(u.mandal || '').toLowerCase().includes(q);
+        return nameMatch || phoneMatch || unitMatch || mandalMatch;
+      }).slice(0, 8);
+    }
+
+    if (filteredOnline.length === 0 && filteredOffline.length === 0) {
+      box.innerHTML = `
+        <div style="padding: 12px; text-align: center; color: #94a3b8; font-size: 11.5px;">
+          ${q ? 'ఏ ఆఫీసర్ లొకేషన్ మ్యాచ్ కాలేదు.' : 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.'}
+        </div>
+      `;
+      box.style.display = 'block';
+      return;
+    }
+
+    let html = '';
+    if (filteredOnline.length > 0) {
+      html += `<div style="padding: 6px 10px; font-size: 10px; font-weight: 800; color: #34d399; background: rgba(16, 185, 129, 0.15); border-bottom: 1px solid rgba(16, 185, 129, 0.2); text-transform: uppercase; letter-spacing: 0.5px;">
+        ● లైవ్ ఆఫీసర్లు (${filteredOnline.length})
+      </div>`;
+
+      filteredOnline.forEach(item => {
+        const d = item.data || {};
+        const pillLabel = getOfficerRankPillLabel(d);
+        const cleanUnit = (d.unitName || d.route || 'Duty Force').trim();
+        const mandal = d.mandal || '';
+        const phone = d.phone || '';
+        const speed = parseFloat(d.speed) || 0;
+        const kmh = speed > 0 ? Math.round(speed * 3.6) : 0;
+        const timeDiff = Math.max(0, Math.round((Date.now() - (item.lastUpdated || Date.now())) / 1000));
+        const timeAgo = timeDiff < 60 ? (timeDiff + 's ago') : (Math.round(timeDiff / 60) + 'm ago');
+
+        html += `
+          <div onclick="selectOnlineOfficerSearchResult('${escapeHtml(item.key)}')" 
+            style="padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.06); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; transition: background 0.15s;"
+            onmouseover="this.style.background='rgba(56, 189, 248, 0.12)'" onmouseout="this.style.background='transparent'">
+            <div style="min-width: 0; flex: 1;">
+              <div style="font-weight: 800; font-size: 12px; color: #f8fafc; display: flex; align-items: center; gap: 5px;">
+                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(pillLabel)}</span>
+                <span style="background: #10b981; color: white; font-size: 9px; font-weight: 900; padding: 1px 5px; border-radius: 4px; flex-shrink: 0;">LIVE</span>
+              </div>
+              <div style="font-size: 11px; color: #94a3b8; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                <span style="color: #cbd5e1; font-weight: 600;">${escapeHtml(cleanUnit)}</span>
+                ${mandal ? `<span style="color: #64748b; margin: 0 4px;">•</span><span style="color: #38bdf8;">${escapeHtml(mandal)}</span>` : ''}
+              </div>
+              ${phone ? `<div style="font-size: 10px; color: #34d399; font-weight: 700; margin-top: 1px;">📞 ${escapeHtml(phone)}</div>` : ''}
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+              <div style="background: ${kmh > 0 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)'}; color: ${kmh > 0 ? '#fbbf24' : '#34d399'}; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; border: 1px solid ${kmh > 0 ? 'rgba(245, 158, 11, 0.4)' : 'rgba(16, 185, 129, 0.4)'};">
+                ${kmh > 0 ? `${kmh} km/h` : 'Stationary'}
+              </div>
+              <div style="font-size: 9px; color: #64748b; margin-top: 2px;">${timeAgo}</div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    if (filteredOffline.length > 0) {
+      html += `<div style="padding: 6px 10px; font-size: 10px; font-weight: 800; color: #94a3b8; background: rgba(148, 163, 184, 0.1); border-bottom: 1px solid rgba(255,255,255,0.06); text-transform: uppercase; letter-spacing: 0.5px;">
+        ఆఫ్‌లైన్ అధికారులు (${filteredOffline.length})
+      </div>`;
+
+      filteredOffline.forEach(u => {
+        html += `
+          <div onclick="selectOfflineOfficerSearchResult('${escapeHtml(u.id)}')" 
+            style="padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; opacity: 0.75;"
+            onmouseover="this.style.background='rgba(148, 163, 184, 0.1)'; this.style.opacity='1'" onmouseout="this.style.background='transparent'; this.style.opacity='0.75'">
+            <div style="min-width: 0; flex: 1;">
+              <div style="font-weight: 700; font-size: 11.5px; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${escapeHtml(u.officer || u.unitName)}
+              </div>
+              <div style="font-size: 10px; color: #64748b;">
+                <span>${escapeHtml(u.unitName || u.route)}</span>
+                ${u.mandal ? `<span style="margin: 0 4px;">•</span><span>${escapeHtml(u.mandal)}</span>` : ''}
+              </div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0; font-size: 9.5px; color: #64748b;">
+              OFFLINE
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    box.innerHTML = html;
+    box.style.display = 'block';
+  }
+
+  // Click outside to close officer search suggestions
+  document.addEventListener('click', function(e) {
+    const container = document.getElementById('live-officer-search-container');
+    const box = document.getElementById('live-officer-suggestions');
+    if (box && box.contains(e.target)) return;
+    if (container && !container.contains(e.target)) {
+      hideOnlineOfficerSuggestions();
+    }
+  });
+
   // Periodic SDPO / CI live sync request (every 45s) to keep live positions refreshed
   setInterval(() => {
     if (isSdpoLoggedIn() && mqttClient && mqttClient.connected) {
@@ -1808,7 +2084,7 @@
     const now = Date.now();
     let changed = false;
     for (const key in sdpoSubordinateMarkers) {
-      if (now - sdpoSubordinateMarkers[key].lastUpdated > 20 * 60 * 1000) {
+      if (now - sdpoSubordinateMarkers[key].lastUpdated > 24 * 60 * 60 * 1000) {
         try { officerMap.removeLayer(sdpoSubordinateMarkers[key].marker); } catch (e) {}
         delete sdpoSubordinateMarkers[key];
         changed = true;
