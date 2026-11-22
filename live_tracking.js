@@ -251,15 +251,18 @@ function initLiveMQTT() {
                     }
                     if (payload.from !== liveUserId && payload.units && typeof payload.units === 'object') {
                         const now = Date.now();
-                        for (const k in payload.units) {
-                            const u = payload.units[k];
-                            const t = Number(u.lastUpdated || u.timestamp || 0);
-                            if (t > 0 && (now - t) <= LIVE_UNIT_EXPIRY_MS) {
-                                if (!window.livePartyMarkers[k] || Number(window.livePartyMarkers[k].lastUpdated || 0) < t) {
+                        const uMap = payload.units;
+                        const uList = Array.isArray(uMap) ? uMap : Object.keys(uMap).map(k => ({ ...uMap[k], _mapKey: k }));
+                        uList.forEach(u => {
+                            let t = Number(u.lastUpdated || u.timestamp || 0);
+                            if (t > 0 && t < 1e11) t *= 1000;
+                            if (t <= 0 || (now - t) <= LIVE_UNIT_EXPIRY_MS) {
+                                const k = u.unitId || u.id || (u.phone ? ('phone_' + String(u.phone).replace(/\D/g, '').slice(-10)) : u._mapKey);
+                                if (k && (!window.livePartyMarkers[k] || Number(window.livePartyMarkers[k].lastUpdated || 0) < t)) {
                                     updateLivePartyUnitOnMap(k, u);
                                 }
                             }
-                        }
+                        });
                     }
                     return;
                 }
@@ -282,15 +285,19 @@ function initLiveMQTT() {
                     if (!payload.latitude && !payload.lat) return;
                 }
 
-                const unitKey = payload.unitId || payload.id || topic.split('/').pop();
+                const rawTopicLast = topic.split('/').pop();
+                const unitKey = payload.unitId || payload.id || (payload.phone ? ('phone_' + String(payload.phone).replace(/\D/g, '').slice(-10)) : (rawTopicLast !== 'locations' ? rawTopicLast : null));
                 if (!unitKey) return;
 
                 if (payload.status === 'stopped' || payload.action === 'clear_unit') {
                     removeLivePartyUnit(unitKey);
                 } else if (payload.latitude || payload.lat) {
-                    const pktTime = Number(payload.lastUpdated || payload.timestamp || 0);
+                    let pktTime = Number(payload.lastUpdated || payload.timestamp || 0);
+                    if (pktTime > 0 && pktTime < 1e11) {
+                        pktTime *= 1000;
+                    }
                     const now = Date.now();
-                    // Reject stale packets older than active expiry window (e.g. old broker retained messages from days/hours ago)
+                    // Reject stale packets older than active expiry window (24 hours matches NETRA APK)
                     if (pktTime > 0 && (now - pktTime) > LIVE_UNIT_EXPIRY_MS) {
                         if (window.livePartyMarkers && window.livePartyMarkers[unitKey]) {
                             removeLivePartyUnit(unitKey);
@@ -763,8 +770,9 @@ function restoreLiveUnitsFromCache() {
         let changed = false;
         for (const k in cached) {
             const u = cached[k];
-            const lastTime = Number(u.lastUpdated || u.timestamp || 0);
-            // ONLY restore units that transmitted within the active freshness window
+            let lastTime = Number(u.lastUpdated || u.timestamp || 0);
+            if (lastTime > 0 && lastTime < 1e11) lastTime *= 1000;
+            // ONLY restore units that transmitted within the active freshness window (24 hours)
             if (lastTime > 0 && (now - lastTime) <= LIVE_UNIT_EXPIRY_MS) {
                 updateLivePartyUnitOnMap(k, u);
             } else {
@@ -780,14 +788,15 @@ function restoreLiveUnitsFromCache() {
     }
 }
 
-// Background cleanup: continuously prunes inactive units that have not transmitted in >10 minutes
+// Background cleanup: continuously prunes inactive units that have not transmitted in >24 hours
 function pruneStaleLiveUnits() {
     if (!window.livePartyMarkers) return;
     const now = Date.now();
     let changed = false;
     for (const k in window.livePartyMarkers) {
         const u = window.livePartyMarkers[k];
-        const lastTime = Number(u.lastUpdated || 0);
+        let lastTime = Number(u.lastUpdated || 0);
+        if (lastTime > 0 && lastTime < 1e11) lastTime *= 1000;
         if (lastTime > 0 && (now - lastTime) > LIVE_UNIT_EXPIRY_MS) {
             if (window.livePartyMarkersGroup) {
                 if (u.marker) window.livePartyMarkersGroup.removeLayer(u.marker);
