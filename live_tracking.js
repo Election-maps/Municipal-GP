@@ -41,8 +41,25 @@ function getPartyUnitMeta(unitId, phone) {
     }) || null;
 }
 
+function normalizePartyCategoryKey(rawKey) {
+    if (!rawKey) return 'RM';
+    const s = String(rawKey).trim().toUpperCase();
+    if (s === 'RM' || s === 'ROUTE_MOBILE' || s.includes('ROUTE')) return 'RM';
+    if (s === 'SF' || (s.includes('STRIKING') && !s.includes('SPECIAL'))) return 'SF';
+    if (s === 'SSF' || s.includes('SPECIAL STRIKING')) return 'SSF';
+    if (s === 'QRT') return 'QRT';
+    if (s === 'RESERVE' || s.includes('RESERVE')) return 'RESERVE';
+    if (s === 'STATIC' || s.includes('STATIC')) return 'STATIC';
+    return s;
+}
+
+function isMobileForcesCategory(catKey) {
+    const k = normalizePartyCategoryKey(catKey);
+    return ['RM', 'SF', 'SSF', 'QRT', 'RESERVE'].includes(k);
+}
+
 function getLivePartyCategoryTheme(catKey) {
-    switch (String(catKey || '').toUpperCase()) {
+    switch (normalizePartyCategoryKey(catKey)) {
         case 'SF':
             return { color: '#ef4444', icon: 'fa-shield-halved', label: 'Striking Force', badgeClass: 'bg-rose-100 text-rose-800 border-rose-300' };
         case 'SSF':
@@ -384,16 +401,25 @@ function updateLivePartyUnitOnMap(key, data) {
     const lng = parseFloat(data.longitude || data.lng);
     if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return;
 
-    // Strict validation: Live Route Map units MUST match the 157 units defined in the Excel sheet
-    const meta = getPartyUnitMeta(key, data.phone);
+    // Allow metadata from ROUTE_MOBILES_DATA or construct fallback so ALL units (Static, Supervisors, Field) show on map
+    let meta = getPartyUnitMeta(key, data.phone);
     if (!meta) {
-        if (window.livePartyMarkers && window.livePartyMarkers[key]) {
-            removeLivePartyUnit(key);
-        }
-        return;
+        meta = {
+            id: key,
+            unitId: key,
+            unitName: data.unitName || key,
+            mandal: data.mandal || '',
+            category: data.category || (String(data.categoryKey || '').toUpperCase() === 'STATIC' ? 'Static Parties' : 'Duty Force'),
+            categoryKey: normalizePartyCategoryKey(data.categoryKey || 'RM'),
+            officer: data.officer || 'Police Officer',
+            phone: data.phone || '',
+            supporting: data.supporting || '',
+            hq: data.hq || '',
+            route: data.route || ''
+        };
     }
 
-    const catKey = (meta.categoryKey || data.categoryKey || 'RM').toUpperCase();
+    const catKey = normalizePartyCategoryKey(meta.categoryKey || data.categoryKey || 'RM');
     const mandal = meta.mandal || data.mandal || '';
     const unitName = meta.unitName || data.unitName || key;
     const officer = meta.officer || data.officer || 'Police Officer';
@@ -483,6 +509,15 @@ function updateLivePartyUnitOnMap(key, data) {
         // Update popup if open
         if (unit.marker.getPopup() && unit.marker.isPopupOpen()) {
             unit.marker.setPopupContent(buildLivePartyPopupHtml(key, unit, meta));
+        }
+
+        // Ensure layer is displayed on map if active
+        if (shouldShowLivePartyUnit(catKey)) {
+            if (!window.livePartyMarkersGroup.hasLayer(unit.marker)) window.livePartyMarkersGroup.addLayer(unit.marker);
+            if (!window.livePartyMarkersGroup.hasLayer(unit.circle)) window.livePartyMarkersGroup.addLayer(unit.circle);
+        } else {
+            if (window.livePartyMarkersGroup.hasLayer(unit.marker)) window.livePartyMarkersGroup.removeLayer(unit.marker);
+            if (window.livePartyMarkersGroup.hasLayer(unit.circle)) window.livePartyMarkersGroup.removeLayer(unit.circle);
         }
     }
 
@@ -652,18 +687,17 @@ function buildLivePartyPopupHtml(key, unit, meta) {
 
 function shouldShowLivePartyUnit(catKey) {
     if (!catKey) return true;
-    const k = String(catKey).toUpperCase();
+    const k = normalizePartyCategoryKey(catKey);
     if (k === 'STATIC') {
         // Map లో మాత్రము కావాలి: Static units are always shown on the Map unless specifically unticked in the map legend
         const legCb = document.getElementById('legend-check-party-static');
         if (legCb) return legCb.checked;
-        if (window.selectedLiveCategories && window.selectedLiveCategories['STATIC'] !== undefined) {
-            return !!window.selectedLiveCategories['STATIC'];
-        }
         return true;
     }
-    if (!window.selectedLiveCategories) return true;
-    return !!window.selectedLiveCategories[k];
+    if (window.selectedLiveCategories && window.selectedLiveCategories[k] !== undefined) {
+        return !!window.selectedLiveCategories[k];
+    }
+    return true;
 }
 
 // Checkbox change handler for individual category (Routes, SF, SSF, QRT, Reserve, Static)
@@ -743,13 +777,15 @@ function applyLivePartyCategoryFilter() {
     let visibleMobileCount = 0;
     for (const k in window.livePartyMarkers) {
         const u = window.livePartyMarkers[k];
-        if (shouldShowLivePartyUnit(u.catKey)) {
+        const normKey = normalizePartyCategoryKey(u.catKey);
+        // On Map: All active units (Routes, SF, SSF, QRT, Reserve, Static, etc.) show on map if shouldShowLivePartyUnit
+        if (shouldShowLivePartyUnit(normKey)) {
             if (u.marker) window.livePartyMarkersGroup.addLayer(u.marker);
             if (u.circle) window.livePartyMarkersGroup.addLayer(u.circle);
-            // Count towards the 157 Live Forces active counter
-            if (u.catKey !== 'STATIC') {
-                visibleMobileCount++;
-            }
+        }
+        // Live Active total STRICTLY counts ONLY the 5 mobile forces: Routes, SF, SSF, QRT, Reserve!
+        if (isMobileForcesCategory(normKey) && shouldShowLivePartyUnit(normKey)) {
+            visibleMobileCount++;
         }
     }
     const countEl = document.getElementById('live-party-active-count');
@@ -874,7 +910,11 @@ function updateLivePartyCounter() {
     let count = 0;
     for (const k in window.livePartyMarkers) {
         const u = window.livePartyMarkers[k];
-        if (shouldShowLivePartyUnit(u.catKey) && u.catKey !== 'STATIC') count++;
+        const normKey = normalizePartyCategoryKey(u.catKey);
+        // Live Active total STRICTLY counts ONLY the 5 mobile forces: Routes, SF, SSF, QRT, Reserve!
+        if (isMobileForcesCategory(normKey) && shouldShowLivePartyUnit(normKey)) {
+            count++;
+        }
     }
     const el = document.getElementById('live-party-active-count');
     if (el) el.innerText = count;
@@ -918,13 +958,6 @@ function restoreLiveUnitsFromCache() {
         let changed = false;
         for (const k in cached) {
             const u = cached[k];
-            // Validate against the 170 units from the Excel sheet
-            const meta = getPartyUnitMeta(k, u.phone);
-            if (!meta) {
-                delete cached[k];
-                changed = true;
-                continue;
-            }
             let lastTime = Number(u.lastUpdated || u.timestamp || 0);
             if (lastTime > 0 && lastTime < 1e11) lastTime *= 1000;
             // ONLY restore units that transmitted within the active freshness window (24 hours)
@@ -2336,11 +2369,12 @@ function renderOnlineOfficerSuggestions(rawQuery) {
         return;
     }
 
+    const activeMobileCount = onlineList.filter(function(u) { return isMobileForcesCategory(u.catKey); }).length;
     let html = `
         <div class="px-3 py-2 bg-slate-900 text-white text-[11px] font-bold flex items-center justify-between rounded-t-lg border-b border-slate-800">
             <span class="flex items-center gap-1.5">
                 <i class="fa-solid fa-satellite-dish text-emerald-400 ${onlineMatches.length > 0 ? 'animate-pulse' : ''}"></i>
-                <span>ఆన్‌లైన్ ఆఫీసర్లు (${onlineMatches.length} / ${onlineList.length} Active)</span>
+                <span>ఆన్‌లైన్ ఆఫీసర్లు (${onlineMatches.length} / ${activeMobileCount} Active)</span>
             </span>
             <div class="flex items-center gap-2">
                 <span class="text-slate-400 font-normal text-[10px] hidden sm:inline">క్లిక్ చేస్తే మ్యాప్‌పైకి వెళ్తుంది</span>
