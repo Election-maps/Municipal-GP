@@ -168,6 +168,9 @@ function initLiveMQTT() {
 
         window.liveMqttClient.on('connect', function() {
             console.log('Connected to Srikakulam Police Real-time Broker (Live Route Map)!');
+            if (typeof window.updateLivePartyPillsCount === 'function') {
+                window.updateLivePartyPillsCount();
+            }
             const dot = document.getElementById('live-mqtt-indicator-dot');
             const txt = document.getElementById('live-mqtt-status-text');
             if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block';
@@ -2295,7 +2298,61 @@ window.addEventListener('scroll', function() {
     }
 }, true);
 
+// Automatically update Live Forces pill counts & badges from ROUTE_MOBILES_DATA
+window.updateLivePartyPillsCount = function() {
+    if (!window.ROUTE_MOBILES_DATA || !Array.isArray(window.ROUTE_MOBILES_DATA)) return;
+    const total = window.ROUTE_MOBILES_DATA.length;
+    let rm = 0, sf = 0, ssf = 0, qrt = 0, reserve = 0;
+    window.ROUTE_MOBILES_DATA.forEach(function(u) {
+        if (!u) return;
+        const k = String(u.categoryKey || '').toUpperCase();
+        if (k === 'RM') rm++;
+        else if (k === 'SF') sf++;
+        else if (k === 'SSF') ssf++;
+        else if (k === 'QRT') qrt++;
+        else if (k === 'RESERVE') reserve++;
+    });
+
+    const elBadge = document.getElementById('live-forces-total-badge');
+    if (elBadge) elBadge.innerText = total;
+
+    const elAll = document.getElementById('live-forces-all-count');
+    if (elAll) elAll.innerText = total;
+
+    const elRm = document.getElementById('live-forces-rm-count');
+    if (elRm) elRm.innerText = rm;
+
+    const elSf = document.getElementById('live-forces-sf-count');
+    if (elSf) elSf.innerText = sf;
+
+    const elSsf = document.getElementById('live-forces-ssf-count');
+    if (elSsf) elSsf.innerText = ssf;
+
+    const elQrt = document.getElementById('live-forces-qrt-count');
+    if (elQrt) elQrt.innerText = qrt;
+
+    const elRes = document.getElementById('live-forces-reserve-count');
+    if (elRes) elRes.innerText = reserve;
+
+    const elActiveTotal = document.getElementById('live-forces-active-total');
+    if (elActiveTotal) elActiveTotal.innerText = total;
+
+    document.querySelectorAll('.legend-rm-count').forEach(function(el) { el.innerText = rm; });
+    document.querySelectorAll('.legend-sf-count').forEach(function(el) { el.innerText = sf; });
+    document.querySelectorAll('.legend-ssf-count').forEach(function(el) { el.innerText = ssf; });
+    document.querySelectorAll('.legend-qrt-count').forEach(function(el) { el.innerText = qrt; });
+    document.querySelectorAll('.legend-reserve-count').forEach(function(el) { el.innerText = reserve; });
+};
+
 // Automatically start Real-time MQTT connection and message storage on page load
+if (typeof window.updateLivePartyPillsCount === 'function') {
+    window.updateLivePartyPillsCount();
+}
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof window.updateLivePartyPillsCount === 'function') {
+        window.updateLivePartyPillsCount();
+    }
+});
 if (typeof initOfficerMessagesStorage === 'function') {
     initOfficerMessagesStorage();
 }
