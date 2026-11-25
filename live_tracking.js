@@ -2450,8 +2450,7 @@ window.addEventListener('scroll', function() {
 // Automatically update Live Forces pill counts & badges from ROUTE_MOBILES_DATA
 window.updateLivePartyPillsCount = function() {
     if (!window.ROUTE_MOBILES_DATA || !Array.isArray(window.ROUTE_MOBILES_DATA)) return;
-    const total = window.ROUTE_MOBILES_DATA.length;
-    let rm = 0, sf = 0, ssf = 0, qrt = 0, reserve = 0;
+    let rm = 0, sf = 0, ssf = 0, qrt = 0, reserve = 0, staticCount = 0;
     window.ROUTE_MOBILES_DATA.forEach(function(u) {
         if (!u) return;
         const k = String(u.categoryKey || '').toUpperCase();
@@ -2460,7 +2459,11 @@ window.updateLivePartyPillsCount = function() {
         else if (k === 'SSF') ssf++;
         else if (k === 'QRT') qrt++;
         else if (k === 'RESERVE') reserve++;
+        else if (k === 'STATIC') staticCount++;
     });
+
+    // Total strictly counts Routes, SF, SSF, QRT, Reserve combined = 157
+    const total = rm + sf + ssf + qrt + reserve;
 
     const elBadge = document.getElementById('live-forces-total-badge');
     if (elBadge) elBadge.innerText = total;
@@ -2491,6 +2494,7 @@ window.updateLivePartyPillsCount = function() {
     document.querySelectorAll('.legend-ssf-count').forEach(function(el) { el.innerText = ssf; });
     document.querySelectorAll('.legend-qrt-count').forEach(function(el) { el.innerText = qrt; });
     document.querySelectorAll('.legend-reserve-count').forEach(function(el) { el.innerText = reserve; });
+    document.querySelectorAll('.legend-static-count').forEach(function(el) { el.innerText = staticCount; });
 
     if (typeof syncLivePartyCheckboxInputs === 'function') {
         syncLivePartyCheckboxInputs();
