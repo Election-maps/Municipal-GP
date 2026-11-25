@@ -1645,9 +1645,9 @@
         "route": "SSF-3",
         "unitName": "SSF (Chintada)",
         "hq": "Chintada",
-        "officer": "B.V Venkateswara Rao, CI, SBX,6309990831",
-        "phone": "6309990831",
-        "supporting": "M. Nageswara Rao, CI, VR, Srikakulam, 7013269612\nAPSP PC 8-9989325247\nAPSP PC 09-82478184112",
+        "officer": "M. Nageswara Rao, CI, VR, Srikakulam, 7013269612",
+        "phone": "7013269612",
+        "supporting": "APSP PC 8-9989325247\nAPSP PC 09-82478184112",
         "pollingStations": ""
     },
     {
@@ -2206,6 +2206,19 @@
         "hq": "NTR M School",
         "officer": "A. Chandrakala, WSI, Traffic PS - 8978079866",
         "phone": "8978079866",
+        "supporting": "",
+        "pollingStations": ""
+    },
+    {
+        "id": "SSF_Amadalavalasa_SBX",
+        "category": "Special Striking Forces",
+        "categoryKey": "SSF",
+        "mandal": "Amadalavalasa",
+        "route": "Special Striking Force",
+        "unitName": "SSF (Amadalavalasa - CI SBX)",
+        "hq": "Amadalavalasa",
+        "officer": "B.V Venkateswara Rao, CI, SBX,6309990831",
+        "phone": "6309990831",
         "supporting": "",
         "pollingStations": ""
     }

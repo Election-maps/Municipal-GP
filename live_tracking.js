@@ -30,15 +30,33 @@ function getPartyUnitMeta(unitId, phone) {
     if (!cleanPh && cleanId.includes('phone_')) {
         cleanPh = cleanId.replace(/\D/g, '').slice(-10);
     }
-    return window.ROUTE_MOBILES_DATA.find(function(u) {
-        if (!u) return false;
-        if (cleanId && (String(u.id || '').trim().toLowerCase() === cleanId || String(u.unitId || '').trim().toLowerCase() === cleanId)) return true;
-        const uPh = String(u.phone || '').replace(/\D/g, '').slice(-10);
-        if (cleanPh && uPh && uPh === cleanPh) return true;
-        if (cleanPh && String(u.officer || '').replace(/\D/g, '').includes(cleanPh)) return true;
-        if (cleanPh && String(u.supporting || '').replace(/\D/g, '').includes(cleanPh)) return true;
-        return false;
-    }) || null;
+    // 1. Prioritize Direct Unit ID match
+    if (cleanId) {
+        const byId = window.ROUTE_MOBILES_DATA.find(function(u) {
+            return u && (String(u.id || '').trim().toLowerCase() === cleanId || String(u.unitId || '').trim().toLowerCase() === cleanId);
+        });
+        if (byId) return byId;
+    }
+    // 2. Prioritize Direct Phone match
+    if (cleanPh) {
+        const byPhone = window.ROUTE_MOBILES_DATA.find(function(u) {
+            if (!u) return false;
+            const uPh = String(u.phone || '').replace(/\D/g, '').slice(-10);
+            return uPh && uPh === cleanPh;
+        });
+        if (byPhone) return byPhone;
+
+        const byOfficer = window.ROUTE_MOBILES_DATA.find(function(u) {
+            return u && String(u.officer || '').replace(/\D/g, '').includes(cleanPh);
+        });
+        if (byOfficer) return byOfficer;
+
+        const bySupporting = window.ROUTE_MOBILES_DATA.find(function(u) {
+            return u && String(u.supporting || '').replace(/\D/g, '').includes(cleanPh);
+        });
+        if (bySupporting) return bySupporting;
+    }
+    return null;
 }
 
 function normalizePartyCategoryKey(rawKey) {
@@ -140,7 +158,8 @@ function formatOfficerRankAndPs(rawOfficer, mandal, unitName, route, phone, id) 
     if (cleanPhone === '6309990939' || cleanId === 'HQ_Reserve_3') return 'CI, Task Force';
 
     // 3. Circle Inspectors (M & GP 2511-14 dataset)
-    if (cleanPhone === '6309990831') return 'CI, SBX';
+    if (cleanPhone === '7013269612' || cleanId === 'SSF_Amadalavalasa_3') return 'CI, VR Srikakulam';
+    if (cleanPhone === '6309990831' || cleanId === 'SSF_Amadalavalasa_SBX') return 'CI, SBX';
     if (cleanPhone === '9948597720') return 'CI, VR Srikakulam';
     if (cleanPhone === '8639521714') return 'HC, BRV PS';
     if (cleanPhone === '6309990814' || cleanId === 'SSF_Srikakulam_Town_1') return 'CI, Srikakulam Rural';

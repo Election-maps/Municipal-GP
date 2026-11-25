@@ -976,10 +976,23 @@
       "categoryKey": "SSF",
       "mandal": "Amadalavalasa",
       "route": "SSF-3",
-      "unitName": "SSF-3 (Amadalavalasa)",
-      "officer": "B.V Venkateswara Rao, CI, SBX,6309990831",
+      "unitName": "SSF-3 (Amadalavalasa - Chintada)",
+      "officer": "M. Nageswara Rao, CI, VR, Srikakulam, 7013269612",
+      "phone": "7013269612",
+      "supporting": "APSP PC 8-9989325247, APSP PC 09-82478184112",
+      "pollingStations": "Amadalavalasa",
+      "hq": "Chintada"
+    },
+    {
+      "id": "SSF_Amadalavalasa_SBX",
+      "category": "Special Striking Forces",
+      "categoryKey": "SSF",
+      "mandal": "Amadalavalasa",
+      "route": "Special Striking Force",
+      "unitName": "SSF (Amadalavalasa - CI SBX)",
+      "officer": "B.V Venkateswara Rao, CI, SBX, 6309990831",
       "phone": "6309990831",
-      "supporting": "CI/VR M.Nageswararao 7013269612",
+      "supporting": "",
       "pollingStations": "Amadalavalasa",
       "hq": "Amadalavalasa"
     }
@@ -1814,7 +1827,8 @@
     if (cleanPhone === '6309990939' || cleanId === 'HQ_Reserve_3') return 'CI, Task Force';
 
     // 3. Circle Inspectors (M & GP 2511-14 dataset)
-    if (cleanP_match(cleanPhone, '6309990831')) return 'CI, SBX';
+    if (cleanP_match(cleanPhone, '7013269612') || cleanId === 'SSF_Amadalavalasa_3') return 'CI, VR Srikakulam';
+    if (cleanP_match(cleanPhone, '6309990831') || cleanId === 'SSF_Amadalavalasa_SBX') return 'CI, SBX';
     if (cleanP_match(cleanPhone, '9948597720')) return 'CI, VR Srikakulam';
     if (cleanP_match(cleanPhone, '8639521714')) return 'HC, BRV PS';
     if (cleanP_match(cleanPhone, '6309990814') || cleanId === 'SSF_Srikakulam_Town_1') return 'CI, Srikakulam Rural';
@@ -2668,8 +2682,8 @@
       route: currentSelectedUnit.route,
       unitName: currentSelectedUnit.unitName,
       hq: currentSelectedUnit.hq,
-      officer: currentSelectedUnit.officer,
-      phone: currentSelectedUnit.phone,
+      officer: (currentLoggedInOfficer && currentLoggedInOfficer.officerName) ? currentLoggedInOfficer.officerName : currentSelectedUnit.officer,
+      phone: (currentLoggedInOfficer && currentLoggedInOfficer.phone) ? currentLoggedInOfficer.phone : currentSelectedUnit.phone,
       supporting: currentSelectedUnit.supporting,
       lat: lat,
       lng: lng,
@@ -3220,10 +3234,13 @@
       return;
     }
 
-    document.getElementById('disp-officer-name').innerText = unit.officer || '--';
+    const displayOfficer = (currentLoggedInOfficer && currentLoggedInOfficer.officerName) ? currentLoggedInOfficer.officerName : (unit.officer || '--');
+    const displayPhone = (currentLoggedInOfficer && currentLoggedInOfficer.phone) ? currentLoggedInOfficer.phone : (unit.phone || '');
+
+    document.getElementById('disp-officer-name').innerText = displayOfficer;
     const phoneEl = document.getElementById('disp-officer-phone');
-    if (unit.phone) {
-      phoneEl.innerHTML = `<button type="button" onclick="triggerPhoneCall('${escapeHtml(unit.phone)}')" style="background:none; border:none; color: #fde047; text-decoration: underline; cursor: pointer; padding:0; font-size:12px; font-weight:bold; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-phone" style="font-size: 11px;"></i> ${escapeHtml(unit.phone)}</button>`;
+    if (displayPhone) {
+      phoneEl.innerHTML = `<button type="button" onclick="triggerPhoneCall('${escapeHtml(displayPhone)}')" style="background:none; border:none; color: #fde047; text-decoration: underline; cursor: pointer; padding:0; font-size:12px; font-weight:bold; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-phone" style="font-size: 11px;"></i> ${escapeHtml(displayPhone)}</button>`;
     } else {
       phoneEl.innerText = 'N/A';
     }
@@ -3308,9 +3325,10 @@
         const cleanP = normalizePhone(currentLoggedInOfficer.phone);
         currentSelectedUnit = allUnitsData.find(u => {
           const up = normalizePhone(u.phone);
+          return (up && (up === cleanP || up.endsWith(cleanP.slice(-10))));
+        }) || allUnitsData.find(u => {
           const us = normalizePhone(u.supporting);
-          return (up && (up === cleanP || up.endsWith(cleanP.slice(-10)))) ||
-                 (us && (us.includes(cleanP) || (cleanP.length >= 10 && us.includes(cleanP.slice(-10)))));
+          return (us && (us.includes(cleanP) || (cleanP.length >= 10 && us.includes(cleanP.slice(-10)))));
         });
       }
     }
@@ -3403,8 +3421,8 @@
       mandal: alertMandal,
       route: alertRoute,
       hq: unit.hq || '',
-      officer: unit.officer || (currentLoggedInOfficer ? currentLoggedInOfficer.officerName : 'Police Officer'),
-      phone: unit.phone || (currentLoggedInOfficer ? currentLoggedInOfficer.phone : ''),
+      officer: (currentLoggedInOfficer && currentLoggedInOfficer.officerName) ? currentLoggedInOfficer.officerName : (unit.officer || 'Police Officer'),
+      phone: (currentLoggedInOfficer && currentLoggedInOfficer.phone) ? currentLoggedInOfficer.phone : (unit.phone || ''),
       message: `🚨 EMERGENCY / SOS: ${alertRoute ? alertRoute + ' (' + alertMandal + ')' : alertMandal + ' రూట్'} బందోబస్తు అధికారి నుండి అత్యవసర సహాయం కోరబడింది!`,
       priority: 'URGENT',
       latitude: curLat,
@@ -4434,8 +4452,9 @@
     '6309990810', // DSP Mahila UPS (5 Mandals: Ponduru, Ranasthalam, Etcherla, Laveru, G.Sigadam)
     '7036228899', // DSP CID VSP (4 Mandals: Pathapatnam, Meliaputti, Kothuru, Hiramandalam)
     '6309990813', // DSP (AR) DAR (4 Mandals: Sompeta, Kanchili, Ichapuram, Kaviti)
-    // Circle Incharges (14)
+    // Circle Incharges (15)
     '6309990823', // CI Amadalavalasa (5 Mandals: Amadalavalasa, Burja, Sarubujjili, Lakshminarsupeta, Ponduru)
+    '7013269612', // CI VR Srikakulam (Amadalavalasa SSF-3)
     '6309990831', // CI SBX (Amadalavalasa SSF)
     '6309990814', // CI Srikakulam Rural (2 Mandals: Gara, Srikakulam)
     '6309990816', // CI JR Puram / Etcherla (4 Mandals: Ranastalam, Laveru, Etcherla, G.Sigadam)
@@ -4466,35 +4485,50 @@
     if (!clean || clean.length < 10) return [];
     const last10 = clean.slice(-10);
 
-    // 1. Authoritative check in ADD1_FALLBACK_UNITS
+    const pool = [];
     if (typeof ADD1_FALLBACK_UNITS !== 'undefined' && Array.isArray(ADD1_FALLBACK_UNITS)) {
-      const add1Matches = ADD1_FALLBACK_UNITS.filter(u => {
-        const uPhone = normalizePhone(u.phone);
-        if (uPhone && (uPhone === clean || (uPhone.length >= 10 && uPhone.slice(-10) === last10))) return true;
-        const suppStr = String(u.supporting || '');
-        if (suppStr && suppStr.includes(last10)) return true;
-        const offStr = String(u.officer || '');
-        if (offStr && offStr.includes(last10)) return true;
-        return false;
-      });
-      if (add1Matches.length > 0) return add1Matches;
+      pool.push(...ADD1_FALLBACK_UNITS);
+    }
+    if (typeof allUnitsData !== 'undefined' && Array.isArray(allUnitsData)) {
+      pool.push(...allUnitsData);
     }
 
-    return (allUnitsData || []).filter(u => {
+    // 1. Direct Phone Match first (Strict: unit belongs directly to this officer)
+    const directMatches = [];
+    const seenIds = new Set();
+    pool.forEach(u => {
+      if (!u || seenIds.has(u.id)) return;
       const uPhone = normalizePhone(u.phone);
       if (uPhone && (uPhone === clean || (uPhone.length >= 10 && uPhone.slice(-10) === last10))) {
-        return true;
+        directMatches.push(u);
+        seenIds.add(u.id);
       }
-      const suppStr = String(u.supporting || '');
-      if (suppStr && suppStr.includes(last10)) {
-        return true;
-      }
+    });
+    if (directMatches.length > 0) return directMatches;
+
+    // 2. Direct Officer string contains phone
+    const officerMatches = [];
+    pool.forEach(u => {
+      if (!u || seenIds.has(u.id)) return;
       const offStr = String(u.officer || '');
       if (offStr && offStr.includes(last10)) {
-        return true;
+        officerMatches.push(u);
+        seenIds.add(u.id);
       }
-      return false;
     });
+    if (officerMatches.length > 0) return officerMatches;
+
+    // 3. Supporting staff contains phone
+    const suppMatches = [];
+    pool.forEach(u => {
+      if (!u || seenIds.has(u.id)) return;
+      const suppStr = String(u.supporting || '');
+      if (suppStr && suppStr.includes(last10)) {
+        suppMatches.push(u);
+        seenIds.add(u.id);
+      }
+    });
+    return suppMatches;
   }
 
   function getCustomPassword(phone) {
@@ -4665,13 +4699,18 @@
 
     if (assignedUnit) {
       const clean10 = enteredPhone.slice(-10);
-      const suppStr = String(assignedUnit.supporting || '');
-      if (suppStr && suppStr.includes(clean10)) {
-        const parts = suppStr.split(';');
-        const foundPart = parts.find(p => p.includes(clean10));
-        officerDisplayName = foundPart ? foundPart.trim() : assignedUnit.officer;
-      } else {
+      const uPhone = normalizePhone(assignedUnit.phone || '');
+      if (uPhone && (uPhone === enteredPhone || uPhone.slice(-10) === clean10)) {
         officerDisplayName = assignedUnit.officer;
+      } else {
+        const suppStr = String(assignedUnit.supporting || '');
+        if (suppStr && suppStr.includes(clean10)) {
+          const parts = suppStr.split(/[;\n]/);
+          const foundPart = parts.find(p => p.includes(clean10));
+          officerDisplayName = foundPart ? foundPart.trim() : assignedUnit.officer;
+        } else {
+          officerDisplayName = assignedUnit.officer;
+        }
       }
     } else if (isSdpo) {
       const monCfg = SDPO_MONITORS[enteredPhone];

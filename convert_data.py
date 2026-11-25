@@ -186,9 +186,9 @@ def run_conversion():
         elif 'kaviti' in mandal_lower:
             s['special_striking_force_incharge'] = "V.Nagaraju, CI, VR, Srikakulam\n 9948597720"
 
-        # 3. Amadalavalasa Special Striking Force (B.V Venkateswara Rao, CI, SBX, 6309990831)
+        # 3. Amadalavalasa Special Striking Force (M.Nageswara Rao and B.V Venkateswara Rao)
         elif 'amadalavalasa' in mandal_lower and ('7013269612' in str(s.get('special_striking_force_incharge', '')) or s.get('sno') in (1, 5, 8, 9, 10, 27, 28, 29)):
-            s['special_striking_force_incharge'] = "B.V Venkateswara Rao, CI, SBX\n 6309990831"
+            s['special_striking_force_incharge'] = "CI/VR M.Nageswararao 7013269612 / B.V Venkateswara Rao, CI, SBX 6309990831"
 
         # 4. Srikakulam Town QRT (N.V.Ramana, DSP, DAR, Srikakulam, 6309990813)
         elif 'srikakulam' in mandal_lower:
@@ -502,16 +502,22 @@ def run_conversion():
                         u['phone'] = clean_phone_val
                         add1_count += 1
 
-            # 6. Amadalavalasa Special Striking Force (SSF_Amadalavalasa_3)
+            # 6. Amadalavalasa Special Striking Force (B.V Venkateswara Rao, CI, SBX, 6309990831 from Add1)
             elif 'amadalavalasa' in mandal_str.lower() and ('sticking' in route_str.lower() or 'striking' in route_str.lower() or 'ssf' in route_str.lower()):
-                for u in all_units:
-                    if u['id'] == 'SSF_Amadalavalasa_3':
-                        old_off = u.get('officer', '')
-                        u['officer'] = officer_str
-                        u['phone'] = clean_phone_val
-                        if old_off and old_off not in u.get('supporting', ''):
-                            u['supporting'] = old_off + '\n' + u.get('supporting', '')
-                        add1_count += 1
+                all_units.append({
+                    "id": "SSF_Amadalavalasa_SBX",
+                    "category": "Special Striking Forces",
+                    "categoryKey": "SSF",
+                    "mandal": mandal_str or "Amadalavalasa",
+                    "route": "Special Striking Force",
+                    "unitName": "SSF (Amadalavalasa - CI SBX)",
+                    "hq": "Amadalavalasa",
+                    "officer": officer_str,
+                    "phone": clean_phone_val,
+                    "supporting": "",
+                    "pollingStations": ""
+                })
+                add1_count += 1
 
         print(f"Applied updates for {add1_count} officers from Add1.xlsx.")
 
