@@ -21,7 +21,7 @@
   <!-- MQTT.js library -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <!-- Pre-loaded Forces Data (Routes, SF, SSF, QRTs, Reserve Parties) -->
-  <script src="route_mobiles_data.js?v=20261125_v4"></script>
+  <script src="route_mobiles_data.js?v=20261125_v5"></script>
   <!-- Pre-loaded Srikakulam Mandals GeoJSON Boundaries -->
   <script src="srikakulam_mandals.js?v=20261119_v3"></script>
 
@@ -808,6 +808,28 @@
       </div>
     </div>
 
+    <!-- Supervisory Category Filter Checkboxes (Routes, SF, SSF, QRT, Reserve) -->
+    <div id="sdpo-category-filter-bar" style="display: none; align-items: center; gap: 4px; flex-wrap: wrap; margin: 4px 0 6px 0; font-size: 11px;">
+      <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid #475569; border-radius: 5px; padding: 2px 6px; color: #f8fafc; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
+        <input type="checkbox" id="sdpo-check-all" checked onchange="toggleAllSdpoCategories(this.checked)" style="cursor: pointer; accent-color: #3b82f6;"> All
+      </label>
+      <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(59, 130, 246, 0.5); border-radius: 5px; padding: 2px 6px; color: #93c5fd; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
+        <input type="checkbox" id="sdpo-check-rm" value="RM" checked onchange="onSdpoCategoryCheckChange('RM', this.checked)" style="cursor: pointer; accent-color: #3b82f6;"> 🚗 Routes (98)
+      </label>
+      <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 5px; padding: 2px 6px; color: #fca5a5; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
+        <input type="checkbox" id="sdpo-check-sf" value="SF" checked onchange="onSdpoCategoryCheckChange('SF', this.checked)" style="cursor: pointer; accent-color: #ef4444;"> 🚔 SF (26)
+      </label>
+      <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(168, 85, 247, 0.5); border-radius: 5px; padding: 2px 6px; color: #d8b4fe; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
+        <input type="checkbox" id="sdpo-check-ssf" value="SSF" checked onchange="onSdpoCategoryCheckChange('SSF', this.checked)" style="cursor: pointer; accent-color: #a855f7;"> 🛡️ SSF (23)
+      </label>
+      <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 5px; padding: 2px 6px; color: #fde68a; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
+        <input type="checkbox" id="sdpo-check-qrt" value="QRT" checked onchange="onSdpoCategoryCheckChange('QRT', this.checked)" style="cursor: pointer; accent-color: #f59e0b;"> ⚡ QRT (5)
+      </label>
+      <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 5px; padding: 2px 6px; color: #6ee7b7; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
+        <input type="checkbox" id="sdpo-check-reserve" value="RESERVE" checked onchange="onSdpoCategoryCheckChange('RESERVE', this.checked)" style="cursor: pointer; accent-color: #10b981;"> 🏛️ Reserve (5)
+      </label>
+    </div>
+
     <div id="officer-map"></div>
     <div class="map-controls-row">
       <button class="btn-map-control active" id="btn-toggle-follow">
@@ -1514,9 +1536,96 @@
 
   let initialSdpoBoundsFitted = false;
 
+  window.selectedSdpoCategories = {
+    'RM': true,
+    'SF': true,
+    'SSF': true,
+    'QRT': true,
+    'RESERVE': true
+  };
+
+  function shouldShowSdpoPartyUnit(catKey) {
+    if (!catKey) return true;
+    const k = String(catKey).toUpperCase();
+    if (!window.selectedSdpoCategories) return true;
+    return !!window.selectedSdpoCategories[k];
+  }
+
+  window.onSdpoCategoryCheckChange = function(catKey, isChecked) {
+    const k = String(catKey || '').toUpperCase();
+    if (!window.selectedSdpoCategories) {
+      window.selectedSdpoCategories = { 'RM': true, 'SF': true, 'SSF': true, 'QRT': true, 'RESERVE': true };
+    }
+    window.selectedSdpoCategories[k] = !!isChecked;
+    syncSdpoCheckboxes();
+    applySdpoCategoryFilter();
+  };
+
+  window.toggleAllSdpoCategories = function(isChecked) {
+    const state = !!isChecked;
+    window.selectedSdpoCategories = {
+      'RM': state,
+      'SF': state,
+      'SSF': state,
+      'QRT': state,
+      'RESERVE': state
+    };
+    syncSdpoCheckboxes();
+    applySdpoCategoryFilter();
+  };
+
+  function syncSdpoCheckboxes() {
+    const cats = ['RM', 'SF', 'SSF', 'QRT', 'RESERVE'];
+    let allChecked = true;
+    let anyChecked = false;
+    cats.forEach(c => {
+      const val = !!window.selectedSdpoCategories[c];
+      if (val) anyChecked = true;
+      else allChecked = false;
+      const cb = document.getElementById('sdpo-check-' + c.toLowerCase());
+      if (cb) cb.checked = val;
+    });
+    const allCb = document.getElementById('sdpo-check-all');
+    if (allCb) {
+      allCb.checked = allChecked;
+      allCb.indeterminate = (!allChecked && anyChecked);
+    }
+  }
+
+  function applySdpoCategoryFilter() {
+    for (const key in sdpoSubordinateMarkers) {
+      const item = sdpoSubordinateMarkers[key];
+      const catKey = (item.catKey || (item.data && (item.data.categoryKey || item.data.catKey)) || 'RM').toUpperCase();
+      const visible = shouldShowSdpoPartyUnit(catKey);
+      if (visible) {
+        if (!officerMap.hasLayer(item.marker)) {
+          officerMap.addLayer(item.marker);
+        }
+      } else {
+        if (officerMap.hasLayer(item.marker)) {
+          officerMap.removeLayer(item.marker);
+        }
+      }
+    }
+    updateSdpoActiveOfficerCountUI();
+  }
+
   function updateSdpoActiveOfficerCountUI() {
-    if (!isSdpoLoggedIn()) return;
-    const count = Object.keys(sdpoSubordinateMarkers).length;
+    if (!isSdpoLoggedIn()) {
+      const bar = document.getElementById('sdpo-category-filter-bar');
+      if (bar) bar.style.display = 'none';
+      return;
+    }
+    const bar = document.getElementById('sdpo-category-filter-bar');
+    if (bar) bar.style.display = 'flex';
+
+    let count = 0;
+    for (const key in sdpoSubordinateMarkers) {
+      const item = sdpoSubordinateMarkers[key];
+      const catKey = (item.catKey || (item.data && (item.data.categoryKey || item.data.catKey)) || 'RM').toUpperCase();
+      if (shouldShowSdpoPartyUnit(catKey)) count++;
+    }
+
     const badge = document.getElementById('sdpo-live-count-badge');
     if (badge) {
       badge.style.display = 'inline-block';
@@ -1790,6 +1899,7 @@
       iconAnchor: [0, 0]
     });
 
+    const assignedCatKey = ((resolvedUnit && resolvedUnit.categoryKey) || payload.categoryKey || 'RM').toUpperCase();
     if (sdpoSubordinateMarkers[unitKey]) {
       const existing = sdpoSubordinateMarkers[unitKey];
       existing.marker.setLatLng([lat, lng]);
@@ -1797,14 +1907,28 @@
       existing.marker.setIcon(customIcon);
       existing.lastUpdated = Date.now();
       existing.data = payload;
+      existing.catKey = assignedCatKey;
+      if (!shouldShowSdpoPartyUnit(assignedCatKey)) {
+        if (officerMap.hasLayer(existing.marker)) {
+          officerMap.removeLayer(existing.marker);
+        }
+      } else {
+        if (!officerMap.hasLayer(existing.marker)) {
+          officerMap.addLayer(existing.marker);
+        }
+      }
     } else {
-      const marker = L.marker([lat, lng], { icon: customIcon }).addTo(officerMap);
+      const marker = L.marker([lat, lng], { icon: customIcon });
+      if (shouldShowSdpoPartyUnit(assignedCatKey)) {
+        marker.addTo(officerMap);
+      }
       marker.bindPopup(popupHtml);
 
       sdpoSubordinateMarkers[unitKey] = {
         marker: marker,
         lastUpdated: Date.now(),
-        data: payload
+        data: payload,
+        catKey: assignedCatKey
       };
       updateSdpoActiveOfficerCountUI();
     }
@@ -1823,8 +1947,11 @@
       if (myLatLng) points.push(myLatLng);
     }
     for (const key in sdpoSubordinateMarkers) {
-      const latlng = sdpoSubordinateMarkers[key].marker.getLatLng();
-      if (latlng) points.push(latlng);
+      const item = sdpoSubordinateMarkers[key];
+      if (shouldShowSdpoPartyUnit(item.catKey)) {
+        const latlng = item.marker.getLatLng();
+        if (latlng) points.push(latlng);
+      }
     }
     if (points.length === 0) {
       const activeSdpo = getActiveSdpoConfig();

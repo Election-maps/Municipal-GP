@@ -7,6 +7,13 @@
 window.livePartyMarkers = {};
 window.livePartyMarkersGroup = null;
 window.currentLivePartyCategory = 'ALL';
+window.selectedLiveCategories = {
+    'RM': true,
+    'SF': true,
+    'SSF': true,
+    'QRT': true,
+    'RESERVE': true
+};
 window.liveMqttClient = null;
 
 const LIVE_MQTT_BROKER = 'wss://broker.emqx.io:8084/mqtt';
@@ -627,32 +634,106 @@ function buildLivePartyPopupHtml(key, unit, meta) {
 }
 
 function shouldShowLivePartyUnit(catKey) {
-    if (window.currentLivePartyCategory === 'ALL') return true;
-    return String(catKey || '').toUpperCase() === window.currentLivePartyCategory;
+    if (!catKey) return true;
+    const k = String(catKey).toUpperCase();
+    if (!window.selectedLiveCategories) return true;
+    return !!window.selectedLiveCategories[k];
 }
 
-window.setLivePartyCategory = function(catKey) {
-    window.currentLivePartyCategory = catKey;
-    ['all', 'rm', 'sf', 'ssf', 'qrt', 'reserve'].forEach(function(k) {
-        const btn = document.getElementById('live-pill-party-' + k);
-        if (btn) {
-            if (k.toUpperCase() === catKey) {
-                btn.className = 'px-2.5 py-1 rounded text-[11px] font-bold bg-blue-600 text-white transition shadow-sm';
+// Checkbox change handler for individual category (Routes, SF, SSF, QRT, Reserve)
+window.onLivePartyCategoryCheckChange = function(catKey, isChecked) {
+    const k = String(catKey || '').toUpperCase();
+    if (!window.selectedLiveCategories) {
+        window.selectedLiveCategories = { 'RM': true, 'SF': true, 'SSF': true, 'QRT': true, 'RESERVE': true };
+    }
+    window.selectedLiveCategories[k] = !!isChecked;
+    syncLivePartyCheckboxInputs();
+    applyLivePartyCategoryFilter();
+};
+
+// Checkbox change handler for "All"
+window.toggleAllLivePartyCategories = function(isChecked) {
+    const state = !!isChecked;
+    window.selectedLiveCategories = {
+        'RM': state,
+        'SF': state,
+        'SSF': state,
+        'QRT': state,
+        'RESERVE': state
+    };
+    syncLivePartyCheckboxInputs();
+    applyLivePartyCategoryFilter();
+};
+
+function syncLivePartyCheckboxInputs() {
+    if (!window.selectedLiveCategories) return;
+    const cats = ['RM', 'SF', 'SSF', 'QRT', 'RESERVE'];
+    let allChecked = true;
+    let anyChecked = false;
+
+    cats.forEach(function(c) {
+        const val = !!window.selectedLiveCategories[c];
+        if (val) anyChecked = true;
+        else allChecked = false;
+
+        const kLower = c.toLowerCase();
+        // Top bar checkbox
+        const topCb = document.getElementById('live-check-party-' + kLower);
+        if (topCb) topCb.checked = val;
+
+        // Top bar label styling (highlight when checked)
+        const topLbl = document.getElementById('live-label-party-' + kLower);
+        if (topLbl) {
+            if (val) {
+                topLbl.classList.add('bg-slate-700', 'ring-1', 'ring-white/30');
             } else {
-                btn.className = 'px-2.5 py-1 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition';
+                topLbl.classList.remove('bg-slate-700', 'ring-1', 'ring-white/30');
             }
         }
+
+        // Legend checkbox
+        const legCb = document.getElementById('legend-check-party-' + kLower);
+        if (legCb) legCb.checked = val;
     });
 
+    const allCb = document.getElementById('live-check-party-all');
+    if (allCb) {
+        allCb.checked = allChecked;
+        allCb.indeterminate = (!allChecked && anyChecked);
+    }
+}
+
+function applyLivePartyCategoryFilter() {
     if (!window.livePartyMarkersGroup) return;
     window.livePartyMarkersGroup.clearLayers();
 
+    let visibleCount = 0;
     for (const k in window.livePartyMarkers) {
         const u = window.livePartyMarkers[k];
         if (shouldShowLivePartyUnit(u.catKey)) {
-            window.livePartyMarkersGroup.addLayer(u.marker);
-            window.livePartyMarkersGroup.addLayer(u.circle);
+            if (u.marker) window.livePartyMarkersGroup.addLayer(u.marker);
+            if (u.circle) window.livePartyMarkersGroup.addLayer(u.circle);
+            visibleCount++;
         }
+    }
+    const countEl = document.getElementById('live-party-active-count');
+    if (countEl) countEl.innerText = visibleCount;
+}
+
+window.setLivePartyCategory = function(catKey) {
+    if (String(catKey).toUpperCase() === 'ALL') {
+        window.toggleAllLivePartyCategories(true);
+    } else {
+        const target = String(catKey).toUpperCase();
+        window.selectedLiveCategories = {
+            'RM': target === 'RM',
+            'SF': target === 'SF',
+            'SSF': target === 'SSF',
+            'QRT': target === 'QRT',
+            'RESERVE': target === 'RESERVE'
+        };
+        syncLivePartyCheckboxInputs();
+        applyLivePartyCategoryFilter();
     }
 };
 
@@ -753,7 +834,11 @@ function clearAllLiveTrackingLocally() {
 }
 
 function updateLivePartyCounter() {
-    const count = Object.keys(window.livePartyMarkers).length;
+    let count = 0;
+    for (const k in window.livePartyMarkers) {
+        const u = window.livePartyMarkers[k];
+        if (shouldShowLivePartyUnit(u.catKey)) count++;
+    }
     const el = document.getElementById('live-party-active-count');
     if (el) el.innerText = count;
 }
@@ -2372,6 +2457,10 @@ window.updateLivePartyPillsCount = function() {
     document.querySelectorAll('.legend-ssf-count').forEach(function(el) { el.innerText = ssf; });
     document.querySelectorAll('.legend-qrt-count').forEach(function(el) { el.innerText = qrt; });
     document.querySelectorAll('.legend-reserve-count').forEach(function(el) { el.innerText = reserve; });
+
+    if (typeof syncLivePartyCheckboxInputs === 'function') {
+        syncLivePartyCheckboxInputs();
+    }
 };
 
 // Automatically start Real-time MQTT connection and message storage on page load
