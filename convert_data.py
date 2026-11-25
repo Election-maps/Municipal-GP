@@ -171,6 +171,29 @@ def run_conversion():
         key = (mandal_muni.lower(), route_no)
         mandal_route_ps_counts[key] = mandal_route_ps_counts.get(key, 0) + 1
 
+    # Apply Add1 updates directly to stations
+    for s in stations:
+        mandal_lower = str(s.get('mandal_zptc_segment', '')).lower()
+        r_no = str(s.get('route_no', '')).strip()
+
+        # 1. Sompeta Route 6 (HC-205, BRV PS, 8639521714)
+        if 'sompeta' in mandal_lower and r_no == '6':
+            s['route_incharge'] = "HC-205, BRV PS,\n8639521714"
+            s['route_staff'] = "HC-205, BRV PS,\n8639521714"
+            s['route_staff_ph_no'] = "8639521714"
+
+        # 2. Kaviti Special Striking Force (V.Nagaraju, CI, VR, Srikakulam, 9948597720)
+        elif 'kaviti' in mandal_lower:
+            s['special_striking_force_incharge'] = "V.Nagaraju, CI, VR, Srikakulam\n 9948597720"
+
+        # 3. Amadalavalasa Special Striking Force (B.V Venkateswara Rao, CI, SBX, 6309990831)
+        elif 'amadalavalasa' in mandal_lower and ('7013269612' in str(s.get('special_striking_force_incharge', '')) or s.get('sno') in (1, 5, 8, 9, 10, 27, 28, 29)):
+            s['special_striking_force_incharge'] = "B.V Venkateswara Rao, CI, SBX\n 6309990831"
+
+        # 4. Srikakulam Town QRT (N.V.Ramana, DSP, DAR, Srikakulam, 6309990813)
+        elif 'srikakulam' in mandal_lower:
+            s['qrt'] = "Ch. Dhanunjaya Naidu, SDPO, 6309990804 / N.V.Ramana, DSP, DAR, Srikakulam, 6309990813"
+
     print(f"Generated {len(stations)} station records.")
     with open('data/stations.json', 'w', encoding='utf-8') as f:
         json.dump(stations, f, indent=4, ensure_ascii=False)

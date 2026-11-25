@@ -4373,6 +4373,25 @@
             const ws = XLSX.utils.json_to_sheet(exportData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Polling Stations");
+
+            // Also append Forces Sheet (Routes, SF, SSF, QRTs, Reserve Parties)
+            const forcesList = (window.ROUTE_MOBILES_DATA && Array.isArray(window.ROUTE_MOBILES_DATA)) ? window.ROUTE_MOBILES_DATA : [];
+            if (forcesList.length > 0) {
+                const forcesExportData = forcesList.map((u, idx) => ({
+                    'S. No': idx + 1,
+                    'Category': u.category || '',
+                    'Unit Name / Route': u.unitName || u.route || '',
+                    'Mandal / PS': u.mandal || '',
+                    'Headquarters': u.hq || u.route || '',
+                    'Officer Name & Rank': u.officer || '',
+                    'Mobile No': u.phone || '',
+                    'Supporting Staff': u.supporting || '',
+                    'Assigned Area / Stations': u.pollingStations || ''
+                }));
+                const wsForces = XLSX.utils.json_to_sheet(forcesExportData);
+                XLSX.utils.book_append_sheet(wb, wsForces, "Mobile & Reserve Forces");
+            }
+
             XLSX.writeFile(wb, `Election_Polling_Stations_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
         }
         // ================= LIVE ROUTE MAP & POLLING STATION REPORT SYNC =================
