@@ -478,7 +478,7 @@
         "officer": "B.Govinda Rao, HC-1099, SPT PS, 9640229622,",
         "phone": "9640229622",
         "supporting": "HG-708 \n9848310353",
-        "pollingStations": "1"
+        "pollingStations": "5"
     },
     {
         "id": "RM_Sompeta_2",
@@ -491,7 +491,7 @@
         "officer": "G.Ramarao, HC-1060, SPT PS, 9440347890",
         "phone": "9440347890",
         "supporting": "HG-195 \n9989086984",
-        "pollingStations": "1"
+        "pollingStations": "4"
     },
     {
         "id": "RM_Sompeta_3",
@@ -504,7 +504,7 @@
         "officer": "ASI-957, BRV PS,\n8247711441",
         "phone": "8247711441",
         "supporting": "HG-625\n9652876660",
-        "pollingStations": "1"
+        "pollingStations": "3"
     },
     {
         "id": "RM_Sompeta_4",
@@ -517,7 +517,7 @@
         "officer": "PC-1833, BRV PS\n9440041833",
         "phone": "9440041833",
         "supporting": "HG-814\n9177827576",
-        "pollingStations": "1"
+        "pollingStations": "4"
     },
     {
         "id": "RM_Sompeta_5",
@@ -530,7 +530,7 @@
         "officer": "PC-820, BRV PS,\n9553319890",
         "phone": "9553319890",
         "supporting": "HG-136\n9494430870",
-        "pollingStations": "1"
+        "pollingStations": "8"
     },
     {
         "id": "RM_Sompeta_6",
@@ -543,7 +543,7 @@
         "officer": "PC-1253, BRV PS,\n9182718400",
         "phone": "9182718400",
         "supporting": "HG-619\n8374457580",
-        "pollingStations": "1"
+        "pollingStations": "4"
     },
     {
         "id": "RM_Sompeta_7",
@@ -556,7 +556,7 @@
         "officer": "HC-1192, BRV PS,\n9441357110",
         "phone": "9441357110",
         "supporting": "HG-610\n8985402400",
-        "pollingStations": "1"
+        "pollingStations": "4"
     },
     {
         "id": "RM_Sompeta_8",
@@ -569,7 +569,7 @@
         "officer": "PC-1225, BRV PS,\n9490678602",
         "phone": "9490678602",
         "supporting": "HG-454\n9491931345",
-        "pollingStations": "1"
+        "pollingStations": "5"
     },
     {
         "id": "RM_Kanchili_1",
@@ -998,7 +998,7 @@
         "officer": "K.Janardhana Rao, ASI 1521, 9491928827",
         "phone": "9491928827",
         "supporting": "M. V. R. Kishore, HG, 150, Home Guard Unit, 7702563969",
-        "pollingStations": "3"
+        "pollingStations": "6"
     },
     {
         "id": "RM_Mandasa_2",
@@ -1011,7 +1011,7 @@
         "officer": "R.Rambabu, PC 734, 7989383452",
         "phone": "7989383452",
         "supporting": "Ravada Raju, HG, 766, Home Guard Unit, 9676769997",
-        "pollingStations": "4"
+        "pollingStations": "6"
     },
     {
         "id": "RM_Mandasa_3",
@@ -1024,7 +1024,7 @@
         "officer": "M.Chinnarao, HC 1282, 9494206854",
         "phone": "9494206854",
         "supporting": "J.V. Ramana, HG, 663, Home Guard Unit, 6281793670",
-        "pollingStations": "2"
+        "pollingStations": "3"
     },
     {
         "id": "RM_Mandasa_4",
@@ -1037,7 +1037,7 @@
         "officer": "K.Jagadish, PC 1580, 8919552825",
         "phone": "8919552825",
         "supporting": "Siva Prasada Patnaik, HG, 736, Home Guard Unit, 8008709695",
-        "pollingStations": "4"
+        "pollingStations": "5"
     },
     {
         "id": "RM_Mandasa_5",
@@ -1050,7 +1050,7 @@
         "officer": "T.Nethaji, PC 174, 9676569178",
         "phone": "9676569178",
         "supporting": "B.V.R. Murthy, HG, 626, Home Guard Unit, 9493292407",
-        "pollingStations": "4"
+        "pollingStations": "9"
     },
     {
         "id": "RM_Mandasa_6",
@@ -1063,7 +1063,7 @@
         "officer": "K.Dilleswara Rao, PC 2141, 8074478172",
         "phone": "8074478172",
         "supporting": "M. Lakshmana Rao, HG, 783, Home Guard Unit, 8106465389",
-        "pollingStations": "4"
+        "pollingStations": "7"
     },
     {
         "id": "RM_Mandasa_7",
@@ -1076,7 +1076,7 @@
         "officer": "T.Vasudevarao, HC 1156, 9959341156",
         "phone": "9959341156",
         "supporting": "G.Yarrayya, HG, 775, Home Guard Unit, 7799552404",
-        "pollingStations": "4"
+        "pollingStations": "7"
     },
     {
         "id": "RM_Mandasa_8",
@@ -1102,7 +1102,7 @@
         "officer": "K.Varalaxmi, WASI 688, 9441115920",
         "phone": "9441115920",
         "supporting": "R.Lakshmana Murthy, HG, 166, Home Guard Unit, 9949320281",
-        "pollingStations": "4"
+        "pollingStations": "8"
     },
     {
         "id": "RM_Mandasa_10",
@@ -1115,7 +1115,7 @@
         "officer": "G.V.Ramana, PC 2116, 8317580593",
         "phone": "8317580593",
         "supporting": "M. Mahandatha, HG, 246, HG (Fire), 9666803626",
-        "pollingStations": "4"
+        "pollingStations": "12"
     },
     {
         "id": "RM_Mandasa_11",
@@ -1128,7 +1128,7 @@
         "officer": "A.Srinivas, HC 1150, 9441707603",
         "phone": "9441707603",
         "supporting": "P. Poornachandra, HG, 679, Home Guard Unit, 9493289479",
-        "pollingStations": "4"
+        "pollingStations": "8"
     },
     {
         "id": "RM_Ichapuram_1",
@@ -1219,7 +1219,7 @@
         "officer": "HC 1259,ICP T,M Viswanadham,9440445662",
         "phone": "9440445662",
         "supporting": "HG 91,,S. NAGABHUSHA,9032623386",
-        "pollingStations": "1"
+        "pollingStations": "2"
     },
     {
         "id": "RM_Ichapuram_8",

@@ -1598,7 +1598,7 @@
                 if (s.route_no) routeSet.add(s.route_no.trim());
             });
             const sortedPS = Array.from(psSet).sort();
-            const sortedRoutes = Array.from(routeSet).sort();
+            const sortedRoutes = Array.from(routeSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
             // Populate Map PS
             const mapPsSelect = document.getElementById('map-filter-psname');
             const tablePsSelect = document.getElementById('table-filter-ps');
@@ -2820,18 +2820,42 @@
             if (!window.PRECOMPUTED_ROUTES) return null;
             const r = (route || '').toString().trim();
             const p = (ps || '').toString().trim();
+            if (!r) return null;
             const altP = p.includes('Itchapuram') ? p.replace('Itchapuram', 'Ichapuram') : (p.includes('Ichapuram') ? p.replace('Ichapuram', 'Itchapuram') : p);
+            const cleanP = p.replace(/\b(PS|ps|Rural|town)\b/gi, '').replace(/\s+/g, ' ').trim();
             
-            const romanMap = { '1':'I', '2':'II', '3':'III', '4':'IV', '5':'V', '6':'VI', '7':'VII', '8':'VIII', '9':'IX', '10':'X', '11':'XI', '12':'XII', '13':'XIII', '14':'XIV', '15':'XV' };
-            const numMap = { 'I':'1', 'II':'2', 'III':'3', 'IV':'4', 'V':'5', 'VI':'6', 'VII':'7', 'VIII':'8', 'IX':'9', 'X':'10', 'XI':'11', 'XII':'12', 'XIII':'13', 'XIV':'14', 'XV':'15' };
+            const romanMap = { '1':'I', '2':'II', '3':'III', '4':'IV', '5':'V', '6':'VI', '7':'VII', '8':'VIII', '9':'IX', '10':'X', '11':'XI', '12':'XII', '13':'XIII', '14':'XIV', '15':'XV', '16':'XVI', '17':'XVII', '18':'XVIII', '19':'XIX', '20':'XX' };
+            const numMap = { 'I':'1', 'II':'2', 'III':'3', 'IV':'4', 'V':'5', 'VI':'6', 'VII':'7', 'VIII':'8', 'IX':'9', 'X':'10', 'XI':'11', 'XII':'12', 'XIII':'13', 'XIV':'14', 'XV':'15', 'XVI':'16', 'XVII':'17', 'XVIII':'18', 'XIX':'19', 'XX':'20' };
+
+            const psMandalMap = {
+                'Kasibugga PS': 'Palasa', 'Kasibugga': 'Palasa',
+                'Baruva PS': 'Sompeta', 'Baruva': 'Sompeta',
+                'Ichapuram Rural PS': 'Ichapuram', 'Ichapuram Rural': 'Ichapuram',
+                'Mandasa PS': 'Mandasa', 'Vajrapukotturu PS': 'Vajrapukotturu',
+                'Srikakulam 1 town PS': 'Srikakulam 1 town PS',
+                'Srikakulam II town ps': 'Srikakulam II town ps',
+                'Srikakulam Rural PS': 'Srikakulam Rural PS',
+                'Amadalavalasa': 'Amadalavalasa',
+                'Etcherla PS': 'Etcherla PS',
+                'KAVITI': 'KAVITI', 'Kaviti': 'KAVITI',
+                'kanchili': 'kanchili', 'Kanchili': 'kanchili'
+            };
+            const mandal = psMandalMap[p] || psMandalMap[cleanP] || '';
             
             const candidates = [
                 `${p}_${r}`,
+                `${cleanP}_${r}`,
+                mandal ? `${mandal}_${r}` : null,
                 `${altP}_${r}`,
                 romanMap[r] ? `${p}_${romanMap[r]}` : null,
+                romanMap[r] ? `${cleanP}_${romanMap[r]}` : null,
+                romanMap[r] && mandal ? `${mandal}_${romanMap[r]}` : null,
                 romanMap[r] ? `${altP}_${romanMap[r]}` : null,
                 numMap[r.toUpperCase()] ? `${p}_${numMap[r.toUpperCase()]}` : null,
-                numMap[r.toUpperCase()] ? `${altP}_${numMap[r.toUpperCase()]}` : null
+                numMap[r.toUpperCase()] ? `${cleanP}_${numMap[r.toUpperCase()]}` : null,
+                numMap[r.toUpperCase()] && mandal ? `${mandal}_${numMap[r.toUpperCase()]}` : null,
+                `${p.toUpperCase()}_${r}`,
+                `${p.toLowerCase()}_${r}`
             ];
             
             for (const cand of candidates) {
@@ -2901,13 +2925,14 @@
                 if (token !== currentMapFilterToken) return;
                 const coords = routeGroups[rKey];
                 const info = routeStaffInfo[rKey] || {};
-                if (!coords || coords.length < 2) continue;
+                if (!coords || coords.length === 0) continue;
                 // 1. First priority: Check if precomputed true road geometry exists (district-wide road network)
                 const pre = getPrecomputedRoute(info.ps, info.route) || (window.PRECOMPUTED_ROUTES && (window.PRECOMPUTED_ROUTES[rKey] || window.PRECOMPUTED_ROUTES[info.ps + '_' + info.route]));
-                if (pre && pre.coordinates) {
+                if (pre && pre.coordinates && pre.coordinates.length >= 2) {
                     drawRoadRouteFromGeometry(pre.coordinates, pre.distKm, info, token);
                     continue;
                 }
+                if (coords.length < 2) continue;
                 // 2. Fallback: For selected PS or individual route, fetch full OSRM driving geometry live
                 if (!isManyRoutes) {
                     await fetchAndDrawOSRMRoute(coords, info, token);
@@ -3966,7 +3991,7 @@
                 allStations.filter(s => (s.psname || '').trim() === psname.trim()).forEach(s => {
                     if (s.route_no) routesInPS.add(s.route_no.trim());
                 });
-                opts += Array.from(routesInPS).sort().map(r => `<option value="${r}">Route - ${r}</option>`).join('');
+                opts += Array.from(routesInPS).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).map(r => `<option value="${r}">Route - ${r}</option>`).join('');
             }
             routeSelect.innerHTML = opts;
         }
@@ -4092,7 +4117,6 @@
                 L.polyline(routeCoords, { color: '#ffffff', weight: 8, opacity: 0.9, smoothFactor: 1.0 }).addTo(routeMap);
                 L.polyline(routeCoords, { color: '#dc2626', weight: 6, opacity: 1.0, smoothFactor: 1.0 }).addTo(routeMap);
                 routeMap.fitBounds(routeCoords, { padding: [40, 40] });
-                        return;
                 return;
             }
             // Calculate OSRM Driving Distance & Route Track
@@ -4819,13 +4843,14 @@
                 if (token !== currentLiveMapFilterToken || !liveRoutesGroup) return;
                 const coords = routeGroups[rKey];
                 const info = routeStaffInfo[rKey] || {};
-                if (!coords || coords.length < 2) continue;
+                if (!coords || coords.length === 0) continue;
                 // 1. Check precomputed true road geometry
                 const pre = getPrecomputedRoute(info.ps, info.route) || (window.PRECOMPUTED_ROUTES && (window.PRECOMPUTED_ROUTES[rKey] || window.PRECOMPUTED_ROUTES[info.ps + '_' + info.route]));
-                if (pre && pre.coordinates) {
+                if (pre && pre.coordinates && pre.coordinates.length >= 2) {
                     drawLiveRoadRouteFromGeometry(pre.coordinates, pre.distKm, info, token);
                     continue;
                 }
+                if (coords.length < 2) continue;
                 // 2. Full OSRM driving geometry live
                 if (!isManyRoutes) {
                     await fetchAndDrawLiveOSRMRoute(coords, info, token);
@@ -4977,7 +5002,6 @@
             if (!liveRoutesGroup || !liveMap) return;
             if (checked) {
                 if (!liveMap.hasLayer(liveRoutesGroup)) liveMap.addLayer(liveRoutesGroup);
-                renderLiveRoadRoutes(filteredLiveMapStations, currentLiveMapFilterToken);
             } else {
                 if (liveMap.hasLayer(liveRoutesGroup)) liveMap.removeLayer(liveRoutesGroup);
             }

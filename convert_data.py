@@ -30,6 +30,12 @@ def run_conversion():
     stations = []
     mandal_route_ps_counts = {}
 
+    current_route_no = ""
+    current_mandal = ""
+    current_incharge = ""
+    current_supporting = ""
+    current_staying = ""
+
     rows = list(ws_st.iter_rows(min_row=2, values_only=True))
     for idx, r in enumerate(rows, 1):
         sno_raw = r[0]
@@ -42,10 +48,33 @@ def run_conversion():
 
         mandal_muni = clean_str(r[2])
         ward_segment = clean_str(r[3])
-        route_no = clean_str(r[4])
-        route_incharge = clean_str(r[5])
-        supporting_staff = clean_str(r[6])
-        staying_point = clean_str(r[7])
+        route_no_raw = clean_str(r[4])
+        route_incharge_raw = clean_str(r[5])
+        supporting_staff_raw = clean_str(r[6])
+        staying_point_raw = clean_str(r[7])
+
+        if route_no_raw != "":
+            current_route_no = route_no_raw
+            current_mandal = mandal_muni
+            current_incharge = route_incharge_raw
+            current_supporting = supporting_staff_raw
+            current_staying = staying_point_raw
+            route_no = route_no_raw
+            route_incharge = route_incharge_raw
+            supporting_staff = supporting_staff_raw
+            staying_point = staying_point_raw
+        else:
+            if mandal_muni == current_mandal or not mandal_muni:
+                route_no = current_route_no
+                route_incharge = route_incharge_raw or current_incharge
+                supporting_staff = supporting_staff_raw or current_supporting
+                staying_point = staying_point_raw or current_staying
+            else:
+                route_no = ""
+                route_incharge = route_incharge_raw
+                supporting_staff = supporting_staff_raw
+                staying_point = staying_point_raw
+
         striking_force = clean_str(r[8])
         special_sf = clean_str(r[9])
         qrt = clean_str(r[10])
