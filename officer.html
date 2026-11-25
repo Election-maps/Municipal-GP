@@ -1209,7 +1209,7 @@
   // 1 District Head (SP - All 30 Mandals) + 3 SDPOs (Division level) + 12 CIs/Inspectors (Circle level) + 3 DSPs
   // -------------------------------------------------------------
   const SDPO_MONITORS = {
-    // District Level Monitor (All 30 Mandals - District Wide)
+    // District Level Leadership Monitors (SP & Addl. SPs - All Mandals)
     '9704452107': {
       phone: '9704452107',
       name: 'SP శ్రీకాకుళం / జిల్లా ఇన్-చార్జ్',
@@ -1224,6 +1224,30 @@
         'kothuru', 'meliaputti', 'nandigam', 'narasannapeta', 'pathapatnam',
         'polaki', 'saravakota', 'kasibugga', 'ichapuram', 'kanchili', 'kaviti',
         'mandasa', 'sompeta', 'vajrapukothuru'
+      ]
+    },
+    '6309990801': {
+      phone: '6309990801',
+      name: 'Addl. SP (Admin) శ్రీకాకుళం',
+      title: 'కాసీబుగ్గ సబ్-డివిజన్ / జిల్లా వ్యాప్త లైవ్ మ్యాప్:',
+      subBadge: 'కాసీబుగ్గ సబ్-డివిజన్ ఫోర్స్',
+      toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: true,
+      mandals: [
+        'kasibugga', 'ichapuram', 'kanchili', 'kaviti', 'mandasa', 'sompeta', 'vajrapukothuru',
+        'srikakulam', 'amadalavalasa', 'tekkali'
+      ]
+    },
+    '8008203236': {
+      phone: '8008203236',
+      name: 'Addl. SP (V&E) శ్రీకాకుళం',
+      title: 'శ్రీకాకుళం & ఆమదాలవలస / జిల్లా వ్యాప్త లైవ్ మ్యాప్:',
+      subBadge: 'శ్రీకాకుళం & ఆమదాలవలస ఫోర్స్',
+      toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: true,
+      mandals: [
+        'srikakulam', 'amadalavalasa', 'burja', 'etcherla', 'gsigadam',
+        'gara', 'ranastalam', 'laveru', 'ponduru', 'sarubujjili', 'lakshminarsupeta'
       ]
     },
 
@@ -1445,6 +1469,24 @@
       mandals: [
         'sompeta', 'kanchili', 'ichapuram', 'kaviti'
       ]
+    },
+    '6309990831': {
+      phone: '6309990831',
+      name: 'CI (SBX) ఆమదాలవలస / స్పెషల్ స్ట్రైకింగ్ ఫోర్స్',
+      title: 'ఆమదాలవలస మండల లైవ్ మ్యాప్:',
+      subBadge: 'ఆమదాలవలస ఫోర్స్',
+      toastMsg: 'ఆమదాలవలస మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
+      mandals: ['amadalavalasa']
+    },
+    '9948597720': {
+      phone: '9948597720',
+      name: 'CI (VR) కవిటి / స్పెషల్ స్ట్రైకింగ్ ఫోర్స్',
+      title: 'కవిటి మండల లైవ్ మ్యాప్:',
+      subBadge: 'కవిటి ఫోర్స్',
+      toastMsg: 'కవిటి మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
+      mandals: ['kaviti']
     }
   };
 
@@ -1669,13 +1711,16 @@
     if (cleanPhone === '7036228899') return 'DSP, CID VSP';
 
     // 2. Addl. SP & HQ Reserves (Strictly as per Excel: Addl. SP Reserve + HQ-Reserve Parties)
-    if (cleanId === 'Addl_SP_Reserve_1') return 'Addl. SP (Admin), Srikakulam';
-    if (cleanId === 'Addl_SP_Reserve_2') return 'Addl. SP (V&E), Srikakulam';
+    if (cleanP_match(cleanPhone, '6309990801') || cleanId === 'Addl_SP_Reserve_1') return 'Addl. SP (Admin), Srikakulam';
+    if (cleanP_match(cleanPhone, '8008203236') || cleanId === 'Addl_SP_Reserve_2') return 'Addl. SP (V&E), Srikakulam';
     if (cleanPhone === '9392663604' || cleanId === 'HQ_Reserve_1') return 'CI, Control Room';
     if (cleanPhone === '6309990838' || cleanId === 'HQ_Reserve_2') return 'RI Admin, DAR Srikakulam';
     if (cleanPhone === '6309990939' || cleanId === 'HQ_Reserve_3') return 'CI, Task Force';
 
     // 3. Circle Inspectors (M & GP 2511-14 dataset)
+    if (cleanP_match(cleanPhone, '6309990831')) return 'CI, SBX';
+    if (cleanP_match(cleanPhone, '9948597720')) return 'CI, VR Srikakulam';
+    if (cleanP_match(cleanPhone, '8639521714')) return 'HC, BRV PS';
     if (cleanP_match(cleanPhone, '6309990814') || cleanId === 'SSF_Srikakulam_Town_1') return 'CI, Srikakulam Rural';
     if (cleanP_match(cleanPhone, '6309990823') || cleanId === 'SSF_Amadalavalasa_1') return 'CI, Amadalavalasa';
     if (cleanP_match(cleanPhone, '6309990816') || cleanId === 'SSF_Srikakulam_Town_5') return 'CI, JR Puram';
@@ -4281,8 +4326,10 @@
   }
 
   const DESIGNATED_OFFICER_PHONES = [
-    // District Level Monitor (SP - All 30 Mandals)
+    // District Level Leadership Monitors (SP & Addl. SPs)
     '9704452107', // SP Srikakulam / District Incharge (All Mandals)
+    '6309990801', // Addl. SP Admin Srikakulam (Entire KSB Sub-Div. GP 1st Phase)
+    '8008203236', // Addl. SP V&E Srikakulam (Srikakulam & Amadalavalasa)
     // SDPO Division Incharges (3)
     '6309990804', // SDPO Srikakulam (11 Mandals)
     '6309990811', // SDPO Tekkali (12 Mandals)
@@ -4291,8 +4338,9 @@
     '6309990810', // DSP Mahila UPS (5 Mandals: Ponduru, Ranasthalam, Etcherla, Laveru, G.Sigadam)
     '7036228899', // DSP CID VSP (4 Mandals: Pathapatnam, Meliaputti, Kothuru, Hiramandalam)
     '6309990813', // DSP (AR) DAR (4 Mandals: Sompeta, Kanchili, Ichapuram, Kaviti)
-    // Circle Incharges (12)
+    // Circle Incharges (14)
     '6309990823', // CI Amadalavalasa (5 Mandals: Amadalavalasa, Burja, Sarubujjili, Lakshminarsupeta, Ponduru)
+    '6309990831', // CI SBX (Amadalavalasa SSF)
     '6309990814', // CI Srikakulam Rural (2 Mandals: Gara, Srikakulam)
     '6309990816', // CI JR Puram / Etcherla (4 Mandals: Ranastalam, Laveru, Etcherla, G.Sigadam)
     '6309990860', // Inspector Tekkali PS (1 Mandal: Tekkali)
@@ -4302,6 +4350,7 @@
     '6309990815', // CI Narasannapeta (4 Mandals: Narasannapeta, Polaki, Saravakota, Jalumuru)
     '6309990825', // CI Kasibugga (1 Mandal: Kasibugga)
     '6309990827', // CI Ichapuram (2 Mandals: Ichapuram Rural, Kaviti)
+    '9948597720', // CI VR Srikakulam (Kaviti SSF-1)
     '6309990819', // CI Sompeta (2 Mandals: Kanchili, Sompeta)
     '6309990818'  // CI Kasibugga Rural / Mandasa (2 Mandals: Mandasa, Vajrapukothuru)
   ];

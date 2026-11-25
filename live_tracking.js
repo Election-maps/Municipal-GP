@@ -73,13 +73,16 @@ function formatOfficerRankAndPs(rawOfficer, mandal, unitName, route, phone, id) 
     if (cleanPhone === '7036228899') return 'DSP, CID VSP';
 
     // 2. Addl. SP & HQ Reserves (Strictly as per Excel: Addl. SP Reserve + HQ-Reserve Parties)
-    if (cleanId === 'Addl_SP_Reserve_1') return 'Addl. SP (Admin), Srikakulam';
-    if (cleanId === 'Addl_SP_Reserve_2') return 'Addl. SP (V&E), Srikakulam';
+    if (cleanPhone === '6309990801' || cleanId === 'Addl_SP_Reserve_1') return 'Addl. SP (Admin), Srikakulam';
+    if (cleanPhone === '8008203236' || cleanId === 'Addl_SP_Reserve_2') return 'Addl. SP (V&E), Srikakulam';
     if (cleanPhone === '9392663604' || cleanId === 'HQ_Reserve_1') return 'CI, Control Room';
     if (cleanPhone === '6309990838' || cleanId === 'HQ_Reserve_2') return 'RI Admin, DAR Srikakulam';
     if (cleanPhone === '6309990939' || cleanId === 'HQ_Reserve_3') return 'CI, Task Force';
 
     // 3. Circle Inspectors (M & GP 2511-14 dataset)
+    if (cleanPhone === '6309990831') return 'CI, SBX';
+    if (cleanPhone === '9948597720') return 'CI, VR Srikakulam';
+    if (cleanPhone === '8639521714') return 'HC, BRV PS';
     if (cleanPhone === '6309990814' || cleanId === 'SSF_Srikakulam_Town_1') return 'CI, Srikakulam Rural';
     if (cleanPhone === '6309990823' || cleanId === 'SSF_Amadalavalasa_1') return 'CI, Amadalavalasa';
     if (cleanPhone === '6309990816' || cleanId === 'SSF_Srikakulam_Town_5') return 'CI, JR Puram';

@@ -540,9 +540,9 @@
         "route": "RM-6",
         "unitName": "RM-6 (Karthalipalem)",
         "hq": "Karthalipalem",
-        "officer": "PC-1253, BRV PS,\n9182718400",
-        "phone": "9182718400",
-        "supporting": "HG-619\n8374457580",
+        "officer": "HC-205, BRV PS,\n8639521714",
+        "phone": "8639521714",
+        "supporting": "PC-1253, BRV PS,\n9182718400;\nHG-619\n8374457580",
         "pollingStations": "4"
     },
     {
@@ -1645,9 +1645,9 @@
         "route": "SSF-3",
         "unitName": "SSF (Chintada)",
         "hq": "Chintada",
-        "officer": "M. Nageswara Rao, CI, VR, Srikakulam, 7013269612",
-        "phone": "7013269612",
-        "supporting": "APSP PC 8-9989325247\nAPSP PC 09-82478184112",
+        "officer": "B.V Venkateswara Rao, CI, SBX,6309990831",
+        "phone": "6309990831",
+        "supporting": "M. Nageswara Rao, CI, VR, Srikakulam, 7013269612\nAPSP PC 8-9989325247\nAPSP PC 09-82478184112",
         "pollingStations": ""
     },
     {
@@ -1840,8 +1840,8 @@
         "route": "SSF-1",
         "unitName": "SSF (SILAGAM)",
         "hq": "SILAGAM",
-        "officer": "V.Nagaraju, CI, VR, Srikakulam @ Kaviti of Kaviti Mandal",
-        "phone": "",
+        "officer": "V.Nagaraju, CI, VR, Srikakulam @ Kaviti of Kaviti Mandal ,",
+        "phone": "9948597720",
         "supporting": "APSP PC 28 SALINA LINGARAJU, APSP PC 77, CH S PRAVEENKUMAR 9000695091",
         "pollingStations": ""
     },
@@ -1983,8 +1983,8 @@
         "route": "Addl. SP Reserve - 1",
         "unitName": "Addl. SP Reserve (Entire KSB Sub-Div. \n(GP 1st Phase))",
         "hq": "Entire KSB Sub-Div. \n(GP 1st Phase)",
-        "officer": "Sri P. Srinivasarao, Addl.SP, Admin, Srikakulam",
-        "phone": "",
+        "officer": "Sri P. Srinivasarao, Addl.SP, Admin, Srikakulam,6309990801",
+        "phone": "6309990801",
         "supporting": "",
         "pollingStations": ""
     },
@@ -1996,8 +1996,8 @@
         "route": "Addl. SP Reserve - 2",
         "unitName": "Addl. SP Reserve (Srikakulam & Amadalavalasa)",
         "hq": "Srikakulam & Amadalavalasa",
-        "officer": "Sri Ch.Vivekananda, Addl.SP, V&E, Srikakulam",
-        "phone": "",
+        "officer": "Sri Ch.Vivekananda, Addl.SP, V&E, Srikakulam,8008203236",
+        "phone": "8008203236",
         "supporting": "",
         "pollingStations": ""
     },

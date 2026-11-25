@@ -2,6 +2,7 @@ import openpyxl
 import json
 import re
 import datetime
+import os
 
 def clean_str(val):
     if val is None:
@@ -417,6 +418,79 @@ def run_conversion():
             })
             static_count += 1
     print(f"Processed {static_count} Static Parties.")
+
+    # 7. Apply Add1.xlsx Updates (6 Officers)
+    add1_path = "Add1.xlsx"
+    if os.path.exists(add1_path):
+        wb_add1 = openpyxl.load_workbook(add1_path, data_only=True)
+        ws_add1 = wb_add1.active
+        add1_count = 0
+        for r in list(ws_add1.iter_rows(min_row=2, values_only=True)):
+            if not r or not any(r):
+                continue
+            sno, area_type, mandal_raw, route_raw, officer_raw, phone_raw = r[:6]
+            if not phone_raw:
+                continue
+            clean_phone_val = extract_phone(str(phone_raw))
+            officer_str = clean_str(officer_raw)
+            mandal_str = clean_str(mandal_raw)
+            route_str = clean_str(route_raw)
+
+            # 1. Sompeta Route 6 (RM_Sompeta_6)
+            if 'sompeta' in mandal_str.lower() and ('6' in route_str or 'rm-6' in route_str.lower()):
+                for u in all_units:
+                    if u['id'] == 'RM_Sompeta_6':
+                        old_off = u.get('officer', '')
+                        u['officer'] = officer_str
+                        u['phone'] = clean_phone_val
+                        if old_off and clean_phone_val not in old_off:
+                            u['supporting'] = old_off + ';\n' + u.get('supporting', '')
+                        add1_count += 1
+
+            # 2. Kaviti Route 1 (SSF_KAVITI_1)
+            elif 'kaviti' in mandal_str.lower() and ('1' in route_str):
+                for u in all_units:
+                    if u['id'] == 'SSF_KAVITI_1':
+                        u['officer'] = officer_str
+                        u['phone'] = clean_phone_val
+                        add1_count += 1
+
+            # 3. Srikakulam Town QRT-2 (QRT_4)
+            elif 'srikakulam' in mandal_str.lower() and 'qrt-2' in route_str.lower():
+                for u in all_units:
+                    if u['id'] == 'QRT_4' or (u['categoryKey'] == 'QRT' and 'srikakulam' in u['mandal'].lower() and '2' in u['route'].lower()):
+                        u['officer'] = officer_str
+                        u['phone'] = clean_phone_val
+                        add1_count += 1
+
+            # 4. Entire KSB Sub-Div. Addl.SP Reserve (Addl_SP_Reserve_1)
+            elif 'ksb' in mandal_str.lower() or 'kasibugga' in mandal_str.lower() or ('addl' in route_str.lower() and str(sno) == '4'):
+                for u in all_units:
+                    if u['id'] == 'Addl_SP_Reserve_1':
+                        u['officer'] = officer_str
+                        u['phone'] = clean_phone_val
+                        add1_count += 1
+
+            # 5. Srikakulam & Amadalavalasa Addl.SP Reserve (Addl_SP_Reserve_2)
+            elif ('srikakulam' in mandal_str.lower() and 'amadalavalasa' in mandal_str.lower()) or ('addl' in route_str.lower() and str(sno) == '5'):
+                for u in all_units:
+                    if u['id'] == 'Addl_SP_Reserve_2':
+                        u['officer'] = officer_str
+                        u['phone'] = clean_phone_val
+                        add1_count += 1
+
+            # 6. Amadalavalasa Special Striking Force (SSF_Amadalavalasa_3)
+            elif 'amadalavalasa' in mandal_str.lower() and ('sticking' in route_str.lower() or 'striking' in route_str.lower() or 'ssf' in route_str.lower()):
+                for u in all_units:
+                    if u['id'] == 'SSF_Amadalavalasa_3':
+                        old_off = u.get('officer', '')
+                        u['officer'] = officer_str
+                        u['phone'] = clean_phone_val
+                        if old_off and old_off not in u.get('supporting', ''):
+                            u['supporting'] = old_off + '\n' + u.get('supporting', '')
+                        add1_count += 1
+
+        print(f"Applied updates for {add1_count} officers from Add1.xlsx.")
 
     print(f"\nTOTAL ALL UNITS: {len(all_units)}")
     from collections import Counter
