@@ -10644,8 +10644,8 @@ window.INITIAL_STATIONS = [
         "pc": "RPC 568",
         "hg": "HG 495",
         "others": "",
-        "latitude": "18.7239942",
-        "longitude": "84.62152",
+        "latitude": "18.723945",
+        "longitude": "84.461552",
         "route_staff": "K Simhachalam ASI 1062 , CMS Srikakulam , 9110712235",
         "route_staff_ph_no": "9110712235"
     },
@@ -11304,8 +11304,8 @@ window.INITIAL_STATIONS = [
         "pc": "PC 1224 & WPC 231",
         "hg": "HG 529",
         "others": "",
-        "latitude": "18.711484",
-        "longitude": "80.404696",
+        "latitude": "18.31313",
+        "longitude": "83.876209",
         "route_staff": "S Rellayya, SI KBM-2, 8374883692",
         "route_staff_ph_no": "8374883692"
     },
