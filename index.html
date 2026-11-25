@@ -1271,11 +1271,11 @@
             <form id="stationForm" onsubmit="saveStation(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <input type="hidden" id="form-id">
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Name of the Mandal / ZPTC Segment *</label>
+                    <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Name of the Mandal *</label>
                     <input type="text" id="form-mandal" required class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Name of the MPTC Segment</label>
+                    <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Name of the Ward</label>
                     <input type="text" id="form-mptc" class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-blue-500">
                 </div>
                 <div>
@@ -2147,8 +2147,8 @@
         }
         // Field keys definition for Polling Station Popup customization
         var POPUP_FIELD_KEYS = [
-            { key: 'mandal_zptc', label: 'Name of the Mandal / ZPTC Segment' },
-            { key: 'mptc', label: 'Name of the MPTC Segment' },
+            { key: 'mandal_zptc', label: 'Name of the Mandal' },
+            { key: 'mptc', label: 'Name of the Ward' },
             { key: 'route_no', label: 'Route_no' },
             { key: 'route_incharge', label: 'Route Inchage' },
             { key: 'striking_incharge', label: 'Striking force Incharge' },
@@ -2326,7 +2326,7 @@
                                 <tr data-field-key="mandal_zptc" style="${hidden.includes('mandal_zptc') ? 'display:none;' : ''}" class="border-b border-slate-100 hover:bg-slate-50 transition">
                                     <td class="py-1 text-slate-500 font-medium w-40 shrink-0 align-top">
                                         <div class="flex items-center justify-between pr-1">
-                                            <span>Name of the Mandal / ZPTC Segment:</span>
+                                            <span>Name of the Mandal:</span>
                                             <button type="button" onclick="hideSinglePopupField('mandal_zptc', this)" title="Hide this field" class="text-slate-300 hover:text-rose-600 p-0.5 rounded hover:bg-rose-50 transition cursor-pointer text-[10px]"><i class="fa-solid fa-eye-slash"></i></button>
                                         </div>
                                     </td>
@@ -2335,7 +2335,7 @@
                                 <tr data-field-key="mptc" style="${hidden.includes('mptc') ? 'display:none;' : ''}" class="border-b border-slate-100 hover:bg-slate-50 transition">
                                     <td class="py-1 text-slate-500 font-medium align-top">
                                         <div class="flex items-center justify-between pr-1">
-                                            <span>Name of the MPTC Segment:</span>
+                                            <span>Name of the Ward:</span>
                                             <button type="button" onclick="hideSinglePopupField('mptc', this)" title="Hide this field" class="text-slate-300 hover:text-rose-600 p-0.5 rounded hover:bg-rose-50 transition cursor-pointer text-[10px]"><i class="fa-solid fa-eye-slash"></i></button>
                                         </div>
                                     </td>
@@ -3136,7 +3136,7 @@
         let tableSortColumn = 'sno';
         let tableSortOrder = 'asc';
         let activeQuickCategory = '';
-        // Dynamic Table Columns Configuration matching 2. ZPTC and MPTC segment.xlsx
+        // Dynamic Table Columns Configuration (Name of the Mandal, Name of the Ward, Route, etc.)
         const TABLE_COLUMNS_DEF = {
             'col-sno': {
                 key: 'col-sno',
@@ -3147,14 +3147,14 @@
             },
             'col-mandal': {
                 key: 'col-mandal',
-                label: 'Name of the Mandal / ZPTC Segment',
+                label: 'Name of the Mandal',
                 sortKey: 'mandal_zptc_segment',
                 align: 'text-left',
                 renderCell: (s, idx, startIdx, hiddenCls) => `<td class="p-2 font-medium text-slate-800 break-words col-mandal ${hiddenCls}">${s.mandal_zptc_segment || '-'}</td>`
             },
             'col-mptc': {
                 key: 'col-mptc',
-                label: 'Name of the MPTC Segment',
+                label: 'Name of the Ward',
                 sortKey: 'mptc_segment',
                 align: 'text-left',
                 renderCell: (s, idx, startIdx, hiddenCls) => `<td class="p-2 text-slate-600 break-words col-mptc ${hiddenCls}">${s.mptc_segment || '-'}</td>`
@@ -4345,8 +4345,8 @@
                     const col = TABLE_COLUMNS_DEF[colKey];
                     if (!col) return;
                     if (colKey === 'col-sno') row['S. No'] = idx + 1;
-                    else if (colKey === 'col-mandal') row['Name of the Mandal / ZPTC Segment'] = s.mandal_zptc_segment || '';
-                    else if (colKey === 'col-mptc') row['Name of the MPTC Segment'] = s.mptc_segment || '';
+                    else if (colKey === 'col-mandal') row['Name of the Mandal'] = s.mandal_zptc_segment || '';
+                    else if (colKey === 'col-mptc') row['Name of the Ward'] = s.mptc_segment || '';
                     else if (colKey === 'col-route') row['Route_no'] = s.route_no || '';
                     else if (colKey === 'col-route-incharge') row['Route Inchage'] = s.route_incharge || '';
                     else if (colKey === 'col-striking-incharge') row['Striking force Incharge'] = s.striking_force_incharge || '';
