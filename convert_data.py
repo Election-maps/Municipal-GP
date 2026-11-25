@@ -100,9 +100,9 @@ def run_conversion():
         elif sno == 355 or '18.7239942' in lat_raw:
             lat_raw = '18.723945'
             lon_raw = '84.461552'
-        elif sno == 377 or '80.404696' in lon_raw or '18.711484' in lat_raw:
-            lat_raw = '18.31313'
-            lon_raw = '83.876209'
+        elif sno == 377 or '80.404696' in lon_raw or '18.711484' in lat_raw or '8.711484' in lat_raw or lat_raw == '18.31313':
+            lat_raw = '18.313155306466673'
+            lon_raw = '83.89630250580744'
         
         route_phone = extract_phone(route_incharge)
 

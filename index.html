@@ -1410,7 +1410,7 @@
         </div>
     </div>
     <!-- Load Local Stations Dataset & Precomputed Road Routes Geometry -->
-    <script src="data/stations.js?v=20261125_v6"></script>
+    <script src="data/stations.js?v=20261125_v7"></script>
     <script defer src="data/routes_geometry.js"></script>
     <!-- Main Application JavaScript Logic -->
     <script>
@@ -1468,7 +1468,7 @@
         }
         // Initialize Data (LocalStorage -> window.INITIAL_STATIONS -> fetch fallback)
         async function initializeDataset() {
-            const DATASET_VERSION = "2026-11-25_v27_gp_coords_update";
+            const DATASET_VERSION = "2026-11-25_v28_gp_coords_update2";
             const savedVer = localStorage.getItem('POLICE_ELECTION_DATASET_VERSION');
             if (savedVer !== DATASET_VERSION) {
                 localStorage.removeItem('POLICE_ELECTION_STATIONS_DATA');
