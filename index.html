@@ -497,11 +497,11 @@
                     <div class="font-bold text-slate-700 border-t pt-1 mt-1 mb-0.5 flex items-center gap-1">
                         <i class="fa-solid fa-satellite-dish text-blue-600"></i> Live Police Forces
                     </div>
-                    <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-blue-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-car-side text-[8px]"></i></span> Route Mobiles (<span class="legend-rm-count">100</span>)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-blue-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-car-side text-[8px]"></i></span> Route Mobiles (<span class="legend-rm-count">98</span>)</div>
                     <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-rose-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-shield-halved text-[8px]"></i></span> Striking Forces - SF (<span class="legend-sf-count">26</span>)</div>
                     <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-purple-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-user-shield text-[8px]"></i></span> Special SF - SSF (<span class="legend-ssf-count">23</span>)</div>
                     <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-amber-500 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-bolt text-[8px]"></i></span> QRTs (<span class="legend-qrt-count">5</span>)</div>
-                    <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-building-columns text-[8px]"></i></span> Reserve Parties (<span class="legend-reserve-count">17</span>)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-building-columns text-[8px]"></i></span> Reserve Parties (<span class="legend-reserve-count">5</span>)</div>
                 </div>
             </div>
         </section>
@@ -511,13 +511,13 @@
             <div class="flex flex-nowrap items-center justify-between gap-2 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white px-2.5 py-1.5 rounded-lg border border-slate-800 shadow-md overflow-x-auto whitespace-nowrap">
                 <div class="flex items-center gap-1 text-xs shrink-0">
                     <span class="font-bold text-amber-400 mr-1 flex items-center gap-1 text-[11px] sm:text-xs">
-                        <i class="fa-solid fa-satellite-dish animate-pulse text-emerald-400"></i> Live Forces (<span id="live-forces-total-badge">171</span>):
+                        <i class="fa-solid fa-satellite-dish animate-pulse text-emerald-400"></i> Live Forces (<span id="live-forces-total-badge">157</span>):
                     </span>
                     <button type="button" onclick="setLivePartyCategory('ALL')" id="live-pill-party-all" class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-600 text-white transition shadow-sm">
-                        All (<span id="live-forces-all-count">171</span>)
+                        All (<span id="live-forces-all-count">157</span>)
                     </button>
                     <button type="button" onclick="setLivePartyCategory('RM')" id="live-pill-party-rm" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-blue-300 border border-blue-500/40 transition">
-                        <i class="fa-solid fa-car-side text-blue-400 mr-0.5"></i> Routes (<span id="live-forces-rm-count">100</span>)
+                        <i class="fa-solid fa-car-side text-blue-400 mr-0.5"></i> Routes (<span id="live-forces-rm-count">98</span>)
                     </button>
                     <button type="button" onclick="setLivePartyCategory('SF')" id="live-pill-party-sf" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-500/40 transition">
                         <i class="fa-solid fa-shield-halved text-rose-400 mr-0.5"></i> SF (<span id="live-forces-sf-count">26</span>)
@@ -529,7 +529,7 @@
                         <i class="fa-solid fa-bolt text-amber-400 mr-0.5"></i> QRT (<span id="live-forces-qrt-count">5</span>)
                     </button>
                     <button type="button" onclick="setLivePartyCategory('RESERVE')" id="live-pill-party-reserve" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/40 transition">
-                        <i class="fa-solid fa-building-columns text-emerald-400 mr-0.5"></i> Reserve (<span id="live-forces-reserve-count">17</span>)
+                        <i class="fa-solid fa-building-columns text-emerald-400 mr-0.5"></i> Reserve (<span id="live-forces-reserve-count">5</span>)
                     </button>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
@@ -537,7 +537,7 @@
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping inline-block" id="live-mqtt-indicator-dot"></span>
                         <span id="live-mqtt-status-text" class="text-emerald-400 font-bold">Online</span>
                         <span class="text-slate-400 font-normal">|</span>
-                        <span class="text-slate-300">Live Active: <strong id="live-party-active-count" class="text-emerald-300">0</strong> / <span id="live-forces-active-total">171</span></span>
+                        <span class="text-slate-300">Live Active: <strong id="live-party-active-count" class="text-emerald-300">0</strong> / <span id="live-forces-active-total">157</span></span>
                     </div>
 
                     <button type="button" onclick="openOfficerMessagesModal()" id="btn-officer-messages" class="relative px-2 py-0.5 rounded text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="View messages sent by Officers to Control Room">
@@ -713,11 +713,11 @@
                     <div class="font-bold text-slate-700 border-t pt-1 mt-1 mb-0.5 flex items-center gap-1">
                         <i class="fa-solid fa-satellite-dish text-blue-600"></i> Live Police Forces
                     </div>
-                    <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-blue-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-car-side text-[8px]"></i></span> Route Mobiles (<span class="legend-rm-count">100</span>)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-blue-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-car-side text-[8px]"></i></span> Route Mobiles (<span class="legend-rm-count">98</span>)</div>
                     <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-rose-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-shield-halved text-[8px]"></i></span> Striking Forces - SF (<span class="legend-sf-count">26</span>)</div>
                     <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-purple-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-user-shield text-[8px]"></i></span> Special SF - SSF (<span class="legend-ssf-count">23</span>)</div>
                     <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-amber-500 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-bolt text-[8px]"></i></span> QRTs (<span class="legend-qrt-count">5</span>)</div>
-                    <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-building-columns text-[8px]"></i></span> Reserve Parties (<span class="legend-reserve-count">17</span>)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-building-columns text-[8px]"></i></span> Reserve Parties (<span class="legend-reserve-count">5</span>)</div>
                 </div>
             </div>
         </section>

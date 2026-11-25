@@ -20,7 +20,7 @@ def extract_phone(val):
         return m2[0]
     return ""
 
-def convert_all():
+def run_conversion():
     print("=============================================================")
     print("STEP 1: Converting Municipality & GP Data for Google Map on 2511-14.xlsx")
     print("=============================================================")
@@ -28,17 +28,13 @@ def convert_all():
     ws_st = wb_st['Muncipal']
 
     stations = []
-    # Count polling stations per (mandal, route_no)
     mandal_route_ps_counts = {}
 
     rows = list(ws_st.iter_rows(min_row=2, values_only=True))
-    print(f"Total raw rows in Muncipal sheet: {len(rows)}")
-
     for idx, r in enumerate(rows, 1):
         sno_raw = r[0]
         if sno_raw is None and r[2] is None:
             continue
-        
         try:
             sno = int(sno_raw) if sno_raw is not None else idx
         except:
@@ -55,7 +51,6 @@ def convert_all():
         qrt = clean_str(r[10])
         psname = clean_str(r[11]) or mandal_muni
 
-        # PS Number (Col 12)
         code_raw = r[12]
         if isinstance(code_raw, (datetime.datetime, datetime.date)):
             code = f"{code_raw.month}-{code_raw.day}"
@@ -75,11 +70,8 @@ def convert_all():
                 no_of_voters = 0
 
         blo_contact = clean_str(r[16])
-        
-        dist_raw = clean_str(r[17])
-        dist_clean = re.sub(r'(?i)kms?|\s+', '', dist_raw)
+        dist_clean = re.sub(r'(?i)kms?|\s+', '', clean_str(r[17]))
 
-        # Categorization
         cat_raw = clean_str(r[18]).upper()
         if 'HYPER' in cat_raw or 'SENSITVIE' in cat_raw:
             cat = 'HYPER SENSITIVE'
@@ -93,19 +85,17 @@ def convert_all():
         hg = clean_str(r[21])
         others = clean_str(r[22])
 
-        # Latitude & Longitude handling
         lat_raw = clean_str(r[23]).rstrip(',')
         lon_raw = clean_str(r[24]).rstrip(',')
 
-        # Specific known data-entry fixes for validity
-        if sno == 70:  # Etcherla Kusalapuram
+        if sno == 70:
             lon_raw = '83.8684'
-        elif sno == 85:  # Srikakulam II town DFO office
+        elif sno == 85:
             lon_raw = '83.895117'
-        elif sno in (205, 206):  # Mandasa Haripuram Anganwadi & GPO
+        elif sno in (205, 206):
             lat_raw = '18.862093'
             lon_raw = '84.509315'
-        elif sno == 243:  # Mandasa Budarasingi
+        elif sno == 243:
             lon_raw = '84.45476'
         
         route_phone = extract_phone(route_incharge)
@@ -146,19 +136,10 @@ def convert_all():
         mandal_route_ps_counts[key] = mandal_route_ps_counts.get(key, 0) + 1
 
     print(f"Generated {len(stations)} station records.")
-    from collections import Counter
-    print("Categorization summary:", Counter(s['categorization'] for s in stations))
-    print("Municipalities summary:", Counter(s['mandal_zptc_segment'] for s in stations))
-
-    # Save data/stations.json
     with open('data/stations.json', 'w', encoding='utf-8') as f:
         json.dump(stations, f, indent=4, ensure_ascii=False)
-    print("Saved data/stations.json successfully.")
-
-    # Save data/stations.js
     with open('data/stations.js', 'w', encoding='utf-8') as f:
         f.write("window.INITIAL_STATIONS = " + json.dumps(stations, indent=4, ensure_ascii=False) + ";\n")
-    print("Saved data/stations.js successfully.")
 
     print("\n=============================================================")
     print("STEP 2: Converting Routes, SF, SSF, QRTs, Reserve Parties - M &  GP 2511-14.xlsx")
@@ -166,26 +147,25 @@ def convert_all():
     wb_rt = openpyxl.load_workbook("Routes, SF, SSF, QRTs, Reserve Parties - M &  GP 2511-14.xlsx", data_only=True)
     all_units = []
 
-    # 1. Route Mobiles
+    # 1. Route Mobiles (Strictly SNo 1 to 98)
     ws_rm = wb_rt['Route Mobiles']
     rm_rows = list(ws_rm.iter_rows(min_row=3, values_only=True))
     rm_count = 0
     for idx, r in enumerate(rm_rows, 1):
-        muni_type = clean_str(r[1])
+        sno = r[0]
         mandal = clean_str(r[2])
+        if sno is None or not str(sno).strip().isdigit() or not mandal:
+            continue
+        
         route_no = clean_str(r[3])
         officer = clean_str(r[4])
         supporting = clean_str(r[5])
         hq = clean_str(r[6])
-        if not mandal and not officer:
-            continue
         phone = extract_phone(officer)
         mandal_id = mandal.replace(' ', '_').replace('.', '_')
         rm_id = f"RM_{mandal_id}_{route_no}"
         
-        # Calculate pollingStations count
         ps_cnt = mandal_route_ps_counts.get((mandal.lower(), route_no), 0)
-        
         all_units.append({
             "id": rm_id,
             "category": "Route Mobiles",
@@ -202,18 +182,19 @@ def convert_all():
         rm_count += 1
     print(f"Processed {rm_count} Route Mobiles.")
 
-    # 2. Striking Forces
+    # 2. Striking Forces (26)
     ws_sf = wb_rt['Striking Forces']
     sf_rows = list(ws_sf.iter_rows(min_row=4, values_only=True))
     sf_count = 0
     for idx, r in enumerate(sf_rows, 1):
+        sno = r[0]
         mandal = clean_str(r[2])
+        if sno is None or not str(sno).strip().isdigit() or not mandal:
+            continue
         sf_no = clean_str(r[3])
         hq = clean_str(r[4])
         officer = clean_str(r[5])
         supporting = clean_str(r[6]) if len(r) > 6 else ""
-        if not mandal and not officer:
-            continue
         phone = extract_phone(officer)
         mandal_id = mandal.replace(' ', '_').replace('.', '_')
         sf_id = f"SF_{mandal_id}_{sf_no}"
@@ -233,18 +214,19 @@ def convert_all():
         sf_count += 1
     print(f"Processed {sf_count} Striking Forces.")
 
-    # 3. Special Striking Forces
+    # 3. Special Striking Forces (23)
     ws_ssf = wb_rt['Special Striking Forces']
     ssf_rows = list(ws_ssf.iter_rows(min_row=4, values_only=True))
     ssf_count = 0
     for idx, r in enumerate(ssf_rows, 1):
+        sno = r[0]
         mandal = clean_str(r[2])
+        if sno is None or not str(sno).strip().isdigit() or not mandal:
+            continue
         ssf_no = clean_str(r[3])
         hq = clean_str(r[4])
         officer = clean_str(r[5])
         supporting = clean_str(r[6]) if len(r) > 6 else ""
-        if not mandal and not officer:
-            continue
         phone = extract_phone(officer)
         mandal_id = mandal.replace(' ', '_').replace('.', '_')
         ssf_id = f"SSF_{mandal_id}_{ssf_no}"
@@ -264,11 +246,14 @@ def convert_all():
         ssf_count += 1
     print(f"Processed {ssf_count} Special Striking Forces.")
 
-    # 4. QRTss
+    # 4. QRTss (5)
     ws_qrt = wb_rt['QRTss']
     qrt_rows = list(ws_qrt.iter_rows(min_row=3, values_only=True))
     qrt_count = 0
     for idx, r in enumerate(qrt_rows, 1):
+        sno = r[0]
+        if sno is None or not str(sno).strip().isdigit():
+            continue
         force_type = clean_str(r[2])
         hq = clean_str(r[3])
         officer = clean_str(r[4])
@@ -292,10 +277,15 @@ def convert_all():
         qrt_count += 1
     print(f"Processed {qrt_count} QRTs.")
 
-    # 5. Addl. SP Reserve
+    # 5. Reserve Parties - ONLY Addl. SP Reserve and HQ-Resereve Parties (Total 5)
+    reserve_count = 0
+    # Addl. SP Reserve (2)
     ws_asp = wb_rt['Addl. SP Reserve']
     asp_rows = list(ws_asp.iter_rows(min_row=3, values_only=True))
     for idx, r in enumerate(asp_rows, 1):
+        sno = r[0]
+        if sno is None or not str(sno).strip().isdigit():
+            continue
         force_type = clean_str(r[2])
         area = clean_str(r[3])
         officer = clean_str(r[4])
@@ -316,11 +306,15 @@ def convert_all():
             "supporting": remarks,
             "pollingStations": ""
         })
+        reserve_count += 1
 
-    # 6. HQ-Resereve Parties
+    # HQ-Resereve Parties (3)
     ws_hqr = wb_rt['HQ-Resereve Parties']
     hqr_rows = list(ws_hqr.iter_rows(min_row=3, values_only=True))
     for idx, r in enumerate(hqr_rows, 1):
+        sno = r[0]
+        if sno is None or not str(sno).strip().isdigit():
+            continue
         force_type = clean_str(r[2])
         area = clean_str(r[3])
         officer = clean_str(r[4])
@@ -341,44 +335,19 @@ def convert_all():
             "supporting": remarks,
             "pollingStations": ""
         })
+        reserve_count += 1
 
-    # 7. Static
-    ws_stat = wb_rt['Static']
-    stat_rows = list(ws_stat.iter_rows(min_row=3, values_only=True))
-    for idx, r in enumerate(stat_rows, 1):
-        force_type = clean_str(r[2])
-        area = clean_str(r[3])
-        officer = clean_str(r[4])
-        remarks = clean_str(r[5]) if len(r) > 5 else ""
-        if not officer:
-            continue
-        phone = extract_phone(officer)
-        all_units.append({
-            "id": f"Static_{idx}",
-            "category": "Reserve Parties",
-            "categoryKey": "RESERVE",
-            "mandal": area,
-            "route": force_type or f"Static - {idx}",
-            "unitName": f"{force_type} ({area})" if area else force_type,
-            "hq": area,
-            "officer": officer,
-            "phone": phone,
-            "supporting": remarks,
-            "pollingStations": ""
-        })
+    print(f"Processed {reserve_count} Reserve Parties (Addl. SP Reserve + HQ-Reserve Parties).")
 
-    print(f"Total units processed: {len(all_units)}")
-    print("Units category breakdown:", Counter(u['category'] for u in all_units))
+    print(f"\nTOTAL ALL UNITS: {len(all_units)}")
+    from collections import Counter
+    print("Breakdown:", Counter(u['category'] for u in all_units))
 
-    # Save route_mobiles.json
     with open('route_mobiles.json', 'w', encoding='utf-8') as f:
         json.dump(all_units, f, indent=4, ensure_ascii=False)
-    print("Saved route_mobiles.json successfully.")
-
-    # Save route_mobiles_data.js
     with open('route_mobiles_data.js', 'w', encoding='utf-8') as f:
         f.write("window.ROUTE_MOBILES_DATA = " + json.dumps(all_units, indent=4, ensure_ascii=False) + ";\n")
-    print("Saved route_mobiles_data.js successfully.")
+    print("Saved route_mobiles.json and route_mobiles_data.js successfully.")
 
 if __name__ == '__main__':
-    convert_all()
+    run_conversion()
