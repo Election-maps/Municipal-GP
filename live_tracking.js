@@ -12,7 +12,8 @@ window.selectedLiveCategories = {
     'SF': true,
     'SSF': true,
     'QRT': true,
-    'RESERVE': true
+    'RESERVE': true,
+    'STATIC': true
 };
 window.liveMqttClient = null;
 
@@ -21,7 +22,7 @@ const LIVE_ROOM_CODE = 'SrikakulamPolice';
 const liveUserId = 'control_room_gp_' + Math.random().toString(36).substring(2, 9);
 const LIVE_UNIT_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours active threshold for live field units (matches NETRA APK duty cycle)
 
-// Forces metadata lookup from route_mobiles_data.js (Strictly 157 Units from Routes, SF, SSF, QRTs, Reserve Parties - M & GP 2511-14.xlsx)
+// Forces metadata lookup from route_mobiles_data.js (Strictly 170 Units from Routes, SF, SSF, QRTs, Reserve Parties, Static - M & GP 2511-14.xlsx)
 function getPartyUnitMeta(unitId, phone) {
     if (!window.ROUTE_MOBILES_DATA || !Array.isArray(window.ROUTE_MOBILES_DATA)) return null;
     let cleanId = String(unitId || '').trim().toLowerCase();
@@ -50,6 +51,8 @@ function getLivePartyCategoryTheme(catKey) {
             return { color: '#f59e0b', icon: 'fa-bolt', label: 'QRT', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300' };
         case 'RESERVE':
             return { color: '#10b981', icon: 'fa-building-columns', label: 'Reserve Party', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+        case 'STATIC':
+            return { color: '#06b6d4', icon: 'fa-tower-observation', label: 'Static Party', badgeClass: 'bg-cyan-100 text-cyan-800 border-cyan-300' };
         default:
             return { color: '#3b82f6', icon: 'fa-car-side', label: 'Route Mobile', badgeClass: 'bg-blue-100 text-blue-800 border-blue-300' };
     }
@@ -651,11 +654,11 @@ function shouldShowLivePartyUnit(catKey) {
     return !!window.selectedLiveCategories[k];
 }
 
-// Checkbox change handler for individual category (Routes, SF, SSF, QRT, Reserve)
+// Checkbox change handler for individual category (Routes, SF, SSF, QRT, Reserve, Static)
 window.onLivePartyCategoryCheckChange = function(catKey, isChecked) {
     const k = String(catKey || '').toUpperCase();
     if (!window.selectedLiveCategories) {
-        window.selectedLiveCategories = { 'RM': true, 'SF': true, 'SSF': true, 'QRT': true, 'RESERVE': true };
+        window.selectedLiveCategories = { 'RM': true, 'SF': true, 'SSF': true, 'QRT': true, 'RESERVE': true, 'STATIC': true };
     }
     window.selectedLiveCategories[k] = !!isChecked;
     syncLivePartyCheckboxInputs();
@@ -670,7 +673,8 @@ window.toggleAllLivePartyCategories = function(isChecked) {
         'SF': state,
         'SSF': state,
         'QRT': state,
-        'RESERVE': state
+        'RESERVE': state,
+        'STATIC': state
     };
     syncLivePartyCheckboxInputs();
     applyLivePartyCategoryFilter();
@@ -678,7 +682,7 @@ window.toggleAllLivePartyCategories = function(isChecked) {
 
 function syncLivePartyCheckboxInputs() {
     if (!window.selectedLiveCategories) return;
-    const cats = ['RM', 'SF', 'SSF', 'QRT', 'RESERVE'];
+    const cats = ['RM', 'SF', 'SSF', 'QRT', 'RESERVE', 'STATIC'];
     let allChecked = true;
     let anyChecked = false;
 
@@ -741,7 +745,8 @@ window.setLivePartyCategory = function(catKey) {
             'SF': target === 'SF',
             'SSF': target === 'SSF',
             'QRT': target === 'QRT',
-            'RESERVE': target === 'RESERVE'
+            'RESERVE': target === 'RESERVE',
+            'STATIC': target === 'STATIC'
         };
         syncLivePartyCheckboxInputs();
         applyLivePartyCategoryFilter();
@@ -892,7 +897,7 @@ function restoreLiveUnitsFromCache() {
         let changed = false;
         for (const k in cached) {
             const u = cached[k];
-            // Validate against the 157 units from the Excel sheet
+            // Validate against the 170 units from the Excel sheet
             const meta = getPartyUnitMeta(k, u.phone);
             if (!meta) {
                 delete cached[k];

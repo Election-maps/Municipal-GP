@@ -374,6 +374,50 @@ def run_conversion():
 
     print(f"Processed {reserve_count} Reserve Parties (Addl. SP Reserve + HQ-Reserve Parties).")
 
+    # 6. Static Parties (13)
+    static_count = 0
+    if 'Static' in wb_rt.sheetnames:
+        ws_static = wb_rt['Static']
+        static_rows = list(ws_static.iter_rows(min_row=2, values_only=True))
+        for idx, r in enumerate(static_rows, 1):
+            sno = r[0]
+            if sno is None or not str(sno).strip().isdigit():
+                continue
+            muni_type = clean_str(r[1])
+            force_type = clean_str(r[2])
+            area = clean_str(r[3])
+            officer = clean_str(r[4])
+            remarks = clean_str(r[5]) if len(r) > 5 else ""
+            if not officer:
+                continue
+            phone = extract_phone(officer)
+            mandal = area
+            if 'srikakulam' in area.lower():
+                mandal = 'Srikakulam'
+            elif area in ['Dammalaveedhi', 'NTR M School']:
+                mandal = 'Srikakulam'
+
+            unit_name = force_type if force_type else f"Static-{idx}"
+            if area:
+                unit_name = f"{unit_name} ({area})"
+
+            static_id = f"Static_{idx}"
+            all_units.append({
+                "id": static_id,
+                "category": "Static Parties",
+                "categoryKey": "STATIC",
+                "mandal": mandal,
+                "route": force_type or f"Static-{idx}",
+                "unitName": unit_name,
+                "hq": area,
+                "officer": officer,
+                "phone": phone,
+                "supporting": remarks,
+                "pollingStations": ""
+            })
+            static_count += 1
+    print(f"Processed {static_count} Static Parties.")
+
     print(f"\nTOTAL ALL UNITS: {len(all_units)}")
     from collections import Counter
     print("Breakdown:", Counter(u['category'] for u in all_units))
