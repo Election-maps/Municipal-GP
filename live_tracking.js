@@ -96,6 +96,11 @@ function formatOfficerRankAndPs(rawOfficer, mandal, unitName, route, phone, id) 
     if (cleanPhone === '6309990833' || cleanId === 'SSF_Mandasa_2') return 'CI, DCRB Srikakulam';
     if (cleanPhone === '6309990809' || cleanId === 'SSF_Ichapuram_2') return 'CI, Traffic PS';
 
+    // Route Mobile Specific Overrides
+    if (cleanPhone === '6309990880' || cleanId === 'RM_Amadalavalasa_6' || (cleanId.includes('Amadalavalasa') && cleanId.endsWith('_6')) || (mandal === 'Amadalavalasa' && (unitName.includes('RM-6') || String(route).includes('6')))) {
+        return 'SI-Hiramandalam';
+    }
+
     const defaultPs = mandal ? (mandal.endsWith('PS') ? mandal : (mandal + ' PS')) : '';
 
     let officerStr = rawOfficer || '';
@@ -110,7 +115,10 @@ function formatOfficerRankAndPs(rawOfficer, mandal, unitName, route, phone, id) 
     }
 
     if (officerStr) {
-        const rawParts = officerStr.replace(/[\r\n]+/g, ' ').split(/[,;-]/).map(function(p) { return p.trim(); }).filter(function(p) {
+        // Normalize slash or dash attached to rank e.g. "SI/Hiramandalam" -> "SI, Hiramandalam"
+        const normalizedOfficer = officerStr.replace(/\b(SDPO|Addl\.?\s*SP|DSP|CI|Inspector|IOP|WCI|SI|WSI|Sub Inspector|ASI|WASI|HC|WHC|PC|WPC)\s*[\/–-]\s*/gi, '$1, ');
+
+        const rawParts = normalizedOfficer.replace(/[\r\n]+/g, ' ').split(/[,;-]/).map(function(p) { return p.trim(); }).filter(function(p) {
             return p && !/^\d{10}$/.test(p) && !/^\+?91/.test(p) && !/^\d{5,}$/.test(p);
         });
 
@@ -146,6 +154,9 @@ function formatOfficerRankAndPs(rawOfficer, mandal, unitName, route, phone, id) 
             if (!psName) {
                 psName = defaultPs;
             } else {
+                if (/^Hiramandalam$/i.test(psName.trim())) {
+                    return rankName + '-Hiramandalam';
+                }
                 if (!/(PS|Rural|Town|Traffic|CID|DCRB|DAR|VR|PCR|SB|UPS|Cell)$/i.test(psName)) {
                     psName = psName + ' PS';
                 }
