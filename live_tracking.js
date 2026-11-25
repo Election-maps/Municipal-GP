@@ -650,6 +650,15 @@ function buildLivePartyPopupHtml(key, unit, meta) {
 function shouldShowLivePartyUnit(catKey) {
     if (!catKey) return true;
     const k = String(catKey).toUpperCase();
+    if (k === 'STATIC') {
+        // Map లో మాత్రము కావాలి: Static units are always shown on the Map unless specifically unticked in the map legend
+        const legCb = document.getElementById('legend-check-party-static');
+        if (legCb) return legCb.checked;
+        if (window.selectedLiveCategories && window.selectedLiveCategories['STATIC'] !== undefined) {
+            return !!window.selectedLiveCategories['STATIC'];
+        }
+        return true;
+    }
     if (!window.selectedLiveCategories) return true;
     return !!window.selectedLiveCategories[k];
 }
@@ -665,7 +674,7 @@ window.onLivePartyCategoryCheckChange = function(catKey, isChecked) {
     applyLivePartyCategoryFilter();
 };
 
-// Checkbox change handler for "All"
+// Checkbox change handler for "All" (Controls the 157 Mobile Forces: RM, SF, SSF, QRT, Reserve)
 window.toggleAllLivePartyCategories = function(isChecked) {
     const state = !!isChecked;
     window.selectedLiveCategories = {
@@ -674,7 +683,7 @@ window.toggleAllLivePartyCategories = function(isChecked) {
         'SSF': state,
         'QRT': state,
         'RESERVE': state,
-        'STATIC': state
+        'STATIC': true // Static remains on Map as requested
     };
     syncLivePartyCheckboxInputs();
     applyLivePartyCategoryFilter();
@@ -682,11 +691,11 @@ window.toggleAllLivePartyCategories = function(isChecked) {
 
 function syncLivePartyCheckboxInputs() {
     if (!window.selectedLiveCategories) return;
-    const cats = ['RM', 'SF', 'SSF', 'QRT', 'RESERVE', 'STATIC'];
+    const mobileCats = ['RM', 'SF', 'SSF', 'QRT', 'RESERVE'];
     let allChecked = true;
     let anyChecked = false;
 
-    cats.forEach(function(c) {
+    mobileCats.forEach(function(c) {
         const val = !!window.selectedLiveCategories[c];
         if (val) anyChecked = true;
         else allChecked = false;
@@ -711,6 +720,12 @@ function syncLivePartyCheckboxInputs() {
         if (legCb) legCb.checked = val;
     });
 
+    // Legend static checkbox if present
+    const legStatic = document.getElementById('legend-check-party-static');
+    if (legStatic && window.selectedLiveCategories['STATIC'] !== undefined) {
+        legStatic.checked = !!window.selectedLiveCategories['STATIC'];
+    }
+
     const allCb = document.getElementById('live-check-party-all');
     if (allCb) {
         allCb.checked = allChecked;
@@ -722,17 +737,20 @@ function applyLivePartyCategoryFilter() {
     if (!window.livePartyMarkersGroup) return;
     window.livePartyMarkersGroup.clearLayers();
 
-    let visibleCount = 0;
+    let visibleMobileCount = 0;
     for (const k in window.livePartyMarkers) {
         const u = window.livePartyMarkers[k];
         if (shouldShowLivePartyUnit(u.catKey)) {
             if (u.marker) window.livePartyMarkersGroup.addLayer(u.marker);
             if (u.circle) window.livePartyMarkersGroup.addLayer(u.circle);
-            visibleCount++;
+            // Count towards the 157 Live Forces active counter
+            if (u.catKey !== 'STATIC') {
+                visibleMobileCount++;
+            }
         }
     }
     const countEl = document.getElementById('live-party-active-count');
-    if (countEl) countEl.innerText = visibleCount;
+    if (countEl) countEl.innerText = visibleMobileCount;
 }
 
 window.setLivePartyCategory = function(catKey) {
@@ -746,7 +764,7 @@ window.setLivePartyCategory = function(catKey) {
             'SSF': target === 'SSF',
             'QRT': target === 'QRT',
             'RESERVE': target === 'RESERVE',
-            'STATIC': target === 'STATIC'
+            'STATIC': target === 'STATIC' || true
         };
         syncLivePartyCheckboxInputs();
         applyLivePartyCategoryFilter();
@@ -853,7 +871,7 @@ function updateLivePartyCounter() {
     let count = 0;
     for (const k in window.livePartyMarkers) {
         const u = window.livePartyMarkers[k];
-        if (shouldShowLivePartyUnit(u.catKey)) count++;
+        if (shouldShowLivePartyUnit(u.catKey) && u.catKey !== 'STATIC') count++;
     }
     const el = document.getElementById('live-party-active-count');
     if (el) el.innerText = count;
