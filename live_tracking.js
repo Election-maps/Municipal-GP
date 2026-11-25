@@ -58,6 +58,49 @@ function isMobileForcesCategory(catKey) {
     return ['RM', 'SF', 'SSF', 'QRT', 'RESERVE'].includes(k);
 }
 
+function getOfficialMobileUnitIds() {
+    if (!window.ROUTE_MOBILES_DATA || !Array.isArray(window.ROUTE_MOBILES_DATA)) return new Set();
+    const set = new Set();
+    window.ROUTE_MOBILES_DATA.forEach(function(u) {
+        if (!u) return;
+        const cat = normalizePartyCategoryKey(u.categoryKey);
+        if (['RM', 'SF', 'SSF', 'QRT', 'RESERVE'].includes(cat) && u.id) {
+            set.add(u.id);
+        }
+    });
+    return set;
+}
+
+function getActiveMobileUnitsSet() {
+    const activeOfficialIds = new Set();
+    const now = Date.now();
+    const officialMobileIds = getOfficialMobileUnitIds();
+
+    for (const k in window.livePartyMarkers) {
+        const u = window.livePartyMarkers[k];
+        if (!u) continue;
+
+        // Freshness check: must have transmitted within active threshold (24 hours)
+        const lastTime = Number(u.lastUpdated || 0);
+        if (lastTime <= 0 || (now - lastTime) > LIVE_UNIT_EXPIRY_MS) continue;
+
+        // Resolve official meta
+        const meta = u.meta || getPartyUnitMeta(u.key || k, u.phone);
+        if (!meta || !meta.id) continue;
+
+        // Must be one of the official 157 mobile units (Routes, SF, SSF, QRT, Reserve)
+        if (!officialMobileIds.has(meta.id)) continue;
+
+        // Category filter check (Routes, SF, SSF, QRT, Reserve)
+        const cat = normalizePartyCategoryKey(meta.categoryKey);
+        if (!shouldShowLivePartyUnit(cat)) continue;
+
+        // Add to active set (strictly deduplicated by official ID)
+        activeOfficialIds.add(meta.id);
+    }
+    return activeOfficialIds;
+}
+
 function getLivePartyCategoryTheme(catKey) {
     switch (normalizePartyCategoryKey(catKey)) {
         case 'SF':
@@ -403,14 +446,21 @@ function updateLivePartyUnitOnMap(key, data) {
 
     // Allow metadata from ROUTE_MOBILES_DATA or construct fallback so ALL units (Static, Supervisors, Field) show on map
     let meta = getPartyUnitMeta(key, data.phone);
+    const effectiveKey = (meta && meta.id) ? meta.id : key;
+
+    // Clean up older duplicate alias marker if key differs (e.g. phone_... vs unit ID)
+    if (effectiveKey !== key && window.livePartyMarkers && window.livePartyMarkers[key]) {
+        removeLivePartyUnit(key);
+    }
+
     if (!meta) {
         meta = {
-            id: key,
-            unitId: key,
-            unitName: data.unitName || key,
+            id: effectiveKey,
+            unitId: effectiveKey,
+            unitName: data.unitName || effectiveKey,
             mandal: data.mandal || '',
             category: data.category || (String(data.categoryKey || '').toUpperCase() === 'STATIC' ? 'Static Parties' : 'Duty Force'),
-            categoryKey: normalizePartyCategoryKey(data.categoryKey || 'RM'),
+            categoryKey: data.categoryKey ? normalizePartyCategoryKey(data.categoryKey) : 'OTHER',
             officer: data.officer || 'Police Officer',
             phone: data.phone || '',
             supporting: data.supporting || '',
@@ -419,9 +469,9 @@ function updateLivePartyUnitOnMap(key, data) {
         };
     }
 
-    const catKey = normalizePartyCategoryKey(meta.categoryKey || data.categoryKey || 'RM');
+    const catKey = meta.categoryKey ? normalizePartyCategoryKey(meta.categoryKey) : (data.categoryKey ? normalizePartyCategoryKey(data.categoryKey) : 'OTHER');
     const mandal = meta.mandal || data.mandal || '';
-    const unitName = meta.unitName || data.unitName || key;
+    const unitName = meta.unitName || data.unitName || effectiveKey;
     const officer = meta.officer || data.officer || 'Police Officer';
     const phone = meta.phone || data.phone || '';
     const speed = parseFloat(data.speed || 0);
@@ -436,10 +486,10 @@ function updateLivePartyUnitOnMap(key, data) {
     }
     const lastUpdated = rawTime;
 
-    let unit = window.livePartyMarkers[key];
+    let unit = window.livePartyMarkers[effectiveKey];
     if (!unit) {
         // Create new marker with compact sizing
-        const icon = createLivePoliceMarkerIcon(catKey, mandal, unitName, true, isMoving, bearing, speedKmh, officer, phone, key);
+        const icon = createLivePoliceMarkerIcon(catKey, mandal, unitName, true, isMoving, bearing, speedKmh, officer, phone, effectiveKey);
         const marker = L.marker([lat, lng], { icon: icon, zIndexOffset: 1000 });
         
         const circle = L.circle([lat, lng], {
@@ -452,7 +502,7 @@ function updateLivePartyUnitOnMap(key, data) {
         });
 
         unit = {
-            key: key,
+            key: effectiveKey,
             marker: marker,
             circle: circle,
             lat: lat,
@@ -471,7 +521,7 @@ function updateLivePartyUnitOnMap(key, data) {
         };
 
         // Bind hover tooltip for instant officer details on mouseover
-        marker.bindTooltip(function() { return buildLivePartyTooltipHtml(key, unit, meta); }, {
+        marker.bindTooltip(function() { return buildLivePartyTooltipHtml(effectiveKey, unit, meta); }, {
             direction: 'top',
             className: 'ps-tooltip-badge',
             offset: [0, -16],
@@ -479,8 +529,8 @@ function updateLivePartyUnitOnMap(key, data) {
         });
 
         // Bind popup for complete details & call/whatsapp/navigation
-        marker.bindPopup(function() { return buildLivePartyPopupHtml(key, unit, meta); }, { maxWidth: 350, minWidth: 260 });
-        window.livePartyMarkers[key] = unit;
+        marker.bindPopup(function() { return buildLivePartyPopupHtml(effectiveKey, unit, meta); }, { maxWidth: 350, minWidth: 260 });
+        window.livePartyMarkers[effectiveKey] = unit;
 
         if (shouldShowLivePartyUnit(catKey)) {
             window.livePartyMarkersGroup.addLayer(marker);
@@ -504,11 +554,11 @@ function updateLivePartyUnitOnMap(key, data) {
         unit.circle.setRadius(Math.max(8, accuracy));
 
         // Icon update
-        unit.marker.setIcon(createLivePoliceMarkerIcon(catKey, mandal, unitName, true, isMoving, bearing, speedKmh, officer, phone, key));
+        unit.marker.setIcon(createLivePoliceMarkerIcon(catKey, mandal, unitName, true, isMoving, bearing, speedKmh, officer, phone, effectiveKey));
 
         // Update popup if open
         if (unit.marker.getPopup() && unit.marker.isPopupOpen()) {
-            unit.marker.setPopupContent(buildLivePartyPopupHtml(key, unit, meta));
+            unit.marker.setPopupContent(buildLivePartyPopupHtml(effectiveKey, unit, meta));
         }
 
         // Ensure layer is displayed on map if active
@@ -774,7 +824,6 @@ function applyLivePartyCategoryFilter() {
     if (!window.livePartyMarkersGroup) return;
     window.livePartyMarkersGroup.clearLayers();
 
-    let visibleMobileCount = 0;
     for (const k in window.livePartyMarkers) {
         const u = window.livePartyMarkers[k];
         const normKey = normalizePartyCategoryKey(u.catKey);
@@ -783,13 +832,8 @@ function applyLivePartyCategoryFilter() {
             if (u.marker) window.livePartyMarkersGroup.addLayer(u.marker);
             if (u.circle) window.livePartyMarkersGroup.addLayer(u.circle);
         }
-        // Live Active total STRICTLY counts ONLY the 5 mobile forces: Routes, SF, SSF, QRT, Reserve!
-        if (isMobileForcesCategory(normKey) && shouldShowLivePartyUnit(normKey)) {
-            visibleMobileCount++;
-        }
     }
-    const countEl = document.getElementById('live-party-active-count');
-    if (countEl) countEl.innerText = visibleMobileCount;
+    updateLivePartyCounter();
 }
 
 window.setLivePartyCategory = function(catKey) {
@@ -907,17 +951,9 @@ function clearAllLiveTrackingLocally() {
 }
 
 function updateLivePartyCounter() {
-    let count = 0;
-    for (const k in window.livePartyMarkers) {
-        const u = window.livePartyMarkers[k];
-        const normKey = normalizePartyCategoryKey(u.catKey);
-        // Live Active total STRICTLY counts ONLY the 5 mobile forces: Routes, SF, SSF, QRT, Reserve!
-        if (isMobileForcesCategory(normKey) && shouldShowLivePartyUnit(normKey)) {
-            count++;
-        }
-    }
+    const activeMobileSet = getActiveMobileUnitsSet();
     const el = document.getElementById('live-party-active-count');
-    if (el) el.innerText = count;
+    if (el) el.innerText = activeMobileSet.size;
 }
 
 function saveLiveUnitsToCache() {
@@ -955,22 +991,30 @@ function restoreLiveUnitsFromCache() {
         if (!cachedStr) return;
         const cached = JSON.parse(cachedStr);
         const now = Date.now();
-        let changed = false;
+        const seenOfficialIds = new Set();
+        const cleanedCache = {};
+
         for (const k in cached) {
             const u = cached[k];
             let lastTime = Number(u.lastUpdated || u.timestamp || 0);
             if (lastTime > 0 && lastTime < 1e11) lastTime *= 1000;
-            // ONLY restore units that transmitted within the active freshness window (24 hours)
-            if (lastTime > 0 && (now - lastTime) <= LIVE_UNIT_EXPIRY_MS) {
-                updateLivePartyUnitOnMap(k, u);
-            } else {
-                delete cached[k];
-                changed = true;
+            // Purge expired units
+            if (lastTime <= 0 || (now - lastTime) > LIVE_UNIT_EXPIRY_MS) {
+                continue;
             }
+
+            const meta = getPartyUnitMeta(k, u.phone);
+            const effId = (meta && meta.id) ? meta.id : k;
+
+            // Deduplicate by official unit ID
+            if (seenOfficialIds.has(effId)) {
+                continue;
+            }
+            seenOfficialIds.add(effId);
+            cleanedCache[effId] = u;
+            updateLivePartyUnitOnMap(effId, u);
         }
-        if (changed) {
-            localStorage.setItem('gp_live_units_cache', JSON.stringify(cached));
-        }
+        localStorage.setItem('gp_live_units_cache', JSON.stringify(cleanedCache));
     } catch(e) {
         console.warn('Error restoring live units cache:', e);
     }
@@ -2369,7 +2413,7 @@ function renderOnlineOfficerSuggestions(rawQuery) {
         return;
     }
 
-    const activeMobileCount = onlineList.filter(function(u) { return isMobileForcesCategory(u.catKey); }).length;
+    const activeMobileCount = typeof getActiveMobileUnitsSet === 'function' ? getActiveMobileUnitsSet().size : onlineList.filter(function(u) { return isMobileForcesCategory(u.catKey); }).length;
     let html = `
         <div class="px-3 py-2 bg-slate-900 text-white text-[11px] font-bold flex items-center justify-between rounded-t-lg border-b border-slate-800">
             <span class="flex items-center gap-1.5">
