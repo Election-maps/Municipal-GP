@@ -21,7 +21,7 @@
   <!-- MQTT.js library -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <!-- Pre-loaded Forces Data (Routes, SF, SSF, QRTs, Reserve Parties) -->
-  <script src="route_mobiles_data.js?v=20261125_v3"></script>
+  <script src="route_mobiles_data.js?v=20261125_v4"></script>
   <!-- Pre-loaded Srikakulam Mandals GeoJSON Boundaries -->
   <script src="srikakulam_mandals.js?v=20261119_v3"></script>
 
@@ -875,7 +875,7 @@
   });
 
   // -------------------------------------------------------------
-  // Data Load: 364 Units (Routes, SF, SSF, QRTs, Reserve Parties)
+  // Data Load: 157 Units (Routes, SF, SSF, QRTs, Reserve Parties - M & GP 2511-14)
   // -------------------------------------------------------------
   let allUnitsData = window.ROUTE_MOBILES_DATA || [];
 
@@ -1544,30 +1544,41 @@
     const cleanPhone = normalizePhone(phone || '');
     const cleanId = String(id || '').trim();
 
-    // 1. Explicit District & Division Heads
+    // 1. Explicit District & Division Heads / DSPs (Aligned with M & GP 2511-14 dataset)
     if (cleanPhone === '9704452107' || cleanId === 'SP_Srikakulam') return 'SP, Srikakulam';
-    if (cleanPhone === '6309990804' || cleanId === 'QRT_1') return 'SDPO, Srikakulam';
-    if (cleanPhone === '6309990811' || cleanId === 'QRT_3') return 'SDPO, Tekkali';
-    if (cleanPhone === '6309990805' || cleanId === 'QRT_4') return 'SDPO, Kasibugga';
+    if (cleanPhone === '6309990805' || cleanId === 'QRT_1') return 'SDPO, Kasibugga';
+    if (cleanPhone === '6309990811' || cleanId === 'QRT_2') return 'SDPO, Tekkali';
+    if (cleanPhone === '6309990804' || cleanId === 'QRT_3') return 'SDPO, Srikakulam';
+    if (cleanPhone === '6309990813' || cleanId === 'QRT_4') return 'DSP (AR), DAR';
+    if (cleanPhone === '6309990810' || cleanId === 'QRT_5') return 'DSP, Women PS';
+    if (cleanPhone === '7036228899') return 'DSP, CID VSP';
 
-    // 2. Explicit DSPs
-    if (cleanPhone === '6309990810' || cleanId === 'QRT_2') return 'DSP, Mahila UPS';
-    if (cleanPhone === '7036228899' || cleanId === 'QRT_5') return 'DSP, CID VSP';
-    if (cleanPhone === '6309990813' || cleanId === 'QRT_6') return 'DSP (AR), DAR';
+    // 2. Addl. SP & HQ Reserves (Strictly as per Excel: Addl. SP Reserve + HQ-Reserve Parties)
+    if (cleanId === 'Addl_SP_Reserve_1') return 'Addl. SP (Admin), Srikakulam';
+    if (cleanId === 'Addl_SP_Reserve_2') return 'Addl. SP (V&E), Srikakulam';
+    if (cleanPhone === '9392663604' || cleanId === 'HQ_Reserve_1') return 'CI, Control Room';
+    if (cleanPhone === '6309990838' || cleanId === 'HQ_Reserve_2') return 'RI Admin, DAR Srikakulam';
+    if (cleanPhone === '6309990939' || cleanId === 'HQ_Reserve_3') return 'CI, Task Force';
 
-    // 3. Explicit Circle Inspectors (12 Circles)
-    if (cleanP_match(cleanPhone, '6309990814') || cleanId === 'SSF_Srikakulam_1' || String(unitName).includes('Singupuram') || String(route).includes('Singupuram')) return 'CI, Srikakulam Rural';
-    if (cleanP_match(cleanPhone, '6309990823') || cleanId === 'SSF_Amadalavalasa_7') return 'CI, Amadalavalasa';
-    if (cleanP_match(cleanPhone, '6309990816') || cleanId === 'SSF_Etcherla_4') return 'CI, JR Puram';
-    if (cleanP_match(cleanPhone, '6309990860') || cleanId === 'SSF_Tekkali_16') return 'Inspector, Tekkali PS';
-    if (cleanP_match(cleanPhone, '6309990817') || cleanId === 'SSF_Kotabommali_17') return 'CI, Tekkali Rural';
-    if (cleanP_match(cleanPhone, '6309990828') || cleanId === 'SSF_Kothuru_22') return 'CI, Kothuru';
-    if (cleanP_match(cleanPhone, '6309990822') || cleanId === 'SSF_Pathapatnam_20') return 'CI, Pathapatnam';
-    if (cleanP_match(cleanPhone, '6309990815') || cleanId === 'SSF_Narasannapeta_12') return 'CI, Narasannapeta';
-    if (cleanP_match(cleanPhone, '6309990825') || cleanId === 'SSF_Palasa_24') return 'CI, Kasibugga PS';
-    if (cleanP_match(cleanPhone, '6309990827') || cleanId === 'SSF_Ichapuram_29') return 'CI, Ichapuram';
-    if (cleanP_match(cleanPhone, '6309990819') || cleanId === 'SSF_Sompeta_27') return 'CI, Sompeta';
-    if (cleanP_match(cleanPhone, '6309990818') || cleanId === 'SSF_Mandasa_26') return 'CI, Kasibugga Rural';
+    // 3. Circle Inspectors (M & GP 2511-14 dataset)
+    if (cleanP_match(cleanPhone, '6309990814') || cleanId === 'SSF_Srikakulam_Town_1') return 'CI, Srikakulam Rural';
+    if (cleanP_match(cleanPhone, '6309990823') || cleanId === 'SSF_Amadalavalasa_1') return 'CI, Amadalavalasa';
+    if (cleanP_match(cleanPhone, '6309990816') || cleanId === 'SSF_Srikakulam_Town_5') return 'CI, JR Puram';
+    if (cleanP_match(cleanPhone, '6309990860') || cleanId === 'SSF_Vajrapukotturu_2') return 'CI, Tekkali UPS';
+    if (cleanP_match(cleanPhone, '6309990817') || cleanId === 'SSF_Tekkali_17') return 'CI, Tekkali Rural';
+    if (cleanP_match(cleanPhone, '6309990828') || cleanId === 'SSF_Srikakulam_Town_2') return 'CI, Kothuru';
+    if (cleanP_match(cleanPhone, '6309990822') || cleanId === 'SSF_KAVITI_2') return 'CI, Pathapatnam';
+    if (cleanP_match(cleanPhone, '6309990815') || cleanId === 'SSF_Amadalavalasa_2') return 'CI, Narasannapeta';
+    if (cleanP_match(cleanPhone, '6309990825') || cleanId === 'SSF_Palasa_1') return 'CI, Kasibugga PS';
+    if (cleanP_match(cleanPhone, '6309990827') || cleanId === 'SSF_Ichapuram_1') return 'CI, Ichapuram';
+    if (cleanP_match(cleanPhone, '6309990819') || cleanId === 'SSF_Sompeta_1') return 'CI, Sompeta';
+    if (cleanP_match(cleanPhone, '6309990818') || cleanId === 'SSF_Mandasa_1') return 'CI, Kasibugga Rural';
+    if (cleanP_match(cleanPhone, '6309990824') || cleanId === 'SSF_Srikakulam_Town_4') return 'CI, SKL II Town PS';
+    if (cleanP_match(cleanPhone, '6309990836') || cleanId === 'SSF_Srikakulam_Town_6') return 'WCI, Women PS';
+    if (cleanP_match(cleanPhone, '6309990835') || cleanId === 'SSF_Kanchili_1') return 'CI, CCS Srikakulam';
+    if (cleanP_match(cleanPhone, '6309990947') || cleanId === 'SSF_Kanchili_2') return 'CI, Cyber Cell';
+    if (cleanP_match(cleanPhone, '6309990833') || cleanId === 'SSF_Mandasa_2') return 'CI, DCRB Srikakulam';
+    if (cleanP_match(cleanPhone, '6309990809') || cleanId === 'SSF_Ichapuram_2') return 'CI, Traffic PS';
 
     const defaultPs = mandal ? (mandal.endsWith('PS') ? mandal : `${mandal} PS`) : '';
 
@@ -1696,10 +1707,10 @@
       return;
     }
 
-    const officerName = payload.officer || 'Police Officer';
-    const unitName = payload.unitName || payload.route || 'Duty Force';
-    const cat = payload.category || 'Duty Force';
-    const phone = payload.phone || '';
+    const officerName = (resolvedUnit && resolvedUnit.officer) || payload.officer || 'Police Officer';
+    const unitName = (resolvedUnit && resolvedUnit.unitName) || payload.unitName || payload.route || 'Duty Force';
+    const cat = (resolvedUnit && resolvedUnit.category) || payload.category || 'Duty Force';
+    const phone = (resolvedUnit && resolvedUnit.phone) || payload.phone || '';
     const speed = parseFloat(payload.speed) || 0;
     const kmh = speed > 0 ? Math.round(speed * 3.6) : 0;
     const timeStr = new Date(payload.lastUpdated || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

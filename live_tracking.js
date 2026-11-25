@@ -14,16 +14,21 @@ const LIVE_ROOM_CODE = 'SrikakulamPolice';
 const liveUserId = 'control_room_gp_' + Math.random().toString(36).substring(2, 9);
 const LIVE_UNIT_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours active threshold for live field units (matches NETRA APK duty cycle)
 
-// Forces metadata lookup from route_mobiles_data.js
+// Forces metadata lookup from route_mobiles_data.js (Strictly 157 Units from Routes, SF, SSF, QRTs, Reserve Parties - M & GP 2511-14.xlsx)
 function getPartyUnitMeta(unitId, phone) {
     if (!window.ROUTE_MOBILES_DATA || !Array.isArray(window.ROUTE_MOBILES_DATA)) return null;
-    const cleanId = String(unitId || '').trim().toLowerCase();
-    const cleanPh = String(phone || '').replace(/\D/g, '').slice(-10);
+    let cleanId = String(unitId || '').trim().toLowerCase();
+    let cleanPh = String(phone || '').replace(/\D/g, '').slice(-10);
+    if (!cleanPh && cleanId.includes('phone_')) {
+        cleanPh = cleanId.replace(/\D/g, '').slice(-10);
+    }
     return window.ROUTE_MOBILES_DATA.find(function(u) {
         if (!u) return false;
-        if (cleanId && String(u.id || '').trim().toLowerCase() === cleanId) return true;
-        if (cleanId && String(u.unitId || '').trim().toLowerCase() === cleanId) return true;
-        if (cleanPh && String(u.phone || '').replace(/\D/g, '').slice(-10) === cleanPh) return true;
+        if (cleanId && (String(u.id || '').trim().toLowerCase() === cleanId || String(u.unitId || '').trim().toLowerCase() === cleanId)) return true;
+        const uPh = String(u.phone || '').replace(/\D/g, '').slice(-10);
+        if (cleanPh && uPh && uPh === cleanPh) return true;
+        if (cleanPh && String(u.officer || '').replace(/\D/g, '').includes(cleanPh)) return true;
+        if (cleanPh && String(u.supporting || '').replace(/\D/g, '').includes(cleanPh)) return true;
         return false;
     }) || null;
 }
@@ -48,28 +53,41 @@ function formatOfficerRankAndPs(rawOfficer, mandal, unitName, route, phone, id) 
     const cleanPhone = String(phone || '').replace(/\D/g, '').slice(-10);
     const cleanId = String(id || '').trim();
 
-    // 1. Explicit District & Division Heads / DSPs
+    // 1. Explicit District & Division Heads / DSPs (Aligned with M & GP 2511-14 dataset)
     if (cleanPhone === '9704452107' || cleanId === 'SP_Srikakulam') return 'SP, Srikakulam';
-    if (cleanPhone === '6309990804' || cleanId === 'QRT_1') return 'SDPO, Srikakulam';
-    if (cleanPhone === '6309990811' || cleanId === 'QRT_3') return 'SDPO, Tekkali';
-    if (cleanPhone === '6309990805' || cleanId === 'QRT_4') return 'SDPO, Kasibugga';
-    if (cleanPhone === '6309990810' || cleanId === 'QRT_2') return 'DSP, Mahila UPS';
-    if (cleanPhone === '7036228899' || cleanId === 'QRT_5') return 'DSP, CID VSP';
-    if (cleanPhone === '6309990813' || cleanId === 'QRT_6') return 'DSP (AR), DAR';
+    if (cleanPhone === '6309990805' || cleanId === 'QRT_1') return 'SDPO, Kasibugga';
+    if (cleanPhone === '6309990811' || cleanId === 'QRT_2') return 'SDPO, Tekkali';
+    if (cleanPhone === '6309990804' || cleanId === 'QRT_3') return 'SDPO, Srikakulam';
+    if (cleanPhone === '6309990813' || cleanId === 'QRT_4') return 'DSP (AR), DAR';
+    if (cleanPhone === '6309990810' || cleanId === 'QRT_5') return 'DSP, Women PS';
+    if (cleanPhone === '7036228899') return 'DSP, CID VSP';
 
-    // 2. 12 Circle Inspectors
-    if (cleanPhone === '6309990814' || cleanId === 'SSF_Srikakulam_1' || /Singupuram/i.test(unitName || '') || /Singupuram/i.test(route || '')) return 'CI, Srikakulam Rural';
-    if (cleanPhone === '6309990823' || cleanId === 'SSF_Amadalavalasa_7') return 'CI, Amadalavalasa';
-    if (cleanPhone === '6309990816' || cleanId === 'SSF_Etcherla_4') return 'CI, JR Puram';
-    if (cleanPhone === '6309990860' || cleanId === 'SSF_Tekkali_16') return 'Inspector, Tekkali PS';
-    if (cleanPhone === '6309990817' || cleanId === 'SSF_Kotabommali_17') return 'CI, Tekkali Rural';
-    if (cleanPhone === '6309990828' || cleanId === 'SSF_Kothuru_22') return 'CI, Kothuru';
-    if (cleanPhone === '6309990822' || cleanId === 'SSF_Pathapatnam_20') return 'CI, Pathapatnam';
-    if (cleanPhone === '6309990815' || cleanId === 'SSF_Narasannapeta_12') return 'CI, Narasannapeta';
-    if (cleanPhone === '6309990825' || cleanId === 'SSF_Palasa_24') return 'CI, Kasibugga PS';
-    if (cleanPhone === '6309990827' || cleanId === 'SSF_Ichapuram_29') return 'CI, Ichapuram';
-    if (cleanPhone === '6309990819' || cleanId === 'SSF_Sompeta_27') return 'CI, Sompeta';
-    if (cleanPhone === '6309990818' || cleanId === 'SSF_Mandasa_26') return 'CI, Kasibugga Rural';
+    // 2. Addl. SP & HQ Reserves (Strictly as per Excel: Addl. SP Reserve + HQ-Reserve Parties)
+    if (cleanId === 'Addl_SP_Reserve_1') return 'Addl. SP (Admin), Srikakulam';
+    if (cleanId === 'Addl_SP_Reserve_2') return 'Addl. SP (V&E), Srikakulam';
+    if (cleanPhone === '9392663604' || cleanId === 'HQ_Reserve_1') return 'CI, Control Room';
+    if (cleanPhone === '6309990838' || cleanId === 'HQ_Reserve_2') return 'RI Admin, DAR Srikakulam';
+    if (cleanPhone === '6309990939' || cleanId === 'HQ_Reserve_3') return 'CI, Task Force';
+
+    // 3. Circle Inspectors (M & GP 2511-14 dataset)
+    if (cleanPhone === '6309990814' || cleanId === 'SSF_Srikakulam_Town_1') return 'CI, Srikakulam Rural';
+    if (cleanPhone === '6309990823' || cleanId === 'SSF_Amadalavalasa_1') return 'CI, Amadalavalasa';
+    if (cleanPhone === '6309990816' || cleanId === 'SSF_Srikakulam_Town_5') return 'CI, JR Puram';
+    if (cleanPhone === '6309990860' || cleanId === 'SSF_Vajrapukotturu_2') return 'CI, Tekkali UPS';
+    if (cleanPhone === '6309990817') return 'CI, Tekkali Rural';
+    if (cleanPhone === '6309990828' || cleanId === 'SSF_Srikakulam_Town_2') return 'CI, Kothuru';
+    if (cleanPhone === '6309990822' || cleanId === 'SSF_KAVITI_2') return 'CI, Pathapatnam';
+    if (cleanPhone === '6309990815' || cleanId === 'SSF_Amadalavalasa_2') return 'CI, Narasannapeta';
+    if (cleanPhone === '6309990825' || cleanId === 'SSF_Palasa_1') return 'CI, Kasibugga PS';
+    if (cleanPhone === '6309990827' || cleanId === 'SSF_Ichapuram_1') return 'CI, Ichapuram';
+    if (cleanPhone === '6309990819' || cleanId === 'SSF_Sompeta_1') return 'CI, Sompeta';
+    if (cleanPhone === '6309990818' || cleanId === 'SSF_Mandasa_1') return 'CI, Kasibugga Rural';
+    if (cleanPhone === '6309990824' || cleanId === 'SSF_Srikakulam_Town_4') return 'CI, SKL II Town PS';
+    if (cleanPhone === '6309990836' || cleanId === 'SSF_Srikakulam_Town_6') return 'WCI, Women PS';
+    if (cleanPhone === '6309990835' || cleanId === 'SSF_Kanchili_1') return 'CI, CCS Srikakulam';
+    if (cleanPhone === '6309990947' || cleanId === 'SSF_Kanchili_2') return 'CI, Cyber Cell';
+    if (cleanPhone === '6309990833' || cleanId === 'SSF_Mandasa_2') return 'CI, DCRB Srikakulam';
+    if (cleanPhone === '6309990809' || cleanId === 'SSF_Ichapuram_2') return 'CI, Traffic PS';
 
     const defaultPs = mandal ? (mandal.endsWith('PS') ? mandal : (mandal + ' PS')) : '';
 
@@ -342,12 +360,20 @@ function updateLivePartyUnitOnMap(key, data) {
     const lng = parseFloat(data.longitude || data.lng);
     if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return;
 
-    const meta = getPartyUnitMeta(key) || {};
-    const catKey = (data.categoryKey || meta.categoryKey || 'RM').toUpperCase();
-    const mandal = data.mandal || meta.mandal || '';
-    const unitName = data.unitName || meta.unitName || key;
-    const officer = data.officer || meta.officer || data.name || 'Officer';
-    const phone = data.phone || meta.phone || '';
+    // Strict validation: Live Route Map units MUST match the 157 units defined in the Excel sheet
+    const meta = getPartyUnitMeta(key, data.phone);
+    if (!meta) {
+        if (window.livePartyMarkers && window.livePartyMarkers[key]) {
+            removeLivePartyUnit(key);
+        }
+        return;
+    }
+
+    const catKey = (meta.categoryKey || data.categoryKey || 'RM').toUpperCase();
+    const mandal = meta.mandal || data.mandal || '';
+    const unitName = meta.unitName || data.unitName || key;
+    const officer = meta.officer || data.officer || 'Police Officer';
+    const phone = meta.phone || data.phone || '';
     const speed = parseFloat(data.speed || 0);
     const speedKmh = Math.round(speed * 3.6);
     const isMoving = speedKmh >= 2 || !!data.isMoving;
@@ -553,7 +579,7 @@ function buildLivePartyPopupHtml(key, unit, meta) {
     title = title.replace(/^(SSF|SF|RM|QRT)\s*:\s*\1\b/i, '$1');
     
     const callBtn = cleanPhone ? '<a href="tel:' + cleanPhone + '" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold text-xs flex items-center gap-1 shadow-sm"><i class="fa-solid fa-phone"></i> Call</a>' : '';
-    const waBtn = cleanPhone ? '<a href="https://wa.me/91${cleanPhone}" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold text-xs flex items-center gap-1 shadow-sm"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>' : '';
+    const waBtn = cleanPhone ? '<a href="https://wa.me/91' + cleanPhone + '" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold text-xs flex items-center gap-1 shadow-sm"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>' : '';
     const navBtn = '<a href="https://www.google.com/maps/dir/?api=1&destination=' + unit.lat + ',' + unit.lng + '" target="_blank" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold text-xs flex items-center gap-1 shadow-sm"><i class="fa-solid fa-diamond-turn-right text-emerald-400"></i> Navigate</a>';
     
     // Control Room Clear button for single officer
@@ -580,12 +606,9 @@ function buildLivePartyPopupHtml(key, unit, meta) {
                 '<div class="bg-slate-50 p-2 rounded border border-slate-200 text-xs space-y-1">' +
                     '<div><strong class="text-slate-700">Rank & PS:</strong> <span class="text-slate-900 font-bold">' + rankPs + '</span></div>' +
                     (unit.phone ? '<div><strong class="text-slate-700">Phone:</strong> <span class="text-blue-700 font-bold">' + unit.phone + '</span></div>' : '') +
-                    (meta.supporting ? '<div><strong class="text-slate-700">Supporting:</strong> <span class="text-slate-600">' + meta.supporting + '</span></div>' : '') +
-                    (meta.hq ? '<div><strong class="text-slate-700">HQ:</strong> <span class="text-slate-800 font-semibold">' + meta.hq + '</span></div>' : '') +
-                    (unit.phone ? '<div><strong class="text-slate-700">Phone:</strong> <span class="text-blue-700 font-bold">' + unit.phone + '</span></div>' : '') +
-                    (meta.supporting ? '<div><strong class="text-slate-700">Supporting:</strong> <span class="text-slate-600">' + meta.supporting + '</span></div>' : '') +
-                    (meta.hq ? '<div><strong class="text-slate-700">HQ:</strong> <span class="text-slate-800 font-semibold">' + meta.hq + '</span></div>' : '') +
-                    (meta.pollingStations ? '<div><strong class="text-slate-700">Stations Covered:</strong> <span class="text-purple-700 font-bold">' + meta.pollingStations + '</span></div>' : '') +
+                    (meta && meta.supporting ? '<div><strong class="text-slate-700">Supporting:</strong> <span class="text-slate-600">' + meta.supporting + '</span></div>' : '') +
+                    (meta && meta.hq ? '<div><strong class="text-slate-700">HQ Staying Point:</strong> <span class="text-slate-800 font-semibold">' + meta.hq + '</span></div>' : '') +
+                    (meta && meta.pollingStations ? '<div><strong class="text-slate-700">Stations Covered:</strong> <span class="text-purple-700 font-bold">' + meta.pollingStations + '</span></div>' : '') +
                 '</div>' +
 
                 '<div class="grid grid-cols-2 gap-1.5 text-[11px] bg-blue-50 p-1.5 rounded border border-blue-200 text-blue-900">' +
@@ -773,6 +796,13 @@ function restoreLiveUnitsFromCache() {
         let changed = false;
         for (const k in cached) {
             const u = cached[k];
+            // Validate against the 157 units from the Excel sheet
+            const meta = getPartyUnitMeta(k, u.phone);
+            if (!meta) {
+                delete cached[k];
+                changed = true;
+                continue;
+            }
             let lastTime = Number(u.lastUpdated || u.timestamp || 0);
             if (lastTime > 0 && lastTime < 1e11) lastTime *= 1000;
             // ONLY restore units that transmitted within the active freshness window (24 hours)
