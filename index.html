@@ -17,7 +17,7 @@
     <!-- MQTT.js library for real-time live synchronization -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <!-- Pre-loaded Forces Data (Routes, SF, SSF, QRTs, Reserve Parties) -->
-    <script src="route_mobiles_data.js?v=20261125_v6"></script>
+    <script src="route_mobiles_data.js?v=20261126_v16"></script>
     <!-- Live Forces Real-time Tracking Engine -->
     <script src="live_tracking.js?v=20261125_v11"></script>
     <style>
@@ -3347,7 +3347,7 @@
         }
         function initTableColumns() {
             try {
-                const COLS_VERSION = "2026-11-26_v14_mandal_ward_header";
+                const COLS_VERSION = "2026-11-26_v16_mandal_ward_clean";
                 if (localStorage.getItem('police_election_cols_version') !== COLS_VERSION) {
                     localStorage.removeItem('police_election_cols_order');
                     localStorage.removeItem('police_election_cols_hidden');

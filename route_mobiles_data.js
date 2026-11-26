@@ -2178,8 +2178,8 @@ window.ROUTE_MOBILES_DATA = [
         "route": "Static-11",
         "unitName": "Static-11 (Peddapadu,Srikakulam)",
         "hq": "Peddapadu,Srikakulam",
-        "officer": "V. Satyanarayana, SI, JR Puram PS, 6309990850",
-        "phone": "6309990850",
+        "officer": "Rami, SI, Tekkali PS, 6309990945",
+        "phone": "6309990945",
         "supporting": "",
         "pollingStations": ""
     },

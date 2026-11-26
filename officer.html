@@ -21,9 +21,28 @@
   <!-- MQTT.js library -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <!-- Pre-loaded Forces Data (Routes, SF, SSF, QRTs, Reserve Parties) -->
-  <script src="route_mobiles_data.js?v=20261126_v15"></script>
+  <script src="route_mobiles_data.js?v=20261126_v16"></script>
   <!-- Pre-loaded Srikakulam Mandals GeoJSON Boundaries -->
   <script src="srikakulam_mandals.js?v=20261119_v3"></script>
+
+  <!-- Prevent login screen flickering when session exists -->
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('skl_officer_session')) {
+          document.documentElement.classList.add('officer-logged-in');
+        }
+      } catch(e) {}
+    })();
+  </script>
+  <style>
+    html.officer-logged-in #login-card { display: none !important; }
+    html.officer-logged-in #officer-profile-bar { display: flex !important; }
+    html.officer-logged-in #message-control-card,
+    html.officer-logged-in #officer-map-card,
+    html.officer-logged-in #selection-card { display: block !important; }
+    html.officer-logged-in #officer-home-tip { display: flex !important; }
+  </style>
 
   <style>
     :root {
@@ -397,8 +416,8 @@
       font-size: 12px !important;
     }
 
-    /* Smooth Marker Movement Animation ("ekkada vunna icon kuda move avvali") */
-    .my-location-marker, .leaflet-marker-icon {
+    /* Smooth Marker Movement Animation for current officer GPS position */
+    .my-location-marker {
       transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1) !important;
     }
 
@@ -1852,14 +1871,6 @@
     if (lblRes) lblRes.innerText = `🏛️ Reserve (5${catCounts.RESERVE > 0 ? ' • ' + catCounts.RESERVE : ''})`;
     const lblStat = document.getElementById('sdpo-lbl-static');
     if (lblStat) lblStat.innerText = `🏢 Static (13${catCounts.STATIC > 0 ? ' • ' + catCounts.STATIC : ''})`;
-
-    // Auto-fit bounds on initial batch of live officers so supervisory officers see all units cleanly
-    if (count > 0 && !initialSdpoBoundsFitted) {
-      initialSdpoBoundsFitted = true;
-      setTimeout(() => {
-        fitSdpoOfficersBounds();
-      }, 700);
-    }
   }
 
   function saveLiveUnitsToCache() {
@@ -1902,8 +1913,9 @@
         let lastTime = Number(u.lastUpdated || u.timestamp || 0);
         if (lastTime > 0 && lastTime < 1e11) lastTime *= 1000;
         if (lastTime > 0 && (now - lastTime) > LIVE_EXPIRY_MS) continue;
-        handleSdpoSubordinateLocationUpdate(u);
+        handleSdpoSubordinateLocationUpdate(u, false);
       }
+      updateSdpoActiveOfficerCountUI();
     } catch (e) {}
   }
 
@@ -1916,6 +1928,9 @@
   function formatOfficerRankAndPs(rawOfficer, mandal = '', unitName = '', route = '', phone = '', id = '') {
     const cleanPhone = normalizePhone(phone || '');
     const cleanId = String(id || '').trim();
+
+    // Explicit override for Static-11 Peddapadu, Srikakulam (SI, Tekkali PS)
+    if (cleanPhone === '6309990945' || cleanId === 'Static_11') return 'SI, Tekkali PS';
 
     // 1. Explicit District & Division Heads / DSPs (Aligned with M & GP 2511-14 dataset)
     if (cleanPhone === '9704452107' || cleanId === 'SP_Srikakulam') return 'SP, Srikakulam';
@@ -2041,7 +2056,7 @@
     return formatOfficerRankAndPs(rawOfficer, mandal, unitName, route, phone, id);
   }
 
-  function handleSdpoSubordinateLocationUpdate(payload) {
+  function handleSdpoSubordinateLocationUpdate(payload, autoUpdateUI = true) {
     if (!payload) return;
 
     const rawLat = payload.lat !== undefined ? payload.lat : payload.latitude;
@@ -2198,8 +2213,10 @@
           officerMap.addLayer(existing.marker);
         }
       }
-      updateSdpoActiveOfficerCountUI();
-      saveLiveUnitsToCache();
+      if (autoUpdateUI) {
+        updateSdpoActiveOfficerCountUI();
+        saveLiveUnitsToCache();
+      }
     } else {
       const marker = L.marker([lat, lng], { icon: customIcon });
       if (shouldShowSdpoPartyUnit(assignedCatKey)) {
@@ -2213,12 +2230,14 @@
         data: payload,
         catKey: assignedCatKey
       };
-      updateSdpoActiveOfficerCountUI();
-      saveLiveUnitsToCache();
+      if (autoUpdateUI) {
+        updateSdpoActiveOfficerCountUI();
+        saveLiveUnitsToCache();
+      }
     }
   }
 
-  window.fitSdpoOfficersBounds = function() {
+  window.fitSdpoOfficersBounds = function(isManual = false) {
     if (!officerMap) return;
     if (mqttClient && mqttClient.connected) {
       try {
@@ -2238,8 +2257,10 @@
       }
     }
     if (points.length === 0) {
-      const activeSdpo = getActiveSdpoConfig();
-      showToast(activeSdpo ? activeSdpo.toastMsg : "ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.");
+      if (isManual) {
+        const activeSdpo = getActiveSdpoConfig();
+        showToast(activeSdpo ? activeSdpo.toastMsg : "ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.");
+      }
       return;
     }
     const bounds = L.latLngBounds(points);
@@ -4857,6 +4878,7 @@
 
   function applyLoggedInState(assignedUnit, matchedUnits = []) {
     if (assignedUnit) currentSelectedUnit = assignedUnit;
+    document.documentElement.classList.add('officer-logged-in');
     const loginCard = document.getElementById('login-card');
     const profileBar = document.getElementById('officer-profile-bar');
     const selCard = document.getElementById('selection-card');
@@ -4879,13 +4901,13 @@
       if (cockpitCard) cockpitCard.style.display = 'none';
     }
 
-    // Refresh Leaflet size when map container becomes visible
-    setTimeout(() => {
+    // Refresh Leaflet size smoothly without flashing or sudden jumps
+    requestAnimationFrame(() => {
       if (officerMap) {
-        officerMap.invalidateSize();
+        officerMap.invalidateSize({ animate: false });
         initMandalBoundaries();
       }
-    }, 250);
+    });
 
     const nameEl = document.getElementById('bar-officer-name');
     const metaEl = document.getElementById('bar-officer-meta');
@@ -4959,6 +4981,7 @@
   };
 
   function applyLoggedOutState() {
+    document.documentElement.classList.remove('officer-logged-in');
     const loginCard = document.getElementById('login-card');
     const profileBar = document.getElementById('officer-profile-bar');
     const selCard = document.getElementById('selection-card');
