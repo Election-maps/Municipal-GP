@@ -2162,9 +2162,9 @@
               <i class="fa-solid fa-phone"></i> కాల్ చేయండి (${escapeHtml(phone)})
             </button>
           ` : ''}
-          <button type="button" onclick="triggerNavigation(null, ${lat}, ${lng}, '${escapeHtml(pillLabel)}')" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; padding: 7px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <i class="fa-solid fa-diamond-turn-right"></i> నావిగేషన్ రూట్
-          </button>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving" target="_blank" onclick="event.preventDefault(); triggerNavigation(this.href, ${lat}, ${lng}, '${escapeHtml(pillLabel).replace(/'/g, "\\'")}');" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; text-decoration: none; padding: 7px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <i class="fa-solid fa-diamond-turn-right"></i> నావిగేషన్ రూట్ (Google Maps)
+          </a>
         </div>
       </div>
     `;
@@ -3851,7 +3851,7 @@
 
     if (navBtn) {
       if (payload.latitude && payload.longitude) {
-        const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${payload.latitude},${payload.longitude}`;
+        const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${payload.latitude},${payload.longitude}&travelmode=driving`;
         navBtn.setAttribute('data-nav-url', navUrl);
         navBtn.setAttribute('data-lat', payload.latitude);
         navBtn.setAttribute('data-lng', payload.longitude);
@@ -3913,15 +3913,32 @@
   };
 
   window.triggerNavigation = function(url, lat, lng, label) {
-    const numLat = parseFloat(lat);
-    const numLng = parseFloat(lng);
-    const safeUrl = url || (!isNaN(numLat) && !isNaN(numLng) ? `https://www.google.com/maps/dir/?api=1&destination=${numLat},${numLng}` : null);
-    const safeLabel = label || 'Police SOS';
+    let numLat = parseFloat(lat);
+    let numLng = parseFloat(lng);
 
-    // 1. Try Native Android App bridge methods
+    // If lat or lng not provided, extract from url
+    if ((isNaN(numLat) || isNaN(numLng)) && url) {
+      const match = String(url).match(/destination=([0-9.-]+),([0-9.-]+)/) ||
+                    String(url).match(/q=([0-9.-]+),([0-9.-]+)/) ||
+                    String(url).match(/@([0-9.-]+),([0-9.-]+)/) ||
+                    String(url).match(/([0-9]{2}\.[0-9]+)[,\s]+([0-9]{2}\.[0-9]+)/);
+      if (match) {
+        numLat = parseFloat(match[1]);
+        numLng = parseFloat(match[2]);
+      }
+    }
+
+    if (isNaN(numLat) || isNaN(numLng)) {
+      alert("లొకేషన్ కోఆర్డినేట్స్ (GPS Coordinates) అందుబాటులో లేవు!");
+      return;
+    }
+
+    const safeLabel = label || 'Police SOS';
+    const drivingUrl = `https://www.google.com/maps/dir/?api=1&destination=${numLat},${numLng}&travelmode=driving`;
+
+    // 1. Try Native Android App bridge methods first
     if (window.AndroidApp) {
-      // A. Try openMapsNavigation(double, double, String)
-      if (!isNaN(numLat) && !isNaN(numLng) && typeof window.AndroidApp.openMapsNavigation === 'function') {
+      if (typeof window.AndroidApp.openMapsNavigation === 'function') {
         try {
           window.AndroidApp.openMapsNavigation(numLat, numLng, safeLabel);
           return;
@@ -3929,41 +3946,22 @@
           console.warn("AndroidApp.openMapsNavigation error:", e);
         }
       }
-      // B. Try openExternalUrl(String)
-      if (safeUrl && typeof window.AndroidApp.openExternalUrl === 'function') {
+      if (typeof window.AndroidApp.openExternalUrl === 'function') {
         try {
-          window.AndroidApp.openExternalUrl(safeUrl);
+          window.AndroidApp.openExternalUrl(drivingUrl);
           return;
         } catch (e) {
           console.warn("AndroidApp.openExternalUrl error:", e);
         }
       }
-      // C. Legacy openNavigation
-      if (typeof window.AndroidApp.openNavigation === 'function') {
-        try {
-          window.AndroidApp.openNavigation(safeUrl || `https://www.google.com/maps/dir/?api=1&destination=${numLat},${numLng}`);
-          return;
-        } catch (e) {
-          console.warn("AndroidApp.openNavigation error:", e);
-        }
-      }
     }
 
-    // 2. In Native APK wrapper without bridge methods: NEVER navigate main page
-    const isNativeApp = (window.AndroidApp && (window.AndroidApp.isNativeApp || window.AndroidApp.isTrackingRunning)) ||
-                        window.location.search.includes('app=native');
-    if (isNativeApp) {
-      if (!isNaN(numLat) && !isNaN(numLng)) {
-        prompt("అధికారి GPS లొకేషన్ కోఆర్డినేట్స్ (గూగుల్ మ్యాప్స్ లో వెతకండి):", `${numLat}, ${numLng}`);
-      } else if (safeUrl) {
-        prompt("గూగుల్ మ్యాప్స్ లింక్:", safeUrl);
-      }
-      return;
-    }
-
-    // 3. In regular Web Browser:
-    if (safeUrl) {
-      window.open(safeUrl, '_blank');
+    // 2. Direct browser navigation / Android WebView Intent
+    // Navigating directly to drivingUrl triggers Google Maps app intent on Android devices without opening blank tabs
+    try {
+      window.location.href = drivingUrl;
+    } catch(e) {
+      window.open(drivingUrl, '_blank');
     }
   };
 
@@ -4101,9 +4099,9 @@
           <button type="button" onclick="triggerPhoneCall('${escapeHtml(payload.phone)}')" style="flex:1; background:#16a34a; color:#fff; border:none; padding:6px 10px; border-radius:5px; font-size:11px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:4px;">
             <i class="fa-solid fa-phone"></i> కాల్ చేయండి
           </button>
-          <button type="button" onclick="triggerNavigation('https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}', ${lat}, ${lng}, '${escapeHtml(payload.unitName || payload.officer || 'Police SOS')}')" style="flex:1; background:#2563eb; color:#fff; border:none; padding:6px 10px; border-radius:5px; font-size:11px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:4px;">
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving" target="_blank" onclick="event.preventDefault(); triggerNavigation(this.href, ${lat}, ${lng}, '${escapeHtml(payload.unitName || payload.officer || 'Police SOS').replace(/'/g, "\\'")}');" style="flex:1; background:#2563eb; color:#fff; text-decoration:none; padding:6px 10px; border-radius:5px; font-size:11px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:4px;">
             <i class="fa-solid fa-diamond-turn-right"></i> గూగుల్ మ్యాప్స్ రూట్
-          </button>
+          </a>
         </div>
       </div>
     `);

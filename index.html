@@ -19,7 +19,7 @@
     <!-- Pre-loaded Forces Data (Routes, SF, SSF, QRTs, Reserve Parties) -->
     <script src="route_mobiles_data.js?v=20261126_v16"></script>
     <!-- Live Forces Real-time Tracking Engine -->
-    <script src="live_tracking.js?v=20261125_v11"></script>
+    <script src="live_tracking.js?v=20261126_v12"></script>
     <style>
         .ps-tooltip-badge {
             background-color: rgba(255, 255, 255, 0.96);
@@ -2255,7 +2255,7 @@
             const badgeClass = SENSITIVITY_COLORS[cat]?.badge || 'bg-slate-100 text-slate-800';
             const lat = parseFloat(station.latitude);
             const lng = parseFloat(station.longitude);
-            const navUrl = (!isNaN(lat) && !isNaN(lng)) ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}` : '#';
+            const navUrl = (!isNaN(lat) && !isNaN(lng)) ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving` : '#';
             const distDisplay = station.distance_from_ps_kms ? `${station.distance_from_ps_kms} KM` : 'N/A';
             const hidden = getPopupHiddenFields();
             const totalCount = POPUP_FIELD_KEYS.length;
@@ -2807,7 +2807,7 @@
                                     <button onclick="closeEnlargedRouteModal(); focusStationOnMap(${lat}, ${lng}, ${st.id});" class="px-2 py-1 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-300 hover:border-blue-600 rounded text-[11px] font-bold transition flex items-center gap-1 cursor-pointer" title="Zoom on Map">
                                         <i class="fa-solid fa-location-crosshairs"></i> View on Map
                                     </button>
-                                    <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" rel="noopener noreferrer" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-300 hover:border-emerald-600 rounded text-[11px] font-bold transition flex items-center gap-1 cursor-pointer" title="Google Maps Navigation">
+                                    <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving" target="_blank" rel="noopener noreferrer" class="px-2 py-1 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-300 hover:border-emerald-600 rounded text-[11px] font-bold transition flex items-center gap-1 cursor-pointer" title="Google Maps Navigation">
                                         <i class="fa-solid fa-diamond-turn-right"></i> Navigate
                                     </a>
                                 ` : '<span class="text-slate-400 italic text-[10px]">No GPS</span>'}
@@ -3296,7 +3296,7 @@
                             <button onclick="locateStationOnMap(${s.id})" title="Locate on Live Map" class="w-6 h-6 rounded bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 flex items-center justify-center transition shadow-sm">
                                 <i class="fa-solid fa-location-dot"></i>
                             </button>
-                            <a href="https://www.google.com/maps/dir/?api=1&destination=${s.latitude},${s.longitude}" target="_blank" title="Navigate on Google Maps" class="w-6 h-6 rounded bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-700 flex items-center justify-center transition shadow-sm">
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${s.latitude},${s.longitude}&travelmode=driving" target="_blank" title="Navigate on Google Maps" class="w-6 h-6 rounded bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-700 flex items-center justify-center transition shadow-sm">
                                 <i class="fa-solid fa-diamond-turn-right text-[10px]"></i>
                             </a>
                             <button onclick="openEditModal(${s.id})" title="Edit Details" class="w-6 h-6 rounded bg-amber-100 hover:bg-amber-600 hover:text-white text-amber-700 flex items-center justify-center transition shadow-sm">
@@ -4107,7 +4107,7 @@
                                 <span><b>Code:</b> <span class="font-mono text-slate-700 font-bold">${s.code || '-'}</span></span>
                                 <span><b>Electors:</b> ${(parseInt(s.no_of_voters, 10) || 0).toLocaleString()}</span>
                                 <span><b>BLO:</b> <a href="tel:${s.blo_contact_no}" class="text-blue-600 hover:underline font-semibold" onclick="event.stopPropagation()">${s.blo_contact_no || 'N/A'}</a></span>
-                                <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" onclick="event.stopPropagation()" class="text-emerald-700 hover:text-emerald-900 font-bold inline-flex items-center gap-1 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-300">
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving" target="_blank" onclick="event.stopPropagation()" class="text-emerald-700 hover:text-emerald-900 font-bold inline-flex items-center gap-1 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-300">
                                     <i class="fa-solid fa-diamond-turn-right text-[9px]"></i> Navigate
                                 </a>
                             </div>
@@ -4472,7 +4472,7 @@
                                 <button type="button" onclick="locateStationOnMap(${s.id})" title="Locate on Map" class="w-6 h-6 rounded bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 flex items-center justify-center transition shadow-2xs cursor-pointer">
                                     <i class="fa-solid fa-crosshairs text-[10px]"></i>
                                 </button>
-                                <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" title="Navigate on Google Maps" class="w-6 h-6 rounded bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-700 flex items-center justify-center transition shadow-2xs">
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving" target="_blank" title="Navigate on Google Maps" class="w-6 h-6 rounded bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-700 flex items-center justify-center transition shadow-2xs">
                                     <i class="fa-solid fa-diamond-turn-right text-[10px]"></i>
                                 </a>
                             </div>
@@ -4999,7 +4999,7 @@
                                 <button type="button" onclick="locateStationOnLiveMap(${s.id})" title="Locate on Live Map" class="w-6 h-6 rounded bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-700 flex items-center justify-center transition shadow-2xs cursor-pointer">
                                     <i class="fa-solid fa-crosshairs text-[10px]"></i>
                                 </button>
-                                <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" title="Navigate on Google Maps" class="w-6 h-6 rounded bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 flex items-center justify-center transition shadow-2xs">
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving" target="_blank" title="Navigate on Google Maps" class="w-6 h-6 rounded bg-blue-100 hover:bg-blue-600 hover:text-white text-blue-700 flex items-center justify-center transition shadow-2xs">
                                     <i class="fa-solid fa-diamond-turn-right text-[10px]"></i>
                                 </a>
                             </div>

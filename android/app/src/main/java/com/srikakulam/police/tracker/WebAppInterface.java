@@ -80,9 +80,11 @@ public class WebAppInterface {
     @JavascriptInterface
     public void openMapsNavigation(double lat, double lng, String label) {
         Runnable navAction = () -> {
-            // 1. Try Google Maps App Intent
+            String navDirUrl = "https://www.google.com/maps/dir/?api=1&destination=" + lat + "," + lng + "&travelmode=driving";
+
+            // 1. Try Google Maps Turn-by-Turn Driving Navigation Intent
             try {
-                Uri gmmIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lng);
+                Uri gmmIntentUri = Uri.parse("google.navigation:q=" + lat + "," + lng + "&mode=d");
                 Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
                 mapIntent.setPackage("com.google.android.apps.maps");
                 mapIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -90,24 +92,22 @@ public class WebAppInterface {
                 return;
             } catch (Exception ignored) {}
 
-            // 2. Try geo: intent
+            // 2. Try Google Maps App with Direct Driving Directions URL
             try {
-                String safeLabel = (label != null && !label.isEmpty()) ? label : "Police SOS Location";
-                Uri geoUri = Uri.parse("geo:" + lat + "," + lng + "?q=" + lat + "," + lng + "(" + Uri.encode(safeLabel) + ")");
-                Intent geoIntent = new Intent(Intent.ACTION_VIEW, geoUri);
-                geoIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(geoIntent);
+                Intent dirIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(navDirUrl));
+                dirIntent.setPackage("com.google.android.apps.maps");
+                dirIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(dirIntent);
                 return;
             } catch (Exception ignored) {}
 
-            // 3. Fallback to external browser with Google Maps URL
+            // 3. Fallback: Any Maps App or Web Browser
             try {
-                String webUrl = "https://www.google.com/maps/dir/?api=1&destination=" + lat + "," + lng;
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(webUrl));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(navDirUrl));
                 browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(browserIntent);
             } catch (Exception e) {
-                Toast.makeText(context, "మ్యాప్స్ ఓపెన్ కాలేదు", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "గూగుల్ మ్యాప్స్ తెరవలేకపోయాము", Toast.LENGTH_SHORT).show();
             }
         };
 

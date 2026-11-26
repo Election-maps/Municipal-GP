@@ -101,9 +101,16 @@ public class MainActivity extends AppCompatActivity {
                     url.contains("google.com/maps") ||
                     url.contains("maps.app.goo.gl")) {
                     try {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
+                        Intent mapIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        mapIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        try {
+                            mapIntent.setPackage("com.google.android.apps.maps");
+                            startActivity(mapIntent);
+                        } catch (Exception notFound) {
+                            Intent genericIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                            genericIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(genericIntent);
+                        }
                     } catch (Exception e) {
                         Toast.makeText(MainActivity.this, "మ్యాప్స్ ఓపెన్ కాలేదు", Toast.LENGTH_SHORT).show();
                     }

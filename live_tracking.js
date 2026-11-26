@@ -708,7 +708,7 @@ function buildLivePartyPopupHtml(key, unit, meta) {
     
     const callBtn = cleanPhone ? '<a href="tel:' + cleanPhone + '" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold text-xs flex items-center gap-1 shadow-sm"><i class="fa-solid fa-phone"></i> Call</a>' : '';
     const waBtn = cleanPhone ? '<a href="https://wa.me/91' + cleanPhone + '" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold text-xs flex items-center gap-1 shadow-sm"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>' : '';
-    const navBtn = '<a href="https://www.google.com/maps/dir/?api=1&destination=' + unit.lat + ',' + unit.lng + '" target="_blank" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold text-xs flex items-center gap-1 shadow-sm"><i class="fa-solid fa-diamond-turn-right text-emerald-400"></i> Navigate</a>';
+    const navBtn = '<a href="https://www.google.com/maps/dir/?api=1&destination=' + unit.lat + ',' + unit.lng + '&travelmode=driving" target="_blank" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold text-xs flex items-center gap-1 shadow-sm"><i class="fa-solid fa-diamond-turn-right text-emerald-400"></i> Navigate</a>';
     
     // Control Room Clear button for single officer
     const clearBtn = '<button type="button" onclick="clearSingleOfficer(\'' + key + '\')" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded font-bold text-xs flex items-center gap-1 shadow-sm cursor-pointer" title="కంట్రోల్ రూమ్ నుండి ఈ ట్రాకింగ్‌ను తొలగించండి"><i class="fa-solid fa-trash-can"></i> Clear</button>';
