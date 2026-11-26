@@ -21,7 +21,7 @@
   <!-- MQTT.js library -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <!-- Pre-loaded Forces Data (Routes, SF, SSF, QRTs, Reserve Parties) -->
-  <script src="route_mobiles_data.js?v=20261125_v8"></script>
+  <script src="route_mobiles_data.js?v=20261126_v15"></script>
   <!-- Pre-loaded Srikakulam Mandals GeoJSON Boundaries -->
   <script src="srikakulam_mandals.js?v=20261119_v3"></script>
 
@@ -812,25 +812,25 @@
     <!-- Supervisory Category Filter Checkboxes (Routes, SF, SSF, QRT, Reserve, Static) -->
     <div id="sdpo-category-filter-bar" style="display: none; align-items: center; gap: 4px; flex-wrap: wrap; margin: 4px 0 6px 0; font-size: 11px;">
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid #475569; border-radius: 5px; padding: 2px 6px; color: #f8fafc; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-all" checked onchange="toggleAllSdpoCategories(this.checked)" style="cursor: pointer; accent-color: #3b82f6;"> All
+        <input type="checkbox" id="sdpo-check-all" checked onchange="toggleAllSdpoCategories(this.checked)" style="cursor: pointer; accent-color: #3b82f6;"> <span id="sdpo-lbl-all">All</span>
       </label>
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(59, 130, 246, 0.5); border-radius: 5px; padding: 2px 6px; color: #93c5fd; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-rm" value="RM" checked onchange="onSdpoCategoryCheckChange('RM', this.checked)" style="cursor: pointer; accent-color: #3b82f6;"> 🚗 Routes (98)
+        <input type="checkbox" id="sdpo-check-rm" value="RM" checked onchange="onSdpoCategoryCheckChange('RM', this.checked)" style="cursor: pointer; accent-color: #3b82f6;"> <span id="sdpo-lbl-rm">🚗 Routes (98)</span>
       </label>
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 5px; padding: 2px 6px; color: #fca5a5; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-sf" value="SF" checked onchange="onSdpoCategoryCheckChange('SF', this.checked)" style="cursor: pointer; accent-color: #ef4444;"> 🚔 SF (26)
+        <input type="checkbox" id="sdpo-check-sf" value="SF" checked onchange="onSdpoCategoryCheckChange('SF', this.checked)" style="cursor: pointer; accent-color: #ef4444;"> <span id="sdpo-lbl-sf">🚔 SF (26)</span>
       </label>
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(168, 85, 247, 0.5); border-radius: 5px; padding: 2px 6px; color: #d8b4fe; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-ssf" value="SSF" checked onchange="onSdpoCategoryCheckChange('SSF', this.checked)" style="cursor: pointer; accent-color: #a855f7;"> 🛡️ SSF (23)
+        <input type="checkbox" id="sdpo-check-ssf" value="SSF" checked onchange="onSdpoCategoryCheckChange('SSF', this.checked)" style="cursor: pointer; accent-color: #a855f7;"> <span id="sdpo-lbl-ssf">🛡️ SSF (24)</span>
       </label>
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 5px; padding: 2px 6px; color: #fde68a; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-qrt" value="QRT" checked onchange="onSdpoCategoryCheckChange('QRT', this.checked)" style="cursor: pointer; accent-color: #f59e0b;"> ⚡ QRT (5)
+        <input type="checkbox" id="sdpo-check-qrt" value="QRT" checked onchange="onSdpoCategoryCheckChange('QRT', this.checked)" style="cursor: pointer; accent-color: #f59e0b;"> <span id="sdpo-lbl-qrt">⚡ QRT (5)</span>
       </label>
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 5px; padding: 2px 6px; color: #6ee7b7; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-reserve" value="RESERVE" checked onchange="onSdpoCategoryCheckChange('RESERVE', this.checked)" style="cursor: pointer; accent-color: #10b981;"> 🏛️ Reserve (5)
+        <input type="checkbox" id="sdpo-check-reserve" value="RESERVE" checked onchange="onSdpoCategoryCheckChange('RESERVE', this.checked)" style="cursor: pointer; accent-color: #10b981;"> <span id="sdpo-lbl-reserve">🏛️ Reserve (5)</span>
       </label>
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(6, 182, 212, 0.5); border-radius: 5px; padding: 2px 6px; color: #67e8f9; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-static" value="STATIC" checked onchange="onSdpoCategoryCheckChange('STATIC', this.checked)" style="cursor: pointer; accent-color: #06b6d4;"> 🏢 Static (13)
+        <input type="checkbox" id="sdpo-check-static" value="STATIC" checked onchange="onSdpoCategoryCheckChange('STATIC', this.checked)" style="cursor: pointer; accent-color: #06b6d4;"> <span id="sdpo-lbl-static">🏢 Static (13)</span>
       </label>
     </div>
 
@@ -1767,6 +1767,54 @@
     updateSdpoActiveOfficerCountUI();
   }
 
+  function normalizePartyCategoryKey(rawKey) {
+    if (!rawKey) return 'RM';
+    const s = String(rawKey).trim().toUpperCase();
+    if (s === 'RM' || s === 'ROUTE_MOBILE' || s.includes('ROUTE')) return 'RM';
+    if (s === 'SF' || (s.includes('STRIKING') && !s.includes('SPECIAL'))) return 'SF';
+    if (s === 'SSF' || s.includes('SPECIAL STRIKING')) return 'SSF';
+    if (s === 'QRT') return 'QRT';
+    if (s === 'RESERVE' || s.includes('RESERVE')) return 'RESERVE';
+    if (s === 'STATIC' || s.includes('STATIC')) return 'STATIC';
+    return 'RM';
+  }
+
+  function getPartyUnitMeta(unitId, phone) {
+    if (typeof allUnitsData === 'undefined' || !Array.isArray(allUnitsData)) return null;
+    let cleanId = String(unitId || '').trim().toLowerCase();
+    let cleanPh = String(phone || '').replace(/\D/g, '').slice(-10);
+    if (!cleanPh && cleanId.includes('phone_')) {
+      cleanPh = cleanId.replace(/\D/g, '').slice(-10);
+    }
+    // 1. Prioritize Direct Unit ID match
+    if (cleanId) {
+      const byId = allUnitsData.find(u =>
+        u && (String(u.id || '').trim().toLowerCase() === cleanId || String(u.unitId || '').trim().toLowerCase() === cleanId)
+      );
+      if (byId) return byId;
+    }
+    // 2. Prioritize Direct Phone match
+    if (cleanPh) {
+      const byPhone = allUnitsData.find(u => {
+        if (!u) return false;
+        const uPh = String(u.phone || '').replace(/\D/g, '').slice(-10);
+        return uPh && uPh === cleanPh;
+      });
+      if (byPhone) return byPhone;
+
+      const byOfficer = allUnitsData.find(u =>
+        u && String(u.officer || '').replace(/\D/g, '').includes(cleanPh)
+      );
+      if (byOfficer) return byOfficer;
+
+      const bySupporting = allUnitsData.find(u =>
+        u && String(u.supporting || '').replace(/\D/g, '').includes(cleanPh)
+      );
+      if (bySupporting) return bySupporting;
+    }
+    return null;
+  }
+
   function updateSdpoActiveOfficerCountUI() {
     const isLogged = !!(currentLoggedInOfficer || currentSelectedUnit || isSdpoLoggedIn());
     const bar = document.getElementById('sdpo-category-filter-bar');
@@ -1774,9 +1822,12 @@
     if (!isLogged) return;
 
     let count = 0;
+    const catCounts = { 'RM': 0, 'SF': 0, 'SSF': 0, 'QRT': 0, 'RESERVE': 0, 'STATIC': 0 };
     for (const key in sdpoSubordinateMarkers) {
       const item = sdpoSubordinateMarkers[key];
-      const catKey = (item.catKey || (item.data && (item.data.categoryKey || item.data.catKey)) || 'RM').toUpperCase();
+      const rawCat = item.catKey || (item.data && (item.data.categoryKey || item.data.catKey || item.data.category)) || 'RM';
+      const catKey = normalizePartyCategoryKey(rawCat);
+      if (catCounts[catKey] !== undefined) catCounts[catKey]++;
       if (shouldShowSdpoPartyUnit(catKey)) count++;
     }
 
@@ -1787,6 +1838,20 @@
     }
     const btnCount = document.getElementById('sdpo-btn-count');
     if (btnCount) btnCount.innerText = count;
+
+    // Update dynamic live badges on filter bar
+    const lblRm = document.getElementById('sdpo-lbl-rm');
+    if (lblRm) lblRm.innerText = `🚗 Routes (98${catCounts.RM > 0 ? ' • ' + catCounts.RM : ''})`;
+    const lblSf = document.getElementById('sdpo-lbl-sf');
+    if (lblSf) lblSf.innerText = `🚔 SF (26${catCounts.SF > 0 ? ' • ' + catCounts.SF : ''})`;
+    const lblSsf = document.getElementById('sdpo-lbl-ssf');
+    if (lblSsf) lblSsf.innerText = `🛡️ SSF (24${catCounts.SSF > 0 ? ' • ' + catCounts.SSF : ''})`;
+    const lblQrt = document.getElementById('sdpo-lbl-qrt');
+    if (lblQrt) lblQrt.innerText = `⚡ QRT (5${catCounts.QRT > 0 ? ' • ' + catCounts.QRT : ''})`;
+    const lblRes = document.getElementById('sdpo-lbl-reserve');
+    if (lblRes) lblRes.innerText = `🏛️ Reserve (5${catCounts.RESERVE > 0 ? ' • ' + catCounts.RESERVE : ''})`;
+    const lblStat = document.getElementById('sdpo-lbl-static');
+    if (lblStat) lblStat.innerText = `🏢 Static (13${catCounts.STATIC > 0 ? ' • ' + catCounts.STATIC : ''})`;
 
     // Auto-fit bounds on initial batch of live officers so supervisory officers see all units cleanly
     if (count > 0 && !initialSdpoBoundsFitted) {
@@ -1831,10 +1896,10 @@
       if (!cachedStr) return;
       const cached = JSON.parse(cachedStr);
       const now = Date.now();
-      const LIVE_EXPIRY_MS = 2 * 60 * 60 * 1000; // 2 hours
+      const LIVE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours matches duty cycle
       for (const k in cached) {
         const u = cached[k];
-        let lastTime = Number(u.lastUpdated || 0);
+        let lastTime = Number(u.lastUpdated || u.timestamp || 0);
         if (lastTime > 0 && lastTime < 1e11) lastTime *= 1000;
         if (lastTime > 0 && (now - lastTime) > LIVE_EXPIRY_MS) continue;
         handleSdpoSubordinateLocationUpdate(u);
@@ -1978,41 +2043,38 @@
 
   function handleSdpoSubordinateLocationUpdate(payload) {
     if (!payload) return;
-    const activeSdpo = getActiveSdpoConfig();
-
-    // Ignore officer's own location
-    const myUnitId = currentSelectedUnit ? currentSelectedUnit.id : '';
-    const myPhone = normalizePhone(
-      (currentLoggedInOfficer && currentLoggedInOfficer.phone) ||
-      (currentSelectedUnit && currentSelectedUnit.phone) ||
-      (activeSdpo && activeSdpo.phone) ||
-      ''
-    );
-    if (payload.phone && myPhone && normalizePhone(payload.phone) === myPhone) return;
-    if (myUnitId && (payload.unitId === myUnitId || payload.id === myUnitId)) return;
-
-    const unitKey = payload.unitId || payload.id || (payload.phone ? 'phone_' + normalizePhone(payload.phone) : null);
-    if (!unitKey) return;
 
     const rawLat = payload.lat !== undefined ? payload.lat : payload.latitude;
     const rawLng = payload.lng !== undefined ? payload.lng : payload.longitude;
     const lat = parseFloat(rawLat);
     const lng = parseFloat(rawLng);
 
-    // Resolve unit mandal and official unit metadata
-    let mandal = payload.mandal || '';
-    let resolvedUnit = null;
-    if (typeof allUnitsData !== 'undefined' && allUnitsData) {
-      resolvedUnit = allUnitsData.find(x =>
-        (payload.unitId && (x.id === payload.unitId || x.unitId === payload.unitId)) ||
-        (payload.phone && normalizePhone(x.phone) === normalizePhone(payload.phone))
-      );
-    }
-    if ((!mandal || mandal.toLowerCase() === 'district hq') && resolvedUnit && resolvedUnit.mandal) {
-      mandal = resolvedUnit.mandal;
+    const rawKey = payload.unitId || payload.id || (payload.phone ? 'phone_' + normalizePhone(payload.phone) : null);
+    if (!rawKey) return;
+
+    // Resolve official unit metadata from allUnitsData (strictly 171 forces from M & GP 2511-14)
+    const resolvedUnit = getPartyUnitMeta(rawKey, payload.phone);
+    const unitKey = (resolvedUnit && resolvedUnit.id) ? resolvedUnit.id : rawKey;
+
+    // Clean up older duplicate alias marker if key differs (e.g. phone_... vs official unit ID)
+    if (unitKey !== rawKey && sdpoSubordinateMarkers[rawKey]) {
+      try { officerMap.removeLayer(sdpoSubordinateMarkers[rawKey].marker); } catch (e) {}
+      delete sdpoSubordinateMarkers[rawKey];
     }
 
-    // If officer stopped sharing or no coords
+    // Ignore officer's own location ONLY if this device is actively tracking itself
+    if (isTracking) {
+      const myUnitId = currentSelectedUnit ? currentSelectedUnit.id : '';
+      const myPhone = normalizePhone(
+        (currentLoggedInOfficer && currentLoggedInOfficer.phone) ||
+        (currentSelectedUnit && currentSelectedUnit.phone) ||
+        ''
+      );
+      if (payload.phone && myPhone && normalizePhone(payload.phone) === myPhone) return;
+      if (myUnitId && (payload.unitId === myUnitId || payload.id === myUnitId || unitKey === myUnitId)) return;
+    }
+
+    // If officer stopped sharing or invalid coords
     if (payload.status === 'stopped' || isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
       if (sdpoSubordinateMarkers[unitKey]) {
         try { officerMap.removeLayer(sdpoSubordinateMarkers[unitKey].marker); } catch (e) {}
@@ -2022,6 +2084,14 @@
       }
       return;
     }
+
+    let mandal = (resolvedUnit && resolvedUnit.mandal) || payload.mandal || '';
+    if (mandal.toLowerCase() === 'district hq' && resolvedUnit && resolvedUnit.mandal) {
+      mandal = resolvedUnit.mandal;
+    }
+
+    const rawCat = (resolvedUnit && (resolvedUnit.categoryKey || resolvedUnit.category)) || payload.categoryKey || payload.category || 'RM';
+    const assignedCatKey = normalizePartyCategoryKey(rawCat);
 
     const officerName = (resolvedUnit && resolvedUnit.officer) || payload.officer || 'Police Officer';
     const unitName = (resolvedUnit && resolvedUnit.unitName) || payload.unitName || payload.route || 'Duty Force';
@@ -2034,27 +2104,26 @@
     // Determine clean label for marker pill (SI, DSP, CI designations)
     const pillLabel = getOfficerRankPillLabel(payload);
 
-    let cleanUnitName = (payload.unitName || payload.route || 'Duty Force').trim();
+    let cleanUnitName = (unitName || payload.route || 'Duty Force').trim();
     cleanUnitName = cleanUnitName.replace(/^(SSF|SF|RM|QRT)\s*:\s*\1\b/i, '$1');
     cleanUnitName = cleanUnitName.replace(/^(SSF|SF|RM|QRT)\s*:\s*(\1-)/i, '$2');
 
     // Category styling
     let catColor = '#2563eb'; // blue for Route Mobiles
     let catIcon = 'fa-car-side';
-    const catLower = cat.toLowerCase();
-    if (catLower.includes('special striking') || catLower.includes('ssf')) {
+    if (assignedCatKey === 'SSF') {
       catColor = '#7c3aed';
       catIcon = 'fa-shield-halved';
-    } else if (catLower.includes('striking') || catLower.includes('sf')) {
+    } else if (assignedCatKey === 'SF') {
       catColor = '#d97706';
       catIcon = 'fa-bolt';
-    } else if (catLower.includes('qrt')) {
+    } else if (assignedCatKey === 'QRT') {
       catColor = '#059669';
       catIcon = 'fa-person-military-rifle';
-    } else if (catLower.includes('reserve')) {
+    } else if (assignedCatKey === 'RESERVE') {
       catColor = '#10b981';
       catIcon = 'fa-building-columns';
-    } else if (catLower.includes('static')) {
+    } else if (assignedCatKey === 'STATIC') {
       catColor = '#06b6d4';
       catIcon = 'fa-tower-observation';
     }
@@ -2112,7 +2181,6 @@
       iconAnchor: [0, 0]
     });
 
-    const assignedCatKey = ((resolvedUnit && resolvedUnit.categoryKey) || payload.categoryKey || 'RM').toUpperCase();
     if (sdpoSubordinateMarkers[unitKey]) {
       const existing = sdpoSubordinateMarkers[unitKey];
       existing.marker.setLatLng([lat, lng]);
@@ -4838,11 +4906,8 @@
       renderUnitPreview(assignedUnit);
     }
 
-    // Purge any stale subordinate markers on login to guarantee completely clean map
-    for (const k in sdpoSubordinateMarkers) {
-      try { officerMap.removeLayer(sdpoSubordinateMarkers[k].marker); } catch (e) {}
-    }
-    sdpoSubordinateMarkers = {};
+    // Apply category filters to existing live markers
+    applySdpoCategoryFilter();
 
     // Configure Multi-Officer Live Monitoring for all forces (Routes, SF, SSF, QRT, Reserve, Static)
     const activeSdpo = getActiveSdpoConfig();
