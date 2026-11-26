@@ -128,8 +128,8 @@ def run_conversion():
         elif sno == 243:
             lon_raw = '84.45476'
         elif sno == 90:
-            lat_raw = '18.31313'
-            lon_raw = '83.876209'
+            lat_raw = '18.31339'
+            lon_raw = '83.89632'
         elif sno == 355 or '18.7239942' in lat_raw:
             lat_raw = '18.723945'
             lon_raw = '84.461552'

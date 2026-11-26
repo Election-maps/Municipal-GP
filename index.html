@@ -1418,8 +1418,8 @@
         </div>
     </div>
     <!-- Load Local Stations Dataset & Precomputed Road Routes Geometry -->
-    <script src="data/stations.js?v=20261126_v1"></script>
-    <script defer src="data/routes_geometry.js?v=20261126_v1"></script>
+    <script src="data/stations.js?v=20261126_v2"></script>
+    <script defer src="data/routes_geometry.js?v=20261126_v2"></script>
     <!-- Main Application JavaScript Logic -->
     <script>
         // Global State
@@ -1476,7 +1476,7 @@
         }
         // Initialize Data (LocalStorage -> window.INITIAL_STATIONS -> fetch fallback)
         async function initializeDataset() {
-            const DATASET_VERSION = "2026-11-26_v1_sno90_coords";
+            const DATASET_VERSION = "2026-11-26_v2_sno90_coords";
             const savedVer = localStorage.getItem('POLICE_ELECTION_DATASET_VERSION');
             if (savedVer !== DATASET_VERSION) {
                 localStorage.removeItem('POLICE_ELECTION_STATIONS_DATA');
