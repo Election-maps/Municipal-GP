@@ -127,10 +127,13 @@ def run_conversion():
             lon_raw = '84.509315'
         elif sno == 243:
             lon_raw = '84.45476'
+        elif sno == 90:
+            lat_raw = '18.31313'
+            lon_raw = '83.876209'
         elif sno == 355 or '18.7239942' in lat_raw:
             lat_raw = '18.723945'
             lon_raw = '84.461552'
-        elif sno == 377 or '80.404696' in lon_raw or '18.711484' in lat_raw or '8.711484' in lat_raw or lat_raw == '18.31313':
+        elif sno == 377 or '80.404696' in lon_raw or '18.711484' in lat_raw or '8.711484' in lat_raw:
             lat_raw = '18.313155306466673'
             lon_raw = '83.89630250580744'
         

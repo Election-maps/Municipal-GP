@@ -2694,8 +2694,8 @@ window.INITIAL_STATIONS = [
         "pc": "WPC 706 -SKLM II Town PS- 9182552254",
         "hg": "HG 80 - 9618484370",
         "others": "",
-        "latitude": "18.313273",
-        "longitude": "83.5982",
+        "latitude": "18.31313",
+        "longitude": "83.876209",
         "route_staff": "M. Balakrishnamurthy, ASI 1236- SKL 2 tn PS -9492265836",
         "route_staff_ph_no": "9492265836"
     },
