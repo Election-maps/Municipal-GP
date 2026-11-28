@@ -272,7 +272,7 @@
                         </div>
                     </div>
                     <div class="text-xl font-black text-blue-950 mt-1" id="dash-total-ps">0</div>
-                    <span class="text-[10px] font-semibold text-blue-600" id="dash-ps-count">0 Police Stations</span>
+                    <span class="text-[10px] font-semibold text-blue-600" id="dash-ps-count">0 Mandals</span>
                 </div>
                 <!-- Normal (Translucent Green) -->
                 <div class="p-3 rounded-xl shadow-sm border border-emerald-300/90 border-l-4 border-l-emerald-500 bg-gradient-to-br from-emerald-50/95 via-emerald-50/40 to-white backdrop-blur-sm transition hover:shadow-md">
@@ -330,32 +330,32 @@
                     <span class="text-[10px] font-semibold text-purple-700" id="dash-routes-count">0 Patrol Routes</span>
                 </div>
             </div>
-            <!-- Police Stations Quick Master Matrix (Enlarged to fill full height down to bottom) -->
+            <!-- Mandal Quick Master Matrix (Enlarged to fill full height down to bottom) -->
             <div id="dash-matrix-card" style="height: calc(100vh - 250px); min-height: 560px;" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col flex-1">
                 <div class="p-3 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center gap-2">
                     <div class="flex items-center gap-2">
                         <h3 class="font-bold text-xs text-slate-800 flex items-center gap-1.5">
-                            <i class="fa-solid fa-building-shield text-blue-600"></i> Police Station Summary Matrix
+                            <i class="fa-solid fa-map-location-dot text-blue-600"></i> Mandal Summary Matrix
                         </h3>
-                        <span class="text-[10px] text-slate-600 font-bold bg-slate-200/80 px-2 py-0.5 rounded-full" id="dash-matrix-ps-count">30 Police Stations</span>
+                        <span class="text-[10px] text-slate-600 font-bold bg-slate-200/80 px-2 py-0.5 rounded-full" id="dash-matrix-ps-count">13 Mandals</span>
                     </div>
                     <div class="flex items-center gap-2.5">
                         <div class="relative">
                             <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
-                            <input type="text" id="dash-matrix-search" oninput="filterPSMatrix()" placeholder="Search Police Station..." class="pl-7 pr-2.5 py-1 text-xs border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 bg-white w-40 sm:w-48">
+                            <input type="text" id="dash-matrix-search" oninput="filterPSMatrix()" placeholder="Search Mandal..." class="pl-7 pr-2.5 py-1 text-xs border border-slate-300 rounded-md focus:ring-1 focus:ring-blue-500 bg-white w-40 sm:w-48">
                         </div>
                         <button onclick="toggleMatrixHeightMode()" id="btn-matrix-toggle-height" class="px-2.5 py-1 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] flex items-center gap-1.5 border border-blue-200 transition cursor-pointer shadow-xs" title="Toggle Full Table View / Fit Screen">
                             <i class="fa-solid fa-up-right-and-down-left-from-center" id="icon-matrix-height"></i>
-                            <span id="label-matrix-height">Expand All (30 PS)</span>
+                            <span id="label-matrix-height">Expand All (13 Mandals)</span>
                         </button>
-                        <span class="text-[10px] text-slate-500 hidden sm:inline"><i class="fa-solid fa-arrow-pointer text-blue-600 mr-1"></i>Click on any PS to open live map</span>
+                        <span class="text-[10px] text-slate-500 hidden sm:inline"><i class="fa-solid fa-arrow-pointer text-blue-600 mr-1"></i>Click on any Mandal to open live map</span>
                     </div>
                 </div>
                 <div class="overflow-x-auto overflow-y-auto flex-1" style="flex: 1 1 0%; min-height: 0;">
                     <table class="w-full text-left border-collapse text-[11px]">
                         <thead class="bg-slate-100 text-slate-700 sticky top-0 border-b border-slate-200 font-semibold z-10 shadow-xs">
                             <tr>
-                                <th class="p-2.5">Police Station</th>
+                                <th class="p-2.5">Name of the Mandal</th>
                                 <th class="p-2.5 text-center">Total PS</th>
                                 <th class="p-2.5 text-center text-emerald-700">Normal</th>
                                 <th class="p-2.5 text-center text-amber-700">Sensitive</th>
@@ -408,11 +408,11 @@
                     </button>
                 </div>
                 <div id="map-filter-row-inputs" class="flex flex-wrap items-end gap-2.5">
-                    <!-- Police Station Filter -->
+                    <!-- Mandal Filter -->
                     <div class="flex-1 min-w-[140px] max-w-xs">
-                        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Police Station</label>
+                        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Mandal</label>
                         <select id="map-filter-psname" onchange="onMapPSChange(this.value)" class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 bg-white font-medium">
-                            <option value="">-- All Police Stations --</option>
+                            <option value="">-- All Mandals --</option>
                         </select>
                     </div>
                     <!-- Route No Filter -->
@@ -618,11 +618,11 @@
                     </button>
                 </div>
                 <div id="live-filter-row-inputs" class="flex flex-nowrap items-end gap-1.5 pb-1 relative overflow-x-auto whitespace-nowrap">
-                    <!-- Police Station Filter -->
+                    <!-- Mandal Filter -->
                     <div class="w-32 sm:w-36 shrink-0">
-                        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-0.5 truncate">Police Station</label>
+                        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-0.5 truncate">Mandal</label>
                         <select id="live-filter-psname" onchange="onLiveMapPSChange(this.value)" class="w-full border border-slate-300 rounded px-1.5 py-1 text-xs focus:ring-1 focus:ring-blue-500 bg-white font-medium">
-                            <option value="">-- All Police Stations --</option>
+                            <option value="">-- All Mandals --</option>
                         </select>
                     </div>
                     <!-- Route No Filter -->
@@ -848,9 +848,9 @@
                             <div id="table-psl-suggestions" class="hidden absolute left-0 right-0 top-full mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-2xl z-[1500] max-h-72 overflow-y-auto divide-y divide-slate-100">
                             </div>
                         </div>
-                        <!-- PS Filter -->
+                        <!-- Mandal Filter -->
                         <select id="table-filter-ps" onchange="onTablePSChange(this.value)" class="border border-slate-300 rounded px-2.5 py-1.5 text-xs bg-white focus:ring-1 focus:ring-blue-500 font-medium">
-                            <option value="">-- All Police Stations --</option>
+                            <option value="">-- All Mandals --</option>
                         </select>
                         <!-- Route Filter -->
                         <select id="table-filter-route" onchange="onTableSearch()" class="border border-slate-300 rounded px-2.5 py-1.5 text-xs bg-white focus:ring-1 focus:ring-blue-500 font-medium">
@@ -915,9 +915,9 @@
             <div class="bg-white p-3 rounded-lg shadow-sm border border-slate-200">
                 <div class="flex flex-wrap items-center gap-3">
                     <div class="w-56">
-                        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Select Police Station</label>
+                        <label class="block text-[10px] font-bold text-slate-600 uppercase mb-1">Select Mandal</label>
                         <select id="route-tab-psname" onchange="onRouteTabPSChange(this.value)" class="w-full border border-slate-300 rounded px-2.5 py-1.5 text-xs font-semibold bg-white focus:ring-1 focus:ring-blue-500">
-                            <option value="">-- Select Police Station --</option>
+                            <option value="">-- Select Mandal --</option>
                         </select>
                     </div>
                     <div class="w-48">
@@ -978,7 +978,7 @@
                             <span class="text-[10px] text-slate-500" id="route-shown-count">0 Stations Shown</span>
                         </div>
                         <div class="overflow-y-auto max-h-[380px] p-2 space-y-2" id="route-stations-list">
-                            <p class="text-slate-400 text-center py-6 text-xs">Please select Police Station and Route No above to view details.</p>
+                            <p class="text-slate-400 text-center py-6 text-xs">Please select Mandal and Route No above to view details.</p>
                         </div>
                     </div>
                 </div>
@@ -1158,7 +1158,7 @@
             <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
                 <div class="relative flex-1">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="routes-modal-search" oninput="renderRoutesDirectory()" placeholder="Search Police Station, Route or Village name..." class="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                    <input type="text" id="routes-modal-search" oninput="renderRoutesDirectory()" placeholder="Search Mandal, Route or Village name..." class="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
                 </div>
                 <span id="routes-modal-count" class="text-xs font-bold text-slate-600 bg-white px-2.5 py-1.5 rounded border border-slate-200 whitespace-nowrap">
                     0 Routes
@@ -1599,25 +1599,26 @@
         }
         // Populate all filter dropdowns
         function populateDropdowns() {
-            const psSet = new Set();
+            const mandalSet = new Set();
             const routeSet = new Set();
             allStations.forEach(s => {
-                if (s.psname) psSet.add(s.psname.trim());
+                const m = (s.mandal_zptc_segment || s.psname || '').trim();
+                if (m) mandalSet.add(m);
                 if (s.route_no) routeSet.add(s.route_no.trim());
             });
-            const sortedPS = Array.from(psSet).sort();
+            const sortedMandals = Array.from(mandalSet).sort();
             const sortedRoutes = Array.from(routeSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-            // Populate Map PS
+            // Populate Map Mandal
             const mapPsSelect = document.getElementById('map-filter-psname');
             const tablePsSelect = document.getElementById('table-filter-ps');
             const routeTabPsSelect = document.getElementById('route-tab-psname');
             // Batch generate options
-            const psOptions = sortedPS.map(ps => `<option value="${ps}">${ps}</option>`).join('');
-            if (mapPsSelect) mapPsSelect.innerHTML = '<option value="">-- All Police Stations --</option>' + psOptions;
-            if (tablePsSelect) tablePsSelect.innerHTML = '<option value="">-- All Police Stations --</option>' + psOptions;
-            if (routeTabPsSelect) routeTabPsSelect.innerHTML = '<option value="">-- Select Police Station --</option>' + psOptions;
+            const mandalOptions = sortedMandals.map(m => `<option value="${m}">${m}</option>`).join('');
+            if (mapPsSelect) mapPsSelect.innerHTML = '<option value="">-- All Mandals --</option>' + mandalOptions;
+            if (tablePsSelect) tablePsSelect.innerHTML = '<option value="">-- All Mandals --</option>' + mandalOptions;
+            if (routeTabPsSelect) routeTabPsSelect.innerHTML = '<option value="">-- Select Mandal --</option>' + mandalOptions;
             const livePsSelect = document.getElementById('live-filter-psname');
-            if (livePsSelect) livePsSelect.innerHTML = '<option value="">-- All Police Stations --</option>' + psOptions;
+            if (livePsSelect) livePsSelect.innerHTML = '<option value="">-- All Mandals --</option>' + mandalOptions;
             // Populate Table Routes
             // Populate Live Route Map Routes with Natural Sorting
             const mapRouteSelect = document.getElementById('map-filter-route');
@@ -1674,7 +1675,7 @@
         function renderDashboard() {
             let total = allStations.length;
             let normal = 0, sensitive = 0, critical = 0, hyper = 0, voters = 0;
-            const psMap = {};
+            const mandalMap = {};
             const routeSet = new Set();
             allStations.forEach(s => {
                 const cat = (s.categorization || 'NORMAL').trim().toUpperCase();
@@ -1684,23 +1685,23 @@
                 else normal++;
                 const v = parseInt(s.no_of_voters, 10);
                 if (!isNaN(v)) voters += v;
-                const ps = (s.psname || 'Unknown').trim();
-                if (!psMap[ps]) {
-                    psMap[ps] = { total: 0, normal: 0, sensitive: 0, critical: 0, hyper: 0, voters: 0, routes: new Set() };
+                const mandal = (s.mandal_zptc_segment || s.psname || 'Unknown').trim();
+                if (!mandalMap[mandal]) {
+                    mandalMap[mandal] = { total: 0, normal: 0, sensitive: 0, critical: 0, hyper: 0, voters: 0, routes: new Set() };
                 }
-                psMap[ps].total++;
-                if (cat === 'HYPER SENSITIVE') psMap[ps].hyper++;
-                else if (cat === 'CRITICAL') psMap[ps].critical++;
-                else if (cat === 'SENSITIVE') psMap[ps].sensitive++;
-                else psMap[ps].normal++;
-                if (!isNaN(v)) psMap[ps].voters += v;
+                mandalMap[mandal].total++;
+                if (cat === 'HYPER SENSITIVE') mandalMap[mandal].hyper++;
+                else if (cat === 'CRITICAL') mandalMap[mandal].critical++;
+                else if (cat === 'SENSITIVE') mandalMap[mandal].sensitive++;
+                else mandalMap[mandal].normal++;
+                if (!isNaN(v)) mandalMap[mandal].voters += v;
                 if (s.route_no) {
-                    psMap[ps].routes.add(s.route_no.trim());
+                    mandalMap[mandal].routes.add(s.route_no.trim());
                     routeSet.add(s.route_no.trim());
                 }
             });
             document.getElementById('dash-total-ps').innerText = total.toLocaleString();
-            document.getElementById('dash-ps-count').innerText = `${Object.keys(psMap).length} Police Stations`;
+            document.getElementById('dash-ps-count').innerText = `${Object.keys(mandalMap).length} Mandals`;
             
             document.getElementById('dash-normal-ps').innerText = normal.toLocaleString();
             document.getElementById('dash-normal-pct').innerText = total > 0 ? `${((normal/total)*100).toFixed(1)}% of total` : '0%';
@@ -1712,12 +1713,12 @@
             document.getElementById('dash-hypersensitive-pct').innerText = total > 0 ? `${((hyper/total)*100).toFixed(1)}% of total` : '0%';
             document.getElementById('dash-total-voters').innerText = voters.toLocaleString();
             document.getElementById('dash-routes-count').innerText = `${routeSet.size} Active Patrol Routes`;
-            // Render PS Summary Matrix
-            renderPSMatrix(psMap);
+            // Render Mandal Summary Matrix
+            renderPSMatrix(mandalMap);
         }
         let currentPsMap = {};
-        function renderPSMatrix(psMap) {
-            currentPsMap = psMap || currentPsMap || {};
+        function renderPSMatrix(mandalMap) {
+            currentPsMap = mandalMap || currentPsMap || {};
             filterPSMatrix();
         }
         function filterPSMatrix() {
@@ -1730,8 +1731,8 @@
             let totStations = 0, totNormal = 0, totSens = 0, totCrit = 0, totHyp = 0, totRoutes = 0, totVoters = 0;
             let countShown = 0;
             let rowsHtml = '';
-            sorted.forEach(ps => {
-                const info = currentPsMap[ps];
+            sorted.forEach(mandal => {
+                const info = currentPsMap[mandal];
                 totStations += info.total;
                 totNormal += info.normal;
                 totSens += info.sensitive;
@@ -1739,11 +1740,11 @@
                 totHyp += info.hyper;
                 totRoutes += info.routes.size;
                 totVoters += info.voters;
-                if (q && !ps.toLowerCase().includes(q)) return;
+                if (q && !mandal.toLowerCase().includes(q)) return;
                 countShown++;
                 rowsHtml += `
                     <tr class="hover:bg-blue-50/70 border-b border-slate-100 transition">
-                        <td class="p-2.5 font-bold text-slate-900">${ps}</td>
+                        <td class="p-2.5 font-bold text-slate-900">${mandal}</td>
                         <td class="p-2.5 text-center font-bold text-slate-800">${info.total}</td>
                         <td class="p-2.5 text-center font-bold text-emerald-700 bg-emerald-50/30">${info.normal}</td>
                         <td class="p-2.5 text-center font-bold text-amber-700 bg-amber-50/30">${info.sensitive}</td>
@@ -1752,7 +1753,7 @@
                         <td class="p-2.5 text-center font-semibold text-slate-700">${info.routes.size}</td>
                         <td class="p-2.5 text-center text-slate-700 font-semibold">${info.voters.toLocaleString()}</td>
                         <td class="p-2.5 text-center">
-                            <button onclick="jumpToPSMap('${ps}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1 rounded text-[10px] transition shadow-xs flex items-center justify-center gap-1 mx-auto cursor-pointer">
+                            <button onclick="jumpToPSMap('${mandal}')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1 rounded text-[10px] transition shadow-xs flex items-center justify-center gap-1 mx-auto cursor-pointer">
                                 <i class="fa-solid fa-map-location-dot"></i> View Map
                             </button>
                         </td>
@@ -1761,11 +1762,13 @@
             });
             tbody.innerHTML = rowsHtml;
             const countEl = document.getElementById('dash-matrix-ps-count');
-            if (countEl) countEl.innerText = `${countShown} Police Stations`;
+            if (countEl) countEl.innerText = `${countShown} Mandals`;
+            const labelHeight = document.getElementById('label-matrix-height');
+            if (labelHeight && !isMatrixExpanded) labelHeight.innerText = `Expand All (${countShown} Mandals)`;
             if (tfoot) {
                 tfoot.innerHTML = `
                     <tr>
-                        <td class="p-2.5 uppercase tracking-wide">District Total (${countShown} PS)</td>
+                        <td class="p-2.5 uppercase tracking-wide">District Total (${countShown} Mandals)</td>
                         <td class="p-2.5 text-center font-black">${totStations.toLocaleString()}</td>
                         <td class="p-2.5 text-center font-black text-emerald-800">${totNormal.toLocaleString()}</td>
                         <td class="p-2.5 text-center font-black text-amber-800">${totSens.toLocaleString()}</td>
@@ -1775,18 +1778,20 @@
                         <td class="p-2.5 text-center font-black">${totVoters.toLocaleString()}</td>
                         <td class="p-2.5 text-center">
                             <button onclick="switchTab('map')" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-2.5 py-1 rounded text-[10px] shadow-xs cursor-pointer">
-                                <i class="fa-solid fa-globe"></i> All PS Map
+                                <i class="fa-solid fa-globe"></i> All Mandals Map
                             </button>
                         </td>
                     </tr>
                 `;
             }
         }
-        function jumpToPSMap(psName) {
+        function jumpToPSMap(mandalName) {
             switchTab('map');
             const psSelect = document.getElementById('map-filter-psname');
-            psSelect.value = psName;
-            onMapPSChange(psName);
+            if (psSelect) {
+                psSelect.value = mandalName;
+                onMapPSChange(mandalName);
+            }
         }
         let isMatrixExpanded = false;
         function toggleMatrixHeightMode() {
@@ -1803,7 +1808,8 @@
             } else {
                 card.style.height = 'calc(100vh - 250px)';
                 card.style.minHeight = '560px';
-                if (label) label.innerText = 'Expand All (30 PS)';
+                const count = Object.keys(currentPsMap).length || 13;
+                if (label) label.innerText = `Expand All (${count} Mandals)`;
                 if (icon) icon.className = 'fa-solid fa-up-right-and-down-left-from-center';
             }
         }
@@ -1906,7 +1912,12 @@
             let optsHtml = '<option value="">-- All Routes --</option>';
             if (psname) {
                 const routesInPS = new Set();
-                allStations.filter(s => (s.psname || '').trim() === psname.trim()).forEach(s => {
+                const sel = psname.trim().toLowerCase();
+                allStations.filter(s => {
+                    const m = (s.mandal_zptc_segment || '').trim().toLowerCase();
+                    const p = (s.psname || '').trim().toLowerCase();
+                    return m === sel || p === sel;
+                }).forEach(s => {
                     if (s.route_no) routesInPS.add(s.route_no.trim());
                 });
                 const sorted = Array.from(routesInPS).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
@@ -2000,7 +2011,12 @@
             const distFilter = (document.getElementById('map-filter-distance')?.value || '').trim();
             // Strict filtering matching Polling Station Report logic
             filteredMapStations = allStations.filter(s => {
-                if (selectedPS && (s.psname || '').trim() !== selectedPS) return false;
+                if (selectedPS) {
+                    const m = (s.mandal_zptc_segment || '').trim().toLowerCase();
+                    const p = (s.psname || '').trim().toLowerCase();
+                    const sel = selectedPS.toLowerCase();
+                    if (m !== sel && p !== sel) return false;
+                }
                 if (selectedRoute && (s.route_no || '').trim() !== selectedRoute) return false;
                 
                 // Category filter (dropdown or pill)
@@ -3045,7 +3061,7 @@
             if (!container) return;
             const routeMap = {};
             allStations.forEach(s => {
-                const ps = (s.psname || 'Unknown').trim();
+                const ps = (s.mandal_zptc_segment || s.psname || 'Unknown').trim();
                 const r = (s.route_no || '1').trim();
                 const key = `${ps}___${r}`;
                 if (!routeMap[key]) {
@@ -3096,7 +3112,7 @@
                                 <span class="bg-blue-600 text-white font-black px-2 py-0.5 rounded text-xs shadow-xs">
                                     ROUTE ${info.route}
                                 </span>
-                                <h4 class="font-bold text-slate-900 text-xs">${info.ps} Police Station</h4>
+                                <h4 class="font-bold text-slate-900 text-xs">${info.ps} Mandal</h4>
                                 <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-600">
                                     <span><b>Route Inchage:</b> ${info.route_incharge || info.staff || '-'}</span>
                                     ${info.striking_force_incharge ? `<span>| <b>Striking force Incharge:</b> ${info.striking_force_incharge}</span>` : ''}
@@ -3355,7 +3371,7 @@
         }
         function initTableColumns() {
             try {
-                const COLS_VERSION = "2026-11-28_v18_phase2_gp_final";
+                const COLS_VERSION = "2026-11-28_v19_mandal_matrix_dashboard";
                 if (localStorage.getItem('police_election_cols_version') !== COLS_VERSION) {
                     localStorage.removeItem('police_election_cols_order');
                     localStorage.removeItem('police_election_cols_hidden');
@@ -3573,7 +3589,12 @@
                 let optsHtml = '<option value="">-- All Routes --</option>';
                 if (psname) {
                     const routesInPS = new Set();
-                    allStations.filter(s => (s.psname || '').trim() === psname.trim()).forEach(s => {
+                    const sel = psname.trim().toLowerCase();
+                    allStations.filter(s => {
+                        const m = (s.mandal_zptc_segment || '').trim().toLowerCase();
+                        const p = (s.psname || '').trim().toLowerCase();
+                        return m === sel || p === sel;
+                    }).forEach(s => {
                         if (s.route_no) routesInPS.add(s.route_no.trim());
                     });
                     const sorted = Array.from(routesInPS).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
@@ -3818,7 +3839,12 @@
             if (document.getElementById('cat-count-hyper')) document.getElementById('cat-count-hyper').innerText = cHyper.toLocaleString();
             // Filter Dataset
             tableFilteredStations = allStations.filter(s => {
-                if (psFilter && (s.psname || '').trim() !== psFilter) return false;
+                if (psFilter) {
+                    const m = (s.mandal_zptc_segment || '').trim().toLowerCase();
+                    const p = (s.psname || '').trim().toLowerCase();
+                    const sel = psFilter.toLowerCase();
+                    if (m !== sel && p !== sel) return false;
+                }
                 if (routeFilter && (s.route_no || '').trim() !== routeFilter) return false;
                 
                 // Quick category pill filter
@@ -4004,7 +4030,12 @@
             let opts = '<option value="">-- Select Route No --</option>';
             if (psname) {
                 const routesInPS = new Set();
-                allStations.filter(s => (s.psname || '').trim() === psname.trim()).forEach(s => {
+                const sel = psname.trim().toLowerCase();
+                allStations.filter(s => {
+                    const m = (s.mandal_zptc_segment || '').trim().toLowerCase();
+                    const p = (s.psname || '').trim().toLowerCase();
+                    return m === sel || p === sel;
+                }).forEach(s => {
                     if (s.route_no) routesInPS.add(s.route_no.trim());
                 });
                 opts += Array.from(routesInPS).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).map(r => `<option value="${r}">Route - ${r}</option>`).join('');
@@ -4021,11 +4052,16 @@
             const selectedRoute = (document.getElementById('route-tab-routeno')?.value || '').trim();
             const selectedCat = (document.getElementById('route-tab-category')?.value || '').trim();
             if (!selectedPS || !selectedRoute) {
-                alert('Please select Police Station and Route No first.');
+                alert('Please select Mandal and Route No first.');
                 return;
             }
             // All stations for this specific route (to compute totals and breakdown)
-            const routeStations = allStations.filter(s => (s.psname || '').trim() === selectedPS && (s.route_no || '').trim() === selectedRoute);
+            const selM = selectedPS.toLowerCase();
+            const routeStations = allStations.filter(s => {
+                const m = (s.mandal_zptc_segment || '').trim().toLowerCase();
+                const p = (s.psname || '').trim().toLowerCase();
+                return (m === selM || p === selM) && (s.route_no || '').trim() === selectedRoute;
+            });
             if (routeStations.length === 0) {
                 alert('No stations found for this route.');
                 return;
