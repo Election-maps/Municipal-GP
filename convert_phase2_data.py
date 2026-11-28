@@ -128,10 +128,11 @@ for r in range(4, 30):
 
 print(f"SSF extracted: {ssf_count}")
 
-# 4. QRTs (Sheet 'QRTss')
-# Row 2 is header: Col 1: S.No, Col 2: Name of Panchayathi / Team, Col 3: Location / Area, Col 4: Deployed Sub-Inspector / Officer
+# 4. QRTs (Sheet 'QRTss' - Rows 3 to 7: strictly QRT-1 to QRT-5)
 ws_qrt = wb["QRTss"]
 qrt_count = 0
+special_teams = []
+
 for r in range(3, 15):
     sno = clean(ws_qrt.cell(r, 1).value)
     name = clean(ws_qrt.cell(r, 2).value)
@@ -140,31 +141,48 @@ for r in range(3, 15):
     
     if not sno and not name and not officer:
         continue
-    if sno and sno.lower().startswith("total"):
-        continue
         
     phone = extract_phone(officer)
-    qrt_count += 1
-    uid = f"QRT_{sno}_{name}".replace(" ", "_").replace("-", "_").replace("/", "_")
     mandal_name = loc.split(",")[0].replace("Mandals", "").replace("Mandal", "").strip() if loc else "Srikakulam"
-    units.append({
-        "id": uid,
-        "category": "QRTs",
-        "categoryKey": "QRT",
-        "mandal": mandal_name,
-        "route": name,
-        "unitName": f"{name} ({loc})",
-        "hq": loc,
-        "officer": officer.replace("\n", ", "),
-        "phone": phone,
-        "supporting": officer.replace("\n", ", "),
-        "pollingStations": loc
-    })
+    
+    # Strictly QRT teams (QRT-1 to QRT-5)
+    if name.upper().startswith("QRT"):
+        qrt_count += 1
+        uid = f"QRT_{sno}_{name}".replace(" ", "_").replace("-", "_").replace("/", "_")
+        units.append({
+            "id": uid,
+            "category": "QRTs",
+            "categoryKey": "QRT",
+            "mandal": mandal_name,
+            "route": name,
+            "unitName": f"{name} ({loc})",
+            "hq": loc,
+            "officer": officer.replace("\n", ", "),
+            "phone": phone,
+            "supporting": officer.replace("\n", ", "),
+            "pollingStations": loc
+        })
+    else:
+        # Rows 8 to 14: Special Headquarters / Reserve Teams
+        uid = f"Special_Team_{sno}_{name}".replace(" ", "_").replace("-", "_").replace("/", "_")
+        special_teams.append({
+            "id": uid,
+            "category": "Reserve Parties",
+            "categoryKey": "RESERVE",
+            "mandal": mandal_name,
+            "route": name,
+            "unitName": f"{name} ({loc})",
+            "hq": loc,
+            "officer": officer.replace("\n", ", "),
+            "phone": phone,
+            "supporting": officer.replace("\n", ", "),
+            "pollingStations": loc
+        })
 
-print(f"QRT extracted: {qrt_count}")
+print(f"QRT extracted (strictly QRT teams): {qrt_count}")
+print(f"Special Reserve Teams extracted: {len(special_teams)}")
 
 # 5. Addl. SP Reserve (Sheet 'Addl. SP Reserve')
-# Row 1 is header: Col 1: Sl. No., Col 2: Type of Force, Col 3: Area/ Mandal, Col 4: In-Charge Officer, Col 5: Remarks
 ws_asp = wb["Addl. SP Reserve"]
 asp_count = 0
 for r in range(2, 4):
@@ -198,7 +216,6 @@ for r in range(2, 4):
 print(f"Addl SP Reserve extracted: {asp_count}")
 
 # 6. SP Reserve (Sheet 'SP Reserve')
-# Row 1 is header: Col 1: Sl. No., Col 2: Type of Force, Col 3: Area/ Mandal, Col 4: In-Charge Officer, Col 5: Remarks
 ws_sp = wb["SP Reserve"]
 sp_count = 0
 for r in range(2, 3):
@@ -231,8 +248,10 @@ for r in range(2, 3):
 
 print(f"SP Reserve extracted: {sp_count}")
 
+# Add the Special Teams to Reserve Parties
+units.extend(special_teams)
+
 # 7. Static Parties (Sheet 'Statck')
-# Row 2 is header: Col 1: Name of the Mandal, Col 2: Name of the Gram Panchyat, Col 3: Name of the PS, Col 4: PSL, Col 5: Static Party Others
 ws_statck = wb["Statck"]
 statck_count = 0
 for r in range(3, ws_statck.max_row + 1):

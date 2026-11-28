@@ -17,7 +17,7 @@
     <!-- MQTT.js library for real-time live synchronization -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <!-- Pre-loaded Forces Data (Routes, SF, SSF, QRTs, Reserve Parties) -->
-    <script src="route_mobiles_data.js?v=20261128_p2_v4"></script>
+    <script src="route_mobiles_data.js?v=20261128_p2_v5"></script>
     <!-- Live Forces Real-time Tracking Engine -->
     <script src="live_tracking.js?v=20261126_v12"></script>
     <style>
@@ -500,15 +500,15 @@
                     </div>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-rm" checked onchange="onLivePartyCategoryCheckChange('RM', this.checked)" class="w-3 h-3 text-blue-600 accent-blue-600 cursor-pointer">
-                        <span class="w-4 h-4 rounded-full bg-blue-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-car-side text-[8px]"></i></span> Route Mobiles (<span class="legend-rm-count">98</span>)
+                        <span class="w-4 h-4 rounded-full bg-blue-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-car-side text-[8px]"></i></span> Route Mobiles (<span class="legend-rm-count">128</span>)
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-sf" checked onchange="onLivePartyCategoryCheckChange('SF', this.checked)" class="w-3 h-3 text-rose-600 accent-rose-600 cursor-pointer">
-                        <span class="w-4 h-4 rounded-full bg-rose-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-shield-halved text-[8px]"></i></span> Striking Forces - SF (<span class="legend-sf-count">26</span>)
+                        <span class="w-4 h-4 rounded-full bg-rose-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-shield-halved text-[8px]"></i></span> Striking Forces - SF (<span class="legend-sf-count">30</span>)
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-ssf" checked onchange="onLivePartyCategoryCheckChange('SSF', this.checked)" class="w-3 h-3 text-purple-600 accent-purple-600 cursor-pointer">
-                        <span class="w-4 h-4 rounded-full bg-purple-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-user-shield text-[8px]"></i></span> Special SF - SSF (<span class="legend-ssf-count">23</span>)
+                        <span class="w-4 h-4 rounded-full bg-purple-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-user-shield text-[8px]"></i></span> Special SF - SSF (<span class="legend-ssf-count">26</span>)
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-qrt" checked onchange="onLivePartyCategoryCheckChange('QRT', this.checked)" class="w-3 h-3 text-amber-500 accent-amber-500 cursor-pointer">
@@ -516,11 +516,11 @@
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-reserve" checked onchange="onLivePartyCategoryCheckChange('RESERVE', this.checked)" class="w-3 h-3 text-emerald-600 accent-emerald-600 cursor-pointer">
-                        <span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-building-columns text-[8px]"></i></span> Reserve Parties (<span class="legend-reserve-count">5</span>)
+                        <span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-building-columns text-[8px]"></i></span> Reserve Parties (<span class="legend-reserve-count">10</span>)
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-static" checked onchange="onLivePartyCategoryCheckChange('STATIC', this.checked)" class="w-3 h-3 text-cyan-600 accent-cyan-600 cursor-pointer">
-                        <span class="w-4 h-4 rounded-full bg-cyan-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-tower-observation text-[8px]"></i></span> Static Parties (<span class="legend-static-count">13</span>)
+                        <span class="w-4 h-4 rounded-full bg-cyan-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-tower-observation text-[8px]"></i></span> Static Parties (<span class="legend-static-count">27</span>)
                     </label>
                 </div>
             </div>
@@ -531,23 +531,23 @@
             <div class="flex flex-nowrap items-center justify-between gap-2 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white px-2.5 py-1.5 rounded-lg border border-slate-800 shadow-md overflow-x-auto whitespace-nowrap">
                 <div class="flex items-center gap-1 text-xs shrink-0">
                     <span class="font-bold text-amber-400 mr-1 flex items-center gap-1 text-[11px] sm:text-xs">
-                        <i class="fa-solid fa-satellite-dish animate-pulse text-emerald-400"></i> Live Forces (<span id="live-forces-total-badge">157</span>):
+                        <i class="fa-solid fa-satellite-dish animate-pulse text-emerald-400"></i> Live Forces (<span id="live-forces-total-badge">199</span>):
                     </span>
                     <label class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 cursor-pointer transition select-none" id="live-label-party-all" title="అన్నీ ఎంచుకోండి / రద్దు చేయండి (Select / Deselect All)">
                         <input type="checkbox" id="live-check-party-all" checked onchange="toggleAllLivePartyCategories(this.checked)" class="w-3.5 h-3.5 rounded text-blue-600 bg-slate-900 border-slate-500 focus:ring-0 cursor-pointer accent-blue-500">
-                        <span>All (<span id="live-forces-all-count">157</span>)</span>
+                        <span>All (<span id="live-forces-all-count">199</span>)</span>
                     </label>
                     <label class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-blue-300 border border-blue-500/40 cursor-pointer transition select-none" id="live-label-party-rm" title="రూట్ మొబైల్స్ లైవ్ లొకేషన్లు (Routes Live)">
                         <input type="checkbox" id="live-check-party-rm" value="RM" checked onchange="onLivePartyCategoryCheckChange('RM', this.checked)" class="w-3.5 h-3.5 rounded text-blue-600 bg-slate-900 border-slate-500 focus:ring-0 cursor-pointer accent-blue-500">
-                        <span><i class="fa-solid fa-car-side text-blue-400 mr-0.5"></i> Routes (<span id="live-forces-rm-count">98</span>)</span>
+                        <span><i class="fa-solid fa-car-side text-blue-400 mr-0.5"></i> Routes (<span id="live-forces-rm-count">128</span>)</span>
                     </label>
                     <label class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-500/40 cursor-pointer transition select-none" id="live-label-party-sf" title="స్ట్రైకింగ్ ఫోర్స్ లైవ్ లొకేషన్లు (SF Live)">
                         <input type="checkbox" id="live-check-party-sf" value="SF" checked onchange="onLivePartyCategoryCheckChange('SF', this.checked)" class="w-3.5 h-3.5 rounded text-rose-600 bg-slate-900 border-slate-500 focus:ring-0 cursor-pointer accent-rose-500">
-                        <span><i class="fa-solid fa-shield-halved text-rose-400 mr-0.5"></i> SF (<span id="live-forces-sf-count">26</span>)</span>
+                        <span><i class="fa-solid fa-shield-halved text-rose-400 mr-0.5"></i> SF (<span id="live-forces-sf-count">30</span>)</span>
                     </label>
                     <label class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/40 cursor-pointer transition select-none" id="live-label-party-ssf" title="స్పెషల్ స్ట్రైకింగ్ ఫోర్స్ లైవ్ లొకేషన్లు (SSF Live)">
                         <input type="checkbox" id="live-check-party-ssf" value="SSF" checked onchange="onLivePartyCategoryCheckChange('SSF', this.checked)" class="w-3.5 h-3.5 rounded text-purple-600 bg-slate-900 border-slate-500 focus:ring-0 cursor-pointer accent-purple-500">
-                        <span><i class="fa-solid fa-user-shield text-purple-400 mr-0.5"></i> SSF (<span id="live-forces-ssf-count">23</span>)</span>
+                        <span><i class="fa-solid fa-user-shield text-purple-400 mr-0.5"></i> SSF (<span id="live-forces-ssf-count">26</span>)</span>
                     </label>
                     <label class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 cursor-pointer transition select-none" id="live-label-party-qrt" title="క్విక్ రియాక్షన్ టీమ్స్ లైవ్ లొకేషన్లు (QRT Live)">
                         <input type="checkbox" id="live-check-party-qrt" value="QRT" checked onchange="onLivePartyCategoryCheckChange('QRT', this.checked)" class="w-3.5 h-3.5 rounded text-amber-600 bg-slate-900 border-slate-500 focus:ring-0 cursor-pointer accent-amber-500">
@@ -555,7 +555,7 @@
                     </label>
                     <label class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/40 cursor-pointer transition select-none" id="live-label-party-reserve" title="రిజర్వ్ పార్టీల లైవ్ లొకేషన్లు (Reserve Parties Live)">
                         <input type="checkbox" id="live-check-party-reserve" value="RESERVE" checked onchange="onLivePartyCategoryCheckChange('RESERVE', this.checked)" class="w-3.5 h-3.5 rounded text-emerald-600 bg-slate-900 border-slate-500 focus:ring-0 cursor-pointer accent-emerald-500">
-                        <span><i class="fa-solid fa-building-columns text-emerald-400 mr-0.5"></i> Reserve (<span id="live-forces-reserve-count">5</span>)</span>
+                        <span><i class="fa-solid fa-building-columns text-emerald-400 mr-0.5"></i> Reserve (<span id="live-forces-reserve-count">10</span>)</span>
                     </label>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
@@ -742,15 +742,15 @@
                     </div>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-rm" checked onchange="onLivePartyCategoryCheckChange('RM', this.checked)" class="w-3 h-3 text-blue-600 accent-blue-600 cursor-pointer">
-                        <span class="w-4 h-4 rounded-full bg-blue-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-car-side text-[8px]"></i></span> Route Mobiles (<span class="legend-rm-count">98</span>)
+                        <span class="w-4 h-4 rounded-full bg-blue-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-car-side text-[8px]"></i></span> Route Mobiles (<span class="legend-rm-count">128</span>)
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-sf" checked onchange="onLivePartyCategoryCheckChange('SF', this.checked)" class="w-3 h-3 text-rose-600 accent-rose-600 cursor-pointer">
-                        <span class="w-4 h-4 rounded-full bg-rose-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-shield-halved text-[8px]"></i></span> Striking Forces - SF (<span class="legend-sf-count">26</span>)
+                        <span class="w-4 h-4 rounded-full bg-rose-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-shield-halved text-[8px]"></i></span> Striking Forces - SF (<span class="legend-sf-count">30</span>)
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-ssf" checked onchange="onLivePartyCategoryCheckChange('SSF', this.checked)" class="w-3 h-3 text-purple-600 accent-purple-600 cursor-pointer">
-                        <span class="w-4 h-4 rounded-full bg-purple-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-user-shield text-[8px]"></i></span> Special SF - SSF (<span class="legend-ssf-count">23</span>)
+                        <span class="w-4 h-4 rounded-full bg-purple-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-user-shield text-[8px]"></i></span> Special SF - SSF (<span class="legend-ssf-count">26</span>)
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-qrt" checked onchange="onLivePartyCategoryCheckChange('QRT', this.checked)" class="w-3 h-3 text-amber-500 accent-amber-500 cursor-pointer">
@@ -758,11 +758,11 @@
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-reserve" checked onchange="onLivePartyCategoryCheckChange('RESERVE', this.checked)" class="w-3 h-3 text-emerald-600 accent-emerald-600 cursor-pointer">
-                        <span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-building-columns text-[8px]"></i></span> Reserve Parties (<span class="legend-reserve-count">5</span>)
+                        <span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-building-columns text-[8px]"></i></span> Reserve Parties (<span class="legend-reserve-count">10</span>)
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-static" checked onchange="onLivePartyCategoryCheckChange('STATIC', this.checked)" class="w-3 h-3 text-cyan-600 accent-cyan-600 cursor-pointer">
-                        <span class="w-4 h-4 rounded-full bg-cyan-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-tower-observation text-[8px]"></i></span> Static Parties (<span class="legend-static-count">13</span>)
+                        <span class="w-4 h-4 rounded-full bg-cyan-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-tower-observation text-[8px]"></i></span> Static Parties (<span class="legend-static-count">27</span>)
                     </label>
                 </div>
             </div>
