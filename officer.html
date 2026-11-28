@@ -21,7 +21,7 @@
   <!-- MQTT.js library -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <!-- Pre-loaded Forces Data (Routes, SF, SSF, QRTs, Reserve Parties) -->
-  <script src="route_mobiles_data.js?v=20261128_p2"></script>
+  <script src="route_mobiles_data.js?v=20261128_p2_v3"></script>
   <!-- Pre-loaded Srikakulam Mandals GeoJSON Boundaries -->
   <script src="srikakulam_mandals.js?v=20261119_v3"></script>
 
@@ -920,102 +920,9 @@
   });
 
   // -------------------------------------------------------------
-  // Data Load: 170 Units (Routes, SF, SSF, QRTs, Reserve Parties, Static - M & GP 2511-14)
-  // Authoritative inline fallback for all 6 officers from Add1.xlsx to guarantee 100% login on cached APK WebViews
+  // Data Load: 225 Units (Routes, SF, SSF, QRTs, Reserve Parties, Static Parties - Phase 2)
   // -------------------------------------------------------------
-  const ADD1_FALLBACK_UNITS = [
-    {
-      "id": "RM_Sompeta_6",
-      "category": "Route Mobiles",
-      "categoryKey": "RM",
-      "mandal": "Sompeta",
-      "route": "RM-6",
-      "unitName": "RM-6 (Sompeta)",
-      "officer": "HC-205, BRV PS,\n8639521714",
-      "phone": "8639521714",
-      "supporting": "HC 810 S.Demudu, BRV PS 8985044458",
-      "pollingStations": "4 Polling Stations",
-      "hq": "Sompeta"
-    },
-    {
-      "id": "SSF_KAVITI_1",
-      "category": "Special Striking Forces",
-      "categoryKey": "SSF",
-      "mandal": "KAVITI",
-      "route": "SSF-1",
-      "unitName": "SSF-1 (KAVITI)",
-      "officer": "V.Nagaraju, CI, VR, Srikakulam @ Kaviti of Kaviti Mandal ,",
-      "phone": "9948597720",
-      "supporting": "APSP PC 28 SALINA LINGARAJU, APSP PC 77, CH S PRAVEENKUMAR 9000695091",
-      "pollingStations": "Kaviti",
-      "hq": "Kaviti"
-    },
-    {
-      "id": "QRT_4",
-      "category": "QRTs",
-      "categoryKey": "QRT",
-      "mandal": "Srikakulam",
-      "route": "QRT-2",
-      "unitName": "QRT-2 (Srikakulam)",
-      "officer": "N.V.Ramana, DSP, DAR, Srikakulam, 6309990813",
-      "phone": "6309990813",
-      "supporting": "",
-      "pollingStations": "Srikakulam Town",
-      "hq": "Srikakulam"
-    },
-    {
-      "id": "Addl_SP_Reserve_1",
-      "category": "Reserve Parties",
-      "categoryKey": "RESERVE",
-      "mandal": "Entire KSB Sub-Div. \n(GP 1st Phase)",
-      "route": "Addl. SP Reserve - 1",
-      "unitName": "Addl. SP Reserve - 1 (Kasibugga Sub-Div)",
-      "officer": "Sri P. Srinivasarao, Addl.SP, Admin, Srikakulam,6309990801",
-      "phone": "6309990801",
-      "supporting": "",
-      "pollingStations": "Kasibugga Sub-Division",
-      "hq": "Kasibugga Sub-Division"
-    },
-    {
-      "id": "Addl_SP_Reserve_2",
-      "category": "Reserve Parties",
-      "categoryKey": "RESERVE",
-      "mandal": "Srikakulam & Amadalavalasa",
-      "route": "Addl. SP Reserve - 2",
-      "unitName": "Addl. SP Reserve - 2 (Srikakulam & Amadalavalasa)",
-      "officer": "Sri Ch.Vivekananda, Addl.SP, V&E, Srikakulam,8008203236",
-      "phone": "8008203236",
-      "supporting": "",
-      "pollingStations": "Srikakulam & Amadalavalasa",
-      "hq": "Srikakulam & Amadalavalasa"
-    },
-    {
-      "id": "SSF_Amadalavalasa_3",
-      "category": "Special Striking Forces",
-      "categoryKey": "SSF",
-      "mandal": "Amadalavalasa",
-      "route": "SSF-3",
-      "unitName": "SSF-3 (Amadalavalasa - Chintada)",
-      "officer": "M. Nageswara Rao, CI, VR, Srikakulam, 7013269612",
-      "phone": "7013269612",
-      "supporting": "APSP PC 8-9989325247, APSP PC 09-82478184112",
-      "pollingStations": "Amadalavalasa",
-      "hq": "Chintada"
-    },
-    {
-      "id": "SSF_Amadalavalasa_SBX",
-      "category": "Special Striking Forces",
-      "categoryKey": "SSF",
-      "mandal": "Amadalavalasa",
-      "route": "Special Striking Force",
-      "unitName": "SSF (Amadalavalasa - CI SBX)",
-      "officer": "B.V Venkateswara Rao, CI, SBX, 6309990831",
-      "phone": "6309990831",
-      "supporting": "",
-      "pollingStations": "Amadalavalasa",
-      "hq": "Amadalavalasa"
-    }
-  ];
+  const ADD1_FALLBACK_UNITS = [];
 
   function mergeAdd1Units(targetList) {
     if (!Array.isArray(targetList)) targetList = [];
