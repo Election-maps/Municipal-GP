@@ -21,7 +21,7 @@
   <!-- MQTT.js library -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <!-- Pre-loaded Forces Data (Routes, SF, SSF, QRTs, Reserve Parties) -->
-  <script src="route_mobiles_data.js?v=20261128_p2_v3"></script>
+  <script src="route_mobiles_data.js?v=20261128_p2_v4"></script>
   <!-- Pre-loaded Srikakulam Mandals GeoJSON Boundaries -->
   <script src="srikakulam_mandals.js?v=20261119_v3"></script>
 
@@ -1240,288 +1240,166 @@
   }
 
   // -------------------------------------------------------------
-  // Supervisory Multi-Officer Live Monitoring (SDPO & Circle Inspectors):
-  // 1 District Head (SP - All 30 Mandals) + 3 SDPOs (Division level) + 12 CIs/Inspectors (Circle level) + 3 DSPs
+  // Supervisory Multi-Officer Live Monitoring (Phase-2 Leadership, DSPs, QRTs, SSF CIs):
   // -------------------------------------------------------------
   const SDPO_MONITORS = {
-    // District Level Leadership Monitors (SP & Addl. SPs - All Mandals)
+    // 1. SP Reserve (Superintendent of Police - All 13 Phase-2 Mandals)
     '9704452107': {
       phone: '9704452107',
-      name: 'SP శ్రీకాకుళం / జిల్లా ఇన్-చార్జ్',
+      name: 'Superintendent of Police శ్రీకాకుళం',
       title: 'జిల్లా వ్యాప్త లైవ్ మ్యాప్ (అన్ని మండలాలు):',
-      subBadge: '30 మండలాల ఫోర్స్ (జిల్లా వ్యాప్తం)',
+      subBadge: '13 మండలాల ఫోర్స్ (Phase-2 జిల్లా వ్యాప్తం)',
       toastMsg: 'జిల్లాలోని మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
       allMandals: true,
       mandals: [
-        'srikakulam', 'amadalavalasa', 'burja', 'etcherla', 'gsigadam', 'gara',
-        'ranastalam', 'laveru', 'ponduru', 'sarubujjili', 'lakshminarsupeta',
-        'tekkali', 'kotabommali', 'santhabommali', 'hiramandalam', 'jalumuru',
-        'kothuru', 'meliaputti', 'nandigam', 'narasannapeta', 'pathapatnam',
-        'polaki', 'saravakota', 'kasibugga', 'ichapuram', 'kanchili', 'kaviti',
-        'mandasa', 'sompeta', 'vajrapukothuru'
+        'amadalavalasa', 'burja', 'etcherla', 'gsigadam', 'hiramandalam',
+        'kothuru', 'lakshminarsupeta', 'laveru', 'meliaputti', 'pathapatnam',
+        'ponduru', 'ranastalam', 'sarubujjili'
       ]
     },
+
+    // 2. Addl. SP Reserves
     '6309990801': {
       phone: '6309990801',
-      name: 'Addl. SP (Admin) శ్రీకాకుళం',
-      title: 'కాసీబుగ్గ సబ్-డివిజన్ / జిల్లా వ్యాప్త లైవ్ మ్యాప్:',
-      subBadge: 'కాసీబుగ్గ సబ్-డివిజన్ ఫోర్స్',
+      name: 'శ్రీ P. శ్రీనివాసరావు, Addl.SP (Admin)',
+      title: 'పాతపట్నం & కొత్తూరు సర్కిల్స్ లైవ్ మ్యాప్:',
+      subBadge: 'పాతపట్నం & కొత్తూరు సర్కిల్స్ ఫోర్స్',
       toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: true,
-      mandals: [
-        'kasibugga', 'ichapuram', 'kanchili', 'kaviti', 'mandasa', 'sompeta', 'vajrapukothuru',
-        'srikakulam', 'amadalavalasa', 'tekkali'
-      ]
+      allMandals: false,
+      mandals: ['pathapatnam', 'kothuru', 'hiramandalam', 'meliaputti']
     },
     '8008203236': {
       phone: '8008203236',
-      name: 'Addl. SP (V&E) శ్రీకాకుళం',
-      title: 'శ్రీకాకుళం & ఆమదాలవలస / జిల్లా వ్యాప్త లైవ్ మ్యాప్:',
-      subBadge: 'శ్రీకాకుళం & ఆమదాలవలస ఫోర్స్',
+      name: 'శ్రీ Ch. వివేకానంద, Addl.SP (V&E)',
+      title: 'జె.ఆర్.పురం & ఆమదాలవలస సర్కిల్స్ లైవ్ మ్యాప్:',
+      subBadge: 'జె.ఆర్.పురం & ఆమదాలవలస సర్కిల్స్ ఫోర్స్',
       toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: true,
+      allMandals: false,
       mandals: [
-        'srikakulam', 'amadalavalasa', 'burja', 'etcherla', 'gsigadam',
-        'gara', 'ranastalam', 'laveru', 'ponduru', 'sarubujjili', 'lakshminarsupeta'
+        'amadalavalasa', 'burja', 'sarubujjili', 'lakshminarsupeta',
+        'ponduru', 'ranastalam', 'laveru', 'etcherla', 'gsigadam'
       ]
     },
 
-    // SDPO Division Level Monitors (3 Sub-Divisions)
-    '6309990804': {
-      phone: '6309990804',
-      name: 'SDPO శ్రీకాకుళం',
-      title: 'SDPO శ్రీకాకుళం లైవ్ మ్యాప్ (11 మండలాలు):',
-      subBadge: '11 మండలాల ఫోర్స్',
-      toastMsg: '11 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'srikakulam', 'amadalavalasa', 'burja', 'etcherla', 'gsigadam',
-        'gara', 'ranastalam', 'laveru', 'ponduru', 'sarubujjili', 'lakshminarsupeta'
-      ]
-    },
-    '6309990811': {
-      phone: '6309990811',
-      name: 'SDPO టెక్కలి',
-      title: 'SDPO టెక్కలి లైవ్ మ్యాప్ (12 మండలాలు):',
-      subBadge: '12 మండలాల ఫోర్స్',
-      toastMsg: '12 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'tekkali', 'kotabommali', 'santhabommali', 'hiramandalam', 'jalumuru',
-        'kothuru', 'meliaputti', 'nandigam', 'narasannapeta', 'pathapatnam',
-        'polaki', 'saravakota'
-      ]
-    },
+    // 3. QRT Incharges (DSPs / SDPOs)
     '6309990805': {
       phone: '6309990805',
-      name: 'SDPO కాశీబుగ్గ',
-      title: 'SDPO కాశీబుగ్గ లైవ్ మ్యాప్ (7 మండలాలు):',
-      subBadge: '7 మండలాల ఫోర్స్',
-      toastMsg: '7 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      name: 'శ్రీ G.V. రమణ, SDPO కాశీబుగ్గ (QRT-1)',
+      title: 'జె.ఆర్.పురం, లావేరు & జి.సిగడాం లైవ్ మ్యాప్:',
+      subBadge: 'జె.ఆర్.పురం, లావేరు, జి.సిగడాం ఫోర్స్',
+      toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
       allMandals: false,
-      mandals: [
-        'kasibugga', 'ichapuram', 'kanchili', 'kaviti', 'mandasa',
-        'sompeta', 'vajrapukothuru'
-      ]
+      mandals: ['ranastalam', 'laveru', 'gsigadam']
     },
-
-    // Circle Level Monitors (12 Circle Incharges)
-    // 1. Amadalavalasa Circle: Amadalavalasa, Burja, Sarubujjili, Lakshminarsupeta, Ponduru
-    '6309990823': {
-      phone: '6309990823',
-      name: 'CI ఆమదాలవలస',
-      title: 'CI ఆమదాలవలస సర్కిల్ లైవ్ మ్యాప్ (5 మండలాలు):',
-      subBadge: '5 మండలాల ఫోర్స్',
-      toastMsg: '5 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'amadalavalasa', 'burja', 'sarubujjili', 'lakshminarsupeta', 'ponduru'
-      ]
-    },
-    // 2. Srikakulam Rural Circle: Gara, Srikakulam
-    '6309990814': {
-      phone: '6309990814',
-      name: 'CI శ్రీకాకుళం రూరల్',
-      title: 'CI శ్రీకాకుళం రూరల్ సర్కిల్ లైవ్ మ్యాప్ (2 మండలాలు):',
-      subBadge: '2 మండలాల ఫోర్స్',
-      toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'gara', 'srikakulam'
-      ]
-    },
-    // 3. JR Puram / Etcherla Circle: Ranastalam, Laveru, Etcherla, G.Sigadam
-    '6309990816': {
-      phone: '6309990816',
-      name: 'CI జేఆర్ పురం / ఎచ్చెర్ల',
-      title: 'CI జేఆర్ పురం సర్కిల్ లైవ్ మ్యాప్ (4 మండలాలు):',
-      subBadge: '4 మండలాల ఫోర్స్',
-      toastMsg: '4 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'ranastalam', 'laveru', 'etcherla', 'gsigadam'
-      ]
-    },
-    // 4. Tekkali PS: Tekkali
-    '6309990860': {
-      phone: '6309990860',
-      name: 'ఇన్‌స్పెక్టర్ టెక్కలి',
-      title: 'ఇన్‌స్పెక్టర్ టెక్కలి లైవ్ మ్యాప్ (టెక్కలి మండలం):',
-      subBadge: 'టెక్కలి మండల ఫోర్స్',
-      toastMsg: 'టెక్కలి మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'tekkali'
-      ]
-    },
-    // 5. Tekkali Rural / Kotabommali Circle: Kotabommali, Santhabommali, Nandigam
-    '6309990817': {
-      phone: '6309990817',
-      name: 'CI కోటబొమ్మాళి / టెక్కలి రూరల్',
-      title: 'CI కోటబొమ్మాళి సర్కిల్ లైవ్ మ్యాప్ (3 మండలాలు):',
-      subBadge: '3 మండలాల ఫోర్స్',
-      toastMsg: '3 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'kotabommali', 'santhabommali', 'nandigam'
-      ]
-    },
-    // 6. Kothuru Circle: Hiramandalam, Kothuru
-    '6309990828': {
-      phone: '6309990828',
-      name: 'CI కొత్తూరు',
-      title: 'CI కొత్తూరు సర్కిల్ లైవ్ మ్యాప్ (2 మండలాలు):',
-      subBadge: '2 మండలాల ఫోర్స్',
-      toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'hiramandalam', 'kothuru'
-      ]
-    },
-    // 7. Pathapatnam Circle: Meliaputti, Pathapatnam
-    '6309990822': {
-      phone: '6309990822',
-      name: 'CI పాతపట్నం',
-      title: 'CI పాతపట్నం సర్కిల్ లైవ్ మ్యాప్ (2 మండలాలు):',
-      subBadge: '2 మండలాల ఫోర్స్',
-      toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'meliaputti', 'pathapatnam'
-      ]
-    },
-    // 8. Narasannapeta Circle: Narasannapeta, Polaki, Saravakota, Jalumuru
-    '6309990815': {
-      phone: '6309990815',
-      name: 'CI నరసన్నపేట',
-      title: 'CI నరసన్నపేట సర్కిల్ లైవ్ మ్యాప్ (4 మండలాలు):',
-      subBadge: '4 మండలాల ఫోర్స్',
-      toastMsg: '4 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'narasannapeta', 'polaki', 'saravakota', 'jalumuru'
-      ]
-    },
-    // 9. Kasibugga PS: Kasibugga
-    '6309990825': {
-      phone: '6309990825',
-      name: 'ఇన్‌స్పెక్టర్ కాశీబుగ్గ',
-      title: 'ఇన్‌స్పెక్టర్ కాశీబుగ్గ లైవ్ మ్యాప్ (కాశీబుగ్గ మండలం):',
-      subBadge: 'కాశీబుగ్గ మండల ఫోర్స్',
-      toastMsg: 'కాశీబుగ్గ మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'kasibugga'
-      ]
-    },
-    // 10. Ichapuram Circle: Ichapuram Rural, Kaviti
-    '6309990827': {
-      phone: '6309990827',
-      name: 'CI ఇచ్చాపురం',
-      title: 'CI ఇచ్చాపురం సర్కిల్ లైవ్ మ్యాప్ (2 మండలాలు):',
-      subBadge: '2 మండలాల ఫోర్స్',
-      toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'ichapuram', 'kaviti'
-      ]
-    },
-    // 11. Sompeta Circle: Kanchili, Sompeta
-    '6309990819': {
-      phone: '6309990819',
-      name: 'CI సోంపేట',
-      title: 'CI సోంపేట సర్కిల్ లైవ్ మ్యాప్ (2 మండలాలు):',
-      subBadge: '2 మండలాల ఫోర్స్',
-      toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'kanchili', 'sompeta'
-      ]
-    },
-    // 12. Kasibugga Rural / Mandasa Circle: Mandasa, Vajrapukothuru
-    '6309990818': {
-      phone: '6309990818',
-      name: 'CI కాశీబుగ్గ రూరల్ / మందస',
-      title: 'CI మందస / వజ్రపుకొత్తూరు సర్కిల్ లైవ్ మ్యాప్ (2 మండలాలు):',
-      subBadge: '2 మండలాల ఫోర్స్',
-      toastMsg: '2 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'mandasa', 'vajrapukothuru'
-      ]
-    },
-
-    // DSP Division / Special Wing Monitors (3 DSPs)
     '6309990810': {
       phone: '6309990810',
-      name: 'N. Bhaskara Reddy, DSP (Mahila UPS)',
-      title: 'DSP పరిధి లైవ్ మ్యాప్ (5 మండలాలు):',
-      subBadge: '5 మండలాల ఫోర్స్',
-      toastMsg: '5 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      name: 'N. భాస్కర్ రెడ్డి, DSP (QRT-2)',
+      title: 'పొందూరు మండల లైవ్ మ్యాప్:',
+      subBadge: 'పొందూరు ఫోర్స్',
+      toastMsg: 'పొందూరు మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
       allMandals: false,
-      mandals: [
-        'ponduru', 'ranastalam', 'etcherla', 'laveru', 'gsigadam'
-      ]
-    },
-    '7036228899': {
-      phone: '7036228899',
-      name: 'N.Kalidas, DSP (CID VSP)',
-      title: 'DSP పరిధి లైవ్ మ్యాప్ (4 మండలాలు):',
-      subBadge: '4 మండలాల ఫోర్స్',
-      toastMsg: '4 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
-      allMandals: false,
-      mandals: [
-        'pathapatnam', 'meliaputti', 'kothuru', 'hiramandalam'
-      ]
+      mandals: ['ponduru']
     },
     '6309990813': {
       phone: '6309990813',
-      name: 'N.V.Ramana, DSP (AR DAR)',
-      title: 'DSP పరిధి లైవ్ మ్యాప్ (4 మండలాలు):',
-      subBadge: '4 మండలాల ఫోర్స్',
-      toastMsg: '4 మండలాలలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      name: 'N.V. రమణ, DSP DAR (QRT-3)',
+      title: 'ఎచ్చెర్ల మండల లైవ్ మ్యాప్:',
+      subBadge: 'ఎచ్చెర్ల ఫోర్స్',
+      toastMsg: 'ఎచ్చెర్ల మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
       allMandals: false,
-      mandals: [
-        'sompeta', 'kanchili', 'ichapuram', 'kaviti'
-      ]
+      mandals: ['etcherla']
+    },
+    '6309990804': {
+      phone: '6309990804',
+      name: 'Ch. ధనుంజయ నాయుడు, SDPO శ్రీకాకుళం (QRT-4)',
+      title: 'ఆమదాలవలస, బూర్జ, సారబుజ్జిలి & ఎల్.ఎన్.పేట లైవ్ మ్యాప్:',
+      subBadge: 'ఆమదాలవలస, బూర్జ, సారబుజ్జిలి, ఎల్.ఎన్.పేట ఫోర్స్',
+      toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
+      mandals: ['amadalavalasa', 'burja', 'sarubujjili', 'lakshminarsupeta']
+    },
+    '6309990811': {
+      phone: '6309990811',
+      name: 'శ్రీ D. లక్ష్మణరావు, SDPO టెక్కలి (QRT-5)',
+      title: 'హీరమండలం, కొత్తూరు, పాతపట్నం & మెళియాపుట్టి లైవ్ మ్యాప్:',
+      subBadge: 'హీరమండలం, కొత్తూరు, పాతపట్నం, మెళియాపుట్టి ఫోర్స్',
+      toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
+      mandals: ['hiramandalam', 'kothuru', 'pathapatnam', 'meliaputti']
+    },
+
+    // 4. QRT Special Teams
+    '9494694956': {
+      phone: '9494694956',
+      name: 'M. సుధాకర్, Traffic PS (VAJRA/GAS/SWAT TEAM - 1)',
+      title: 'SWAT TEAM-1 లైవ్ మ్యాప్:',
+      subBadge: 'జిల్లా వ్యాప్త ఫోర్స్',
+      toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: true,
+      mandals: ['amadalavalasa', 'burja', 'etcherla', 'gsigadam', 'hiramandalam', 'kothuru', 'lakshminarsupeta', 'laveru', 'meliaputti', 'pathapatnam', 'ponduru', 'ranastalam', 'sarubujjili']
+    },
+    '9182312965': {
+      phone: '9182312965',
+      name: 'P. అప్పలరెడ్డి (VAJRA/GAS/SWAT TEAM - 2)',
+      title: 'SWAT TEAM-2 లైవ్ మ్యాప్:',
+      subBadge: 'జిల్లా వ్యాప్త ఫోర్స్',
+      toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: true,
+      mandals: ['amadalavalasa', 'burja', 'etcherla', 'gsigadam', 'hiramandalam', 'kothuru', 'lakshminarsupeta', 'laveru', 'meliaputti', 'pathapatnam', 'ponduru', 'ranastalam', 'sarubujjili']
+    },
+    '6309990886': {
+      phone: '6309990886',
+      name: 'T. ఎమ్మానుయేల్ రాజు, SB (CIs SB TEAM)',
+      title: 'SB టీమ్ లైవ్ మ్యాప్:',
+      subBadge: 'జిల్లా వ్యాప్త ఫోర్స్',
+      toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: true,
+      mandals: ['amadalavalasa', 'burja', 'etcherla', 'gsigadam', 'hiramandalam', 'kothuru', 'lakshminarsupeta', 'laveru', 'meliaputti', 'pathapatnam', 'ponduru', 'ranastalam', 'sarubujjili']
     },
     '6309990831': {
       phone: '6309990831',
-      name: 'CI (SBX) ఆమదాలవలస / స్పెషల్ స్ట్రైకింగ్ ఫోర్స్',
-      title: 'ఆమదాలవలస మండల లైవ్ మ్యాప్:',
+      name: 'B.V. వెంకటేశ్వరరావు, CI SB-X (Amadalavalasa AC)',
+      title: 'ఆమదాలవలస AC లైవ్ మ్యాప్:',
       subBadge: 'ఆమదాలవలస ఫోర్స్',
       toastMsg: 'ఆమదాలవలస మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
       allMandals: false,
-      mandals: ['amadalavalasa']
+      mandals: ['amadalavalasa', 'burja', 'sarubujjili', 'lakshminarsupeta']
     },
-    '9948597720': {
-      phone: '9948597720',
-      name: 'CI (VR) కవిటి / స్పెషల్ స్ట్రైకింగ్ ఫోర్స్',
-      title: 'కవిటి మండల లైవ్ మ్యాప్:',
-      subBadge: 'కవిటి ఫోర్స్',
-      toastMsg: 'కవిటి మండలంలో ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+    '8919647544': {
+      phone: '8919647544',
+      name: 'P.V.V.S.N. కృష్ణారావు (Task Force CI Team)',
+      title: 'ఎచ్చెర్ల AC లైవ్ మ్యాప్:',
+      subBadge: 'ఎచ్చెర్ల AC ఫోర్స్',
+      toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
       allMandals: false,
-      mandals: ['kaviti']
+      mandals: ['etcherla', 'laveru', 'ranastalam', 'gsigadam']
+    },
+    '6309990939': {
+      phone: '6309990939',
+      name: 'P.V.V.S.N. కృష్ణారావు (Task Force CI Team)',
+      title: 'ఎచ్చెర్ల AC లైవ్ మ్యాప్:',
+      subBadge: 'ఎచ్చెర్ల AC ఫోర్స్',
+      toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
+      mandals: ['etcherla', 'laveru', 'ranastalam', 'gsigadam']
+    },
+    '9704789489': {
+      phone: '9704789489',
+      name: 'N. శంకర్ ప్రసాద్, RI (RI Admin Team)',
+      title: 'హెడ్ క్వార్టర్స్ లైవ్ మ్యాప్:',
+      subBadge: 'జిల్లా వ్యాప్త ఫోర్స్',
+      toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: true,
+      mandals: ['amadalavalasa', 'burja', 'etcherla', 'gsigadam', 'hiramandalam', 'kothuru', 'lakshminarsupeta', 'laveru', 'meliaputti', 'pathapatnam', 'ponduru', 'ranastalam', 'sarubujjili']
+    },
+    '9493279328': {
+      phone: '9493279328',
+      name: 'R. సత్తిబాబు, RI (Pathapatnam AC)',
+      title: 'పాతపట్నం AC లైవ్ మ్యాప్:',
+      subBadge: 'పాతపట్నం AC ఫోర్స్',
+      toastMsg: 'ప్రస్తుతం లైవ్ లొకేషన్ షేర్ చేస్తున్న అధికారులు ఎవరూ లేరు.',
+      allMandals: false,
+      mandals: ['pathapatnam', 'meliaputti', 'kothuru', 'hiramandalam']
     }
   };
 
@@ -1836,53 +1714,21 @@
     const cleanPhone = normalizePhone(phone || '');
     const cleanId = String(id || '').trim();
 
-    // Explicit override for Static-11 Peddapadu, Srikakulam (SI, Tekkali PS)
-    if (cleanPhone === '6309990945' || cleanId === 'Static_11') return 'SI, Tekkali PS';
-
-    // 1. Explicit District & Division Heads / DSPs (Aligned with M & GP 2511-14 dataset)
-    if (cleanPhone === '9704452107' || cleanId === 'SP_Srikakulam') return 'SP, Srikakulam';
-    if (cleanPhone === '6309990805' || cleanId === 'QRT_1') return 'SDPO, Kasibugga';
-    if (cleanPhone === '6309990811' || cleanId === 'QRT_2') return 'SDPO, Tekkali';
-    if (cleanPhone === '6309990804' || cleanId === 'QRT_3') return 'SDPO, Srikakulam';
-    if (cleanPhone === '6309990813' || cleanId === 'QRT_4') return 'DSP (AR), DAR';
-    if (cleanPhone === '6309990810' || cleanId === 'QRT_5') return 'DSP, Women PS';
-    if (cleanPhone === '7036228899') return 'DSP, CID VSP';
-
-    // 2. Addl. SP & HQ Reserves (Strictly as per Excel: Addl. SP Reserve + HQ-Reserve Parties)
-    if (cleanP_match(cleanPhone, '6309990801') || cleanId === 'Addl_SP_Reserve_1') return 'Addl. SP (Admin), Srikakulam';
-    if (cleanP_match(cleanPhone, '8008203236') || cleanId === 'Addl_SP_Reserve_2') return 'Addl. SP (V&E), Srikakulam';
-    if (cleanPhone === '9392663604' || cleanId === 'HQ_Reserve_1') return 'CI, Control Room';
-    if (cleanPhone === '6309990838' || cleanId === 'HQ_Reserve_2') return 'RI Admin, DAR Srikakulam';
-    if (cleanPhone === '6309990939' || cleanId === 'HQ_Reserve_3') return 'CI, Task Force';
-
-    // 3. Circle Inspectors (M & GP 2511-14 dataset)
-    if (cleanP_match(cleanPhone, '7013269612') || cleanId === 'SSF_Amadalavalasa_3') return 'CI, VR Srikakulam';
-    if (cleanP_match(cleanPhone, '6309990831') || cleanId === 'SSF_Amadalavalasa_SBX') return 'CI, SBX';
-    if (cleanP_match(cleanPhone, '9948597720')) return 'CI, VR Srikakulam';
-    if (cleanP_match(cleanPhone, '8639521714')) return 'HC, BRV PS';
-    if (cleanP_match(cleanPhone, '6309990814') || cleanId === 'SSF_Srikakulam_Town_1') return 'CI, Srikakulam Rural';
-    if (cleanP_match(cleanPhone, '6309990823') || cleanId === 'SSF_Amadalavalasa_1') return 'CI, Amadalavalasa';
-    if (cleanP_match(cleanPhone, '6309990816') || cleanId === 'SSF_Srikakulam_Town_5') return 'CI, JR Puram';
-    if (cleanP_match(cleanPhone, '6309990860') || cleanId === 'SSF_Vajrapukotturu_2') return 'CI, Tekkali UPS';
-    if (cleanP_match(cleanPhone, '6309990817') || cleanId === 'SSF_Tekkali_17') return 'CI, Tekkali Rural';
-    if (cleanP_match(cleanPhone, '6309990828') || cleanId === 'SSF_Srikakulam_Town_2') return 'CI, Kothuru';
-    if (cleanP_match(cleanPhone, '6309990822') || cleanId === 'SSF_KAVITI_2') return 'CI, Pathapatnam';
-    if (cleanP_match(cleanPhone, '6309990815') || cleanId === 'SSF_Amadalavalasa_2') return 'CI, Narasannapeta';
-    if (cleanP_match(cleanPhone, '6309990825') || cleanId === 'SSF_Palasa_1') return 'CI, Kasibugga PS';
-    if (cleanP_match(cleanPhone, '6309990827') || cleanId === 'SSF_Ichapuram_1') return 'CI, Ichapuram';
-    if (cleanP_match(cleanPhone, '6309990819') || cleanId === 'SSF_Sompeta_1') return 'CI, Sompeta';
-    if (cleanP_match(cleanPhone, '6309990818') || cleanId === 'SSF_Mandasa_1') return 'CI, Kasibugga Rural';
-    if (cleanP_match(cleanPhone, '6309990824') || cleanId === 'SSF_Srikakulam_Town_4') return 'CI, SKL II Town PS';
-    if (cleanP_match(cleanPhone, '6309990836') || cleanId === 'SSF_Srikakulam_Town_6') return 'WCI, Women PS';
-    if (cleanP_match(cleanPhone, '6309990835') || cleanId === 'SSF_Kanchili_1') return 'CI, CCS Srikakulam';
-    if (cleanP_match(cleanPhone, '6309990947') || cleanId === 'SSF_Kanchili_2') return 'CI, Cyber Cell';
-    if (cleanP_match(cleanPhone, '6309990833') || cleanId === 'SSF_Mandasa_2') return 'CI, DCRB Srikakulam';
-    if (cleanP_match(cleanPhone, '6309990809') || cleanId === 'SSF_Ichapuram_2') return 'CI, Traffic PS';
-
-    // Route Mobile Specific Overrides
-    if (cleanP_match(cleanPhone, '6309990880') || cleanId === 'RM_Amadalavalasa_6' || (cleanId.includes('Amadalavalasa') && cleanId.endsWith('_6')) || (mandal === 'Amadalavalasa' && (unitName.includes('RM-6') || String(route).includes('6')))) {
-      return 'SI-Hiramandalam';
-    }
+    // 1. Leadership & QRTs in Phase-2
+    if (cleanPhone === '9704452107' || cleanId.startsWith('SP_Reserve')) return 'SP, Srikakulam';
+    if (cleanPhone === '6309990801' || cleanId === 'Addl_SP_Reserve_1') return 'Addl. SP (Admin), Srikakulam';
+    if (cleanPhone === '8008203236' || cleanId === 'Addl_SP_Reserve_2') return 'Addl. SP (V&E), Srikakulam';
+    if (cleanPhone === '6309990805') return 'SDPO, Kasibugga';
+    if (cleanPhone === '6309990810') return 'DSP, Women PS';
+    if (cleanPhone === '6309990813') return 'DSP (AR), DAR Srikakulam';
+    if (cleanPhone === '6309990804') return 'SDPO, Srikakulam';
+    if (cleanPhone === '6309990811') return 'SDPO, Tekkali';
+    if (cleanPhone === '6309990831') return 'CI, SBX';
+    if (cleanPhone === '6309990886') return 'CI, SB';
+    if (cleanPhone === '9494694956') return 'SI, Traffic (SWAT-1)';
+    if (cleanPhone === '9182312965') return 'SI, Mandasa (SWAT-2)';
+    if (cleanPhone === '9704789489') return 'RI Admin, DAR';
+    if (cleanPhone === '9493279328') return 'RI, Pathapatnam';
 
     const defaultPs = mandal ? (mandal.endsWith('PS') ? mandal : `${mandal} PS`) : '';
 
@@ -4472,36 +4318,24 @@
   }
 
   const DESIGNATED_OFFICER_PHONES = [
-    // District Level Leadership Monitors (SP & Addl. SPs)
-    '9704452107', // SP Srikakulam / District Incharge (All Mandals)
-    '6309990801', // Addl. SP Admin Srikakulam (Entire KSB Sub-Div. GP 1st Phase)
-    '8008203236', // Addl. SP V&E Srikakulam (Srikakulam & Amadalavalasa)
-    // SDPO Division Incharges (3)
-    '6309990804', // SDPO Srikakulam (11 Mandals)
-    '6309990811', // SDPO Tekkali (12 Mandals)
-    '6309990805', // SDPO Kasibugga (7 Mandals)
-    // DSP Special Wing / Division Incharges (3)
-    '6309990810', // DSP Mahila UPS (5 Mandals: Ponduru, Ranasthalam, Etcherla, Laveru, G.Sigadam)
-    '7036228899', // DSP CID VSP (4 Mandals: Pathapatnam, Meliaputti, Kothuru, Hiramandalam)
-    '6309990813', // DSP (AR) DAR (4 Mandals: Sompeta, Kanchili, Ichapuram, Kaviti)
-    // Circle Incharges (15)
-    '6309990823', // CI Amadalavalasa (5 Mandals: Amadalavalasa, Burja, Sarubujjili, Lakshminarsupeta, Ponduru)
-    '7013269612', // CI VR Srikakulam (Amadalavalasa SSF-3)
-    '6309990831', // CI SBX (Amadalavalasa SSF)
-    '6309990814', // CI Srikakulam Rural (2 Mandals: Gara, Srikakulam)
-    '6309990816', // CI JR Puram / Etcherla (4 Mandals: Ranastalam, Laveru, Etcherla, G.Sigadam)
-    '6309990860', // Inspector Tekkali PS (1 Mandal: Tekkali)
-    '6309990817', // CI Tekkali Rural (3 Mandals: Kotabommali, Santhabommali, Nandigam)
-    '6309990828', // CI Kothuru (2 Mandals: Hiramandalam, Kothuru)
-    '6309990822', // CI Pathapatnam (2 Mandals: Meliaputti, Pathapatnam)
-    '6309990815', // CI Narasannapeta (4 Mandals: Narasannapeta, Polaki, Saravakota, Jalumuru)
-    '6309990825', // CI Kasibugga (1 Mandal: Kasibugga)
-    '6309990827', // CI Ichapuram (2 Mandals: Ichapuram Rural, Kaviti)
-    '9948597720', // CI VR Srikakulam (Kaviti SSF-1)
-    '6309990819', // CI Sompeta (2 Mandals: Kanchili, Sompeta)
-    '6309990818', // CI Kasibugga Rural / Mandasa (2 Mandals: Mandasa, Vajrapukothuru)
-    // Route Incharges from Add1
-    '8639521714'  // HC-205, BRV PS (Sompeta Route 6)
+    // Phase-2 Leadership & Reserves
+    '9704452107', // SP Srikakulam (All Mandals)
+    '6309990801', // Addl. SP Admin Srikakulam (Pathapatnam & Kottturu Circles)
+    '8008203236', // Addl. SP V&E Srikakulam (J.R.Puram & Amadalavalasa Circles)
+    // QRT DSPs & SDPOs
+    '6309990805', // SDPO Kasibugga (QRT-1)
+    '6309990810', // DSP Women PS (QRT-2)
+    '6309990813', // DSP DAR (QRT-3)
+    '6309990804', // SDPO Srikakulam (QRT-4)
+    '6309990811', // SDPO Tekkali (QRT-5)
+    // QRT Special Teams
+    '9494694956', // SWAT-1
+    '9182312965', // SWAT-2
+    '6309990886', // CI SB
+    '8919647544', '6309990939', // Task Force CI
+    '6309990831', // CI SBX
+    '9704789489', // RI Admin
+    '9493279328'  // RI Satthibabu
   ];
   const DESIGNATED_OFFICER_PASSWORD = 'Police@123';
 
@@ -4509,7 +4343,18 @@
     if (!phone) return false;
     const clean = normalizePhone(phone);
     if (!clean) return false;
-    return DESIGNATED_OFFICER_PHONES.some(p => clean === p || clean.endsWith(p));
+    if (DESIGNATED_OFFICER_PHONES.some(p => clean === p || clean.endsWith(p))) return true;
+    if (SDPO_MONITORS && (SDPO_MONITORS[clean] || Object.keys(SDPO_MONITORS).some(p => clean.endsWith(p)))) return true;
+    // Any CI in Special Striking Forces or supervisory officer in allUnitsData
+    if (typeof allUnitsData !== 'undefined' && Array.isArray(allUnitsData)) {
+      const match = allUnitsData.find(u => {
+        const uPhone = normalizePhone(u.phone);
+        return uPhone && (uPhone === clean || uPhone.endsWith(clean)) && 
+               (u.category === 'Special Striking Forces' || u.category === 'QRTs' || u.category === 'Reserve Parties');
+      });
+      if (match) return true;
+    }
+    return false;
   }
 
   function findMatchingUnitsByPhone(phone) {

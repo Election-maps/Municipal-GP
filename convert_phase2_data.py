@@ -12,7 +12,7 @@ def extract_phone(text):
     if not text:
         return ""
     # Find 10 digit number starting with 6-9
-    m = re.findall(r'[6-9]\d{9}', text)
+    m = re.findall(r'[6-9]\d{9}', str(text))
     if m:
         return m[0]
     return ""
@@ -20,10 +20,9 @@ def extract_phone(text):
 units = []
 
 # 1. Routes (Sheet 'Routes')
+# Row 1 is header: Col 1: S.No, Col 2: Name of the Mandal, Col 3: Route No, Col 4: Route Incharge Details, Col 5: Supporting staff, Col 6: Route incharge Head Quarter
 ws_routes = wb["Routes"]
-current_mandal = ""
-
-for r in range(2, ws_routes.max_row + 1):
+for r in range(2, 130):
     sno = clean(ws_routes.cell(r, 1).value)
     mandal = clean(ws_routes.cell(r, 2).value)
     r_no = clean(ws_routes.cell(r, 3).value)
@@ -31,37 +30,35 @@ for r in range(2, ws_routes.max_row + 1):
     supp = clean(ws_routes.cell(r, 5).value)
     hq = clean(ws_routes.cell(r, 6).value)
     
-    if mandal:
-        current_mandal = mandal
-        
     if not sno and not r_no:
         continue
         
     r_num_str = str(r_no).replace("Route -", "").replace("Route-", "").replace("Route", "").strip()
     route_num = f"Route-{r_num_str}"
-    uid = f"RM_{current_mandal}_{route_num}_{sno}".replace(" ", "_")
+    uid = f"RM_{mandal}_{route_num}_{sno}".replace(" ", "_")
     phone = extract_phone(incharge) or extract_phone(supp)
     
     units.append({
         "id": uid,
         "category": "Route Mobiles",
         "categoryKey": "RM",
-        "mandal": current_mandal,
+        "mandal": mandal,
         "route": route_num,
         "unitName": f"{route_num} ({hq})",
         "hq": hq,
-        "officer": incharge,
+        "officer": incharge.replace("\n", ", "),
         "phone": phone,
-        "supporting": supp,
+        "supporting": supp.replace("\n", ", "),
         "pollingStations": f"Head Quarter: {hq}"
     })
 
 print(f"Routes extracted: {len(units)}")
 
 # 2. Striking Forces (Sheet 'Striking Forces')
+# Row 2 is header: Col 1: Sl. No., Col 2: GP, Col 3: Name of the Mandal, Col 4: Stracking force No, Col 5: SF Head Quarter, Col 6: Force Deployed (In-Charge SI), Col 7: Supporting PCs/HGs
 ws_sf = wb["Striking Forces"]
 sf_count = 0
-for r in range(4, ws_sf.max_row + 1):
+for r in range(4, 34):
     sno = clean(ws_sf.cell(r, 1).value)
     gp = clean(ws_sf.cell(r, 2).value)
     mandal = clean(ws_sf.cell(r, 3).value)
@@ -95,9 +92,10 @@ for r in range(4, ws_sf.max_row + 1):
 print(f"SF extracted: {sf_count}")
 
 # 3. Special Striking Forces (Sheet 'Special Striking Forces')
+# Row 2 is header: Col 1: Sl. No., Col 2: GP, Col 3: Name of the Mandal, Col 4: No of SSF, Col 5: SSF HQ, Col 6: In-Charge CI, Col 7: Supporting PCs / HGs
 ws_ssf = wb["Special Striking Forces"]
 ssf_count = 0
-for r in range(4, ws_ssf.max_row + 1):
+for r in range(4, 30):
     sno = clean(ws_ssf.cell(r, 1).value)
     gp = clean(ws_ssf.cell(r, 2).value)
     mandal = clean(ws_ssf.cell(r, 3).value)
@@ -131,9 +129,10 @@ for r in range(4, ws_ssf.max_row + 1):
 print(f"SSF extracted: {ssf_count}")
 
 # 4. QRTs (Sheet 'QRTss')
+# Row 2 is header: Col 1: S.No, Col 2: Name of Panchayathi / Team, Col 3: Location / Area, Col 4: Deployed Sub-Inspector / Officer
 ws_qrt = wb["QRTss"]
 qrt_count = 0
-for r in range(3, ws_qrt.max_row + 1):
+for r in range(3, 15):
     sno = clean(ws_qrt.cell(r, 1).value)
     name = clean(ws_qrt.cell(r, 2).value)
     loc = clean(ws_qrt.cell(r, 3).value)
@@ -165,9 +164,10 @@ for r in range(3, ws_qrt.max_row + 1):
 print(f"QRT extracted: {qrt_count}")
 
 # 5. Addl. SP Reserve (Sheet 'Addl. SP Reserve')
+# Row 1 is header: Col 1: Sl. No., Col 2: Type of Force, Col 3: Area/ Mandal, Col 4: In-Charge Officer, Col 5: Remarks
 ws_asp = wb["Addl. SP Reserve"]
 asp_count = 0
-for r in range(2, ws_asp.max_row + 1):
+for r in range(2, 4):
     sno = clean(ws_asp.cell(r, 1).value)
     force_type = clean(ws_asp.cell(r, 2).value)
     area = clean(ws_asp.cell(r, 3).value)
@@ -175,8 +175,6 @@ for r in range(2, ws_asp.max_row + 1):
     remarks = clean(ws_asp.cell(r, 5).value)
     
     if not sno and not officer:
-        continue
-    if sno and sno.lower().startswith("total"):
         continue
         
     phone = extract_phone(officer)
@@ -200,9 +198,10 @@ for r in range(2, ws_asp.max_row + 1):
 print(f"Addl SP Reserve extracted: {asp_count}")
 
 # 6. SP Reserve (Sheet 'SP Reserve')
+# Row 1 is header: Col 1: Sl. No., Col 2: Type of Force, Col 3: Area/ Mandal, Col 4: In-Charge Officer, Col 5: Remarks
 ws_sp = wb["SP Reserve"]
 sp_count = 0
-for r in range(2, ws_sp.max_row + 1):
+for r in range(2, 3):
     sno = clean(ws_sp.cell(r, 1).value)
     force_type = clean(ws_sp.cell(r, 2).value)
     area = clean(ws_sp.cell(r, 3).value)
@@ -210,8 +209,6 @@ for r in range(2, ws_sp.max_row + 1):
     remarks = clean(ws_sp.cell(r, 5).value)
     
     if not sno and not officer:
-        continue
-    if sno and sno.lower().startswith("total"):
         continue
         
     phone = extract_phone(officer)
@@ -235,31 +232,31 @@ for r in range(2, ws_sp.max_row + 1):
 print(f"SP Reserve extracted: {sp_count}")
 
 # 7. Static Parties (Sheet 'Statck')
+# Row 2 is header: Col 1: Name of the Mandal, Col 2: Name of the Gram Panchyat, Col 3: Name of the PS, Col 4: PSL, Col 5: Static Party Others
 ws_statck = wb["Statck"]
 statck_count = 0
 for r in range(3, ws_statck.max_row + 1):
-    sno = clean(ws_statck.cell(r, 1).value)
-    mandal = clean(ws_statck.cell(r, 2).value)
-    gp = clean(ws_statck.cell(r, 3).value)
-    ps = clean(ws_statck.cell(r, 4).value)
-    psl = clean(ws_statck.cell(r, 5).value)
-    officer = clean(ws_statck.cell(r, 6).value)
+    mandal = clean(ws_statck.cell(r, 1).value)
+    gp = clean(ws_statck.cell(r, 2).value)
+    ps = clean(ws_statck.cell(r, 3).value)
+    psl = clean(ws_statck.cell(r, 4).value)
+    officer = clean(ws_statck.cell(r, 5).value)
     
-    if not sno and not mandal and not ps:
+    if not mandal and not ps and not officer:
         continue
-    if sno and sno.lower().startswith("total"):
+    if mandal and mandal.lower().startswith("total"):
         continue
         
     phone = extract_phone(officer)
     statck_count += 1
-    uid = f"Static_{sno}"
+    uid = f"Static_{statck_count}"
     units.append({
         "id": uid,
         "category": "Static Parties",
         "categoryKey": "STATIC",
         "mandal": mandal,
-        "route": f"Static-{sno}",
-        "unitName": f"Static-{sno} ({psl})",
+        "route": f"Static-{statck_count}",
+        "unitName": f"Static-{statck_count} ({psl})",
         "hq": gp,
         "officer": officer.replace("\n", ", "),
         "phone": phone,
