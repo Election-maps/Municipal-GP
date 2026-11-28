@@ -21,7 +21,7 @@
   <!-- MQTT.js library -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <!-- Pre-loaded Forces Data (Routes, SF, SSF, QRTs, Reserve Parties) -->
-  <script src="route_mobiles_data.js?v=20261128_p2_v6"></script>
+  <script src="route_mobiles_data.js?v=20261128_p2_v7"></script>
   <!-- Pre-loaded Srikakulam Mandals GeoJSON Boundaries -->
   <script src="srikakulam_mandals.js?v=20261119_v3"></script>
 
@@ -475,6 +475,75 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    /* Police Marker Styling (Matches live_tracking.js) */
+    .police-marker-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .police-marker-label {
+      background: rgba(11, 26, 46, 0.95);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.65);
+      border: 1.5px solid #fde047;
+      position: absolute;
+      bottom: 34px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      z-index: 50;
+    }
+    .marker-title-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .officer-incharge-badge {
+      font-size: 9.5px;
+      color: #fde047;
+      font-weight: 600;
+      white-space: nowrap;
+      max-width: 320px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-top: 1px;
+      padding-top: 1px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .speed-pill {
+      background: rgba(56, 189, 248, 0.25);
+      color: #38bdf8;
+      padding: 1px 5px;
+      border-radius: 6px;
+      font-size: 8.5px;
+      font-weight: 800;
+    }
+    .police-marker-pin {
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      border: 2px solid #ffffff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      position: relative;
+      z-index: 2;
+    }
   </style>
 </head>
 <body>
@@ -831,25 +900,25 @@
     <!-- Supervisory Category Filter Checkboxes (Routes, SF, SSF, QRT, Reserve, Static) -->
     <div id="sdpo-category-filter-bar" style="display: none; align-items: center; gap: 4px; flex-wrap: wrap; margin: 4px 0 6px 0; font-size: 11px;">
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid #475569; border-radius: 5px; padding: 2px 6px; color: #f8fafc; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-all" checked onchange="toggleAllSdpoCategories(this.checked)" style="cursor: pointer; accent-color: #3b82f6;"> <span id="sdpo-lbl-all">All</span>
+        <input type="checkbox" id="sdpo-check-all" checked onchange="toggleAllSdpoCategories(this.checked)" style="cursor: pointer; accent-color: #3b82f6;"> <span id="sdpo-lbl-all">All (191)</span>
       </label>
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(59, 130, 246, 0.5); border-radius: 5px; padding: 2px 6px; color: #93c5fd; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-rm" value="RM" checked onchange="onSdpoCategoryCheckChange('RM', this.checked)" style="cursor: pointer; accent-color: #3b82f6;"> <span id="sdpo-lbl-rm">🚗 Routes (98)</span>
+        <input type="checkbox" id="sdpo-check-rm" value="RM" checked onchange="onSdpoCategoryCheckChange('RM', this.checked)" style="cursor: pointer; accent-color: #3b82f6;"> <span id="sdpo-lbl-rm">🚗 Routes (128)</span>
       </label>
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 5px; padding: 2px 6px; color: #fca5a5; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-sf" value="SF" checked onchange="onSdpoCategoryCheckChange('SF', this.checked)" style="cursor: pointer; accent-color: #ef4444;"> <span id="sdpo-lbl-sf">🚔 SF (26)</span>
+        <input type="checkbox" id="sdpo-check-sf" value="SF" checked onchange="onSdpoCategoryCheckChange('SF', this.checked)" style="cursor: pointer; accent-color: #ef4444;"> <span id="sdpo-lbl-sf">🚔 SF (30)</span>
       </label>
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(168, 85, 247, 0.5); border-radius: 5px; padding: 2px 6px; color: #d8b4fe; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-ssf" value="SSF" checked onchange="onSdpoCategoryCheckChange('SSF', this.checked)" style="cursor: pointer; accent-color: #a855f7;"> <span id="sdpo-lbl-ssf">🛡️ SSF (24)</span>
+        <input type="checkbox" id="sdpo-check-ssf" value="SSF" checked onchange="onSdpoCategoryCheckChange('SSF', this.checked)" style="cursor: pointer; accent-color: #a855f7;"> <span id="sdpo-lbl-ssf">🛡️ SSF (26)</span>
       </label>
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 5px; padding: 2px 6px; color: #fde68a; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
         <input type="checkbox" id="sdpo-check-qrt" value="QRT" checked onchange="onSdpoCategoryCheckChange('QRT', this.checked)" style="cursor: pointer; accent-color: #f59e0b;"> <span id="sdpo-lbl-qrt">⚡ QRT (5)</span>
       </label>
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 5px; padding: 2px 6px; color: #6ee7b7; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-reserve" value="RESERVE" checked onchange="onSdpoCategoryCheckChange('RESERVE', this.checked)" style="cursor: pointer; accent-color: #10b981;"> <span id="sdpo-lbl-reserve">🏛️ Reserve (5)</span>
+        <input type="checkbox" id="sdpo-check-reserve" value="RESERVE" checked onchange="onSdpoCategoryCheckChange('RESERVE', this.checked)" style="cursor: pointer; accent-color: #10b981;"> <span id="sdpo-lbl-reserve">🏛️ Reserve (2)</span>
       </label>
       <label style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(6, 182, 212, 0.5); border-radius: 5px; padding: 2px 6px; color: #67e8f9; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none;">
-        <input type="checkbox" id="sdpo-check-static" value="STATIC" checked onchange="onSdpoCategoryCheckChange('STATIC', this.checked)" style="cursor: pointer; accent-color: #06b6d4;"> <span id="sdpo-lbl-static">🏢 Static (13)</span>
+        <input type="checkbox" id="sdpo-check-static" value="STATIC" checked onchange="onSdpoCategoryCheckChange('STATIC', this.checked)" style="cursor: pointer; accent-color: #06b6d4;"> <span id="sdpo-lbl-static">🏢 Static (27)</span>
       </label>
     </div>
 
@@ -1644,18 +1713,32 @@
     if (btnCount) btnCount.innerText = count;
 
     // Update dynamic live badges on filter bar
+    const totalCats = { 'RM': 128, 'SF': 30, 'SSF': 26, 'QRT': 5, 'RESERVE': 2, 'STATIC': 27 };
+    const sourceData = (typeof allUnitsData !== 'undefined' && Array.isArray(allUnitsData) && allUnitsData.length > 0) ? allUnitsData : window.ROUTE_MOBILES_DATA;
+    if (Array.isArray(sourceData)) {
+      const counts = { 'RM': 0, 'SF': 0, 'SSF': 0, 'QRT': 0, 'RESERVE': 0, 'STATIC': 0 };
+      sourceData.forEach(u => {
+        const ck = normalizePartyCategoryKey(u.categoryKey || u.category);
+        if (counts[ck] !== undefined) counts[ck]++;
+      });
+      if (counts.RM > 0) Object.assign(totalCats, counts);
+    }
+
+    const lblAll = document.getElementById('sdpo-lbl-all');
+    if (lblAll) lblAll.innerText = `All (${totalCats.RM + totalCats.SF + totalCats.SSF + totalCats.QRT + totalCats.RESERVE})`;
+
     const lblRm = document.getElementById('sdpo-lbl-rm');
-    if (lblRm) lblRm.innerText = `🚗 Routes (98${catCounts.RM > 0 ? ' • ' + catCounts.RM : ''})`;
+    if (lblRm) lblRm.innerText = `🚗 Routes (${totalCats.RM}${catCounts.RM > 0 ? ' • ' + catCounts.RM : ''})`;
     const lblSf = document.getElementById('sdpo-lbl-sf');
-    if (lblSf) lblSf.innerText = `🚔 SF (26${catCounts.SF > 0 ? ' • ' + catCounts.SF : ''})`;
+    if (lblSf) lblSf.innerText = `🚔 SF (${totalCats.SF}${catCounts.SF > 0 ? ' • ' + catCounts.SF : ''})`;
     const lblSsf = document.getElementById('sdpo-lbl-ssf');
-    if (lblSsf) lblSsf.innerText = `🛡️ SSF (24${catCounts.SSF > 0 ? ' • ' + catCounts.SSF : ''})`;
+    if (lblSsf) lblSsf.innerText = `🛡️ SSF (${totalCats.SSF}${catCounts.SSF > 0 ? ' • ' + catCounts.SSF : ''})`;
     const lblQrt = document.getElementById('sdpo-lbl-qrt');
-    if (lblQrt) lblQrt.innerText = `⚡ QRT (5${catCounts.QRT > 0 ? ' • ' + catCounts.QRT : ''})`;
+    if (lblQrt) lblQrt.innerText = `⚡ QRT (${totalCats.QRT}${catCounts.QRT > 0 ? ' • ' + catCounts.QRT : ''})`;
     const lblRes = document.getElementById('sdpo-lbl-reserve');
-    if (lblRes) lblRes.innerText = `🏛️ Reserve (5${catCounts.RESERVE > 0 ? ' • ' + catCounts.RESERVE : ''})`;
+    if (lblRes) lblRes.innerText = `🏛️ Reserve (${totalCats.RESERVE}${catCounts.RESERVE > 0 ? ' • ' + catCounts.RESERVE : ''})`;
     const lblStat = document.getElementById('sdpo-lbl-static');
-    if (lblStat) lblStat.innerText = `🏢 Static (13${catCounts.STATIC > 0 ? ' • ' + catCounts.STATIC : ''})`;
+    if (lblStat) lblStat.innerText = `🏢 Static (${totalCats.STATIC}${catCounts.STATIC > 0 ? ' • ' + catCounts.STATIC : ''})`;
   }
 
   function saveLiveUnitsToCache() {
@@ -1714,21 +1797,47 @@
     const cleanPhone = normalizePhone(phone || '');
     const cleanId = String(id || '').trim();
 
-    // 1. Leadership & QRTs in Phase-2
-    if (cleanPhone === '9704452107' || cleanId.startsWith('SP_Reserve')) return 'SP, Srikakulam';
-    if (cleanPhone === '6309990801' || cleanId === 'Addl_SP_Reserve_1') return 'Addl. SP (Admin), Srikakulam';
-    if (cleanPhone === '8008203236' || cleanId === 'Addl_SP_Reserve_2') return 'Addl. SP (V&E), Srikakulam';
-    if (cleanPhone === '6309990805') return 'SDPO, Kasibugga';
-    if (cleanPhone === '6309990810') return 'DSP, Women PS';
-    if (cleanPhone === '6309990813') return 'DSP (AR), DAR Srikakulam';
-    if (cleanPhone === '6309990804') return 'SDPO, Srikakulam';
-    if (cleanPhone === '6309990811') return 'SDPO, Tekkali';
-    if (cleanPhone === '6309990831') return 'CI, SBX';
-    if (cleanPhone === '6309990886') return 'CI, SB';
-    if (cleanPhone === '9494694956') return 'SI, Traffic (SWAT-1)';
-    if (cleanPhone === '9182312965') return 'SI, Mandasa (SWAT-2)';
-    if (cleanPhone === '9704789489') return 'RI Admin, DAR';
-    if (cleanPhone === '9493279328') return 'RI, Pathapatnam';
+    // 1. Explicit District & Division Heads / DSPs (Phase 2 dataset)
+    if (cleanPhone === '9704452107' || cleanId === 'SP_Srikakulam' || cleanId.startsWith('SP_Reserve')) return 'SP, Srikakulam';
+    if (cleanPhone === '6309990805' || cleanId === 'QRT_1' || cleanId.includes('QRT_1')) return 'SDPO, Kasibugga';
+    if (cleanPhone === '6309990811' || cleanId === 'QRT_2' || cleanId.includes('QRT_2')) return 'SDPO, Tekkali';
+    if (cleanPhone === '6309990804' || cleanId === 'QRT_3' || cleanId.includes('QRT_3')) return 'SDPO, Srikakulam';
+    if (cleanPhone === '6309990813' || cleanId === 'QRT_4' || cleanId.includes('QRT_4')) return 'DSP (AR), DAR';
+    if (cleanPhone === '6309990810' || cleanId === 'QRT_5' || cleanId.includes('QRT_5')) return 'DSP, Women PS';
+    if (cleanPhone === '7036228899') return 'DSP, CID VSP';
+
+    // 2. Addl. SP & Reserves (Strictly as per Excel: Addl. SP Reserve 1 & 2)
+    if (cleanPhone === '6309990801' || cleanId === 'Addl_SP_Reserve_1' || cleanId.includes('Reserve_1')) return 'Addl. SP (Admin), Srikakulam';
+    if (cleanPhone === '8008203236' || cleanId === 'Addl_SP_Reserve_2' || cleanId.includes('Reserve_2')) return 'Addl. SP (V&E), Srikakulam';
+
+    // 3. Circle Inspectors & Specific Officers (Phase 2 official dataset)
+    if (cleanPhone === '7013269612' || cleanId === 'SSF_Amadalavalasa_3') return 'CI, VR Srikakulam';
+    if (cleanPhone === '6309990831' || cleanId === 'SSF_Amadalavalasa_SBX') return 'CI, SBX';
+    if (cleanPhone === '9948597720') return 'CI, VR Srikakulam';
+    if (cleanPhone === '8639521714') return 'HC, BRV PS';
+    if (cleanPhone === '6309990814' || cleanId === 'SSF_Srikakulam_Town_1') return 'CI, Srikakulam Rural';
+    if (cleanPhone === '6309990823' || cleanId === 'SSF_Amadalavalasa_1') return 'CI, Amadalavalasa';
+    if (cleanPhone === '6309990816' || cleanId === 'SSF_Srikakulam_Town_5') return 'CI, JR Puram';
+    if (cleanPhone === '6309990860' || cleanId === 'SSF_Vajrapukotturu_2') return 'CI, Tekkali UPS';
+    if (cleanPhone === '6309990817') return 'CI, Tekkali Rural';
+    if (cleanPhone === '6309990828' || cleanId === 'SSF_Srikakulam_Town_2') return 'CI, Kothuru';
+    if (cleanPhone === '6309990822' || cleanId === 'SSF_KAVITI_2') return 'CI, Pathapatnam';
+    if (cleanPhone === '6309990815' || cleanId === 'SSF_Amadalavalasa_2') return 'CI, Narasannapeta';
+    if (cleanPhone === '6309990825' || cleanId === 'SSF_Palasa_1') return 'CI, Kasibugga PS';
+    if (cleanPhone === '6309990827' || cleanId === 'SSF_Ichapuram_1') return 'CI, Ichapuram';
+    if (cleanPhone === '6309990819' || cleanId === 'SSF_Sompeta_1') return 'CI, Sompeta';
+    if (cleanPhone === '6309990818' || cleanId === 'SSF_Mandasa_1') return 'CI, Kasibugga Rural';
+    if (cleanPhone === '6309990824' || cleanId === 'SSF_Srikakulam_Town_4') return 'CI, SKL II Town PS';
+    if (cleanPhone === '6309990836' || cleanId === 'SSF_Srikakulam_Town_6') return 'WCI, Women PS';
+    if (cleanPhone === '6309990835' || cleanId === 'SSF_Kanchili_1') return 'CI, CCS Srikakulam';
+    if (cleanPhone === '6309990947' || cleanId === 'SSF_Kanchili_2') return 'CI, Cyber Cell';
+    if (cleanPhone === '6309990833' || cleanId === 'SSF_Mandasa_2' || cleanId === 'SSF_Laveru_1_11' || (unitName && unitName.includes('Laveru') && cleanPhone === '6309990833')) return 'CI, DCRB Srikakulam';
+    if (cleanPhone === '6309990809' || cleanId === 'SSF_Ichapuram_2') return 'CI, Traffic PS';
+
+    // Route Mobile Specific Overrides
+    if (cleanPhone === '6309990880' || cleanId === 'RM_Amadalavalasa_6' || (cleanId.includes('Amadalavalasa') && cleanId.endsWith('_6')) || (mandal === 'Amadalavalasa' && (unitName.includes('RM-6') || String(route).includes('6')))) {
+      return 'SI-Hiramandalam';
+    }
 
     const defaultPs = mandal ? (mandal.endsWith('PS') ? mandal : `${mandal} PS`) : '';
 
@@ -1932,28 +2041,22 @@
     const customIcon = L.divIcon({
       className: 'custom-sdpo-subordinate-marker',
       html: `
-        <div style="display:flex; flex-direction:column; align-items:center; transform: translate(-50%, -100%); filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));">
-          <div style="background: ${catColor}; color: white; font-weight: 800; font-size: 10px; padding: 2.5px 8px; border-radius: 8px; white-space: nowrap; border: 1.5px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.45); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1px;">
-            ${cleanUnitName && cleanUnitName !== pillLabel ? `
-              <div style="font-size: 10.5px; font-weight: 900; color: #ffffff; letter-spacing: 0.2px; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
-                ${escapeHtml(cleanUnitName)}
-              </div>
-              <div style="font-size: 9.5px; font-weight: 900; color: #000000; background: rgba(255,255,255,0.92); border-radius: 3px; padding: 0.5px 5px; margin-top: 1.5px; width: 100%; box-sizing: border-box;">
-                ${escapeHtml(pillLabel)}
-              </div>
-            ` : `
-              <div style="font-size: 10.5px; font-weight: 800; color: #ffffff;">
-                ${escapeHtml(pillLabel)}
-              </div>
-            `}
+        <div class="police-marker-container">
+          <div class="police-marker-label" style="border-color:${catColor}; bottom: 30px; padding: 2px 6px; font-size: 9px;">
+            <div class="marker-title-row">
+              <span style="color:#10b981;">● </span>
+              <span>${escapeHtml(cleanUnitName)}</span>
+              ${kmh >= 2 ? `<span class="speed-pill" style="font-size: 8.5px; padding: 1px 3px;">${kmh}k</span>` : '<span style="color:#94a3b8; font-size:8px;">(Stopped)</span>'}
+            </div>
+            ${pillLabel ? `<div class="officer-incharge-badge"><i class="fa-solid fa-user-shield text-[8px] text-yellow-300"></i><span>${escapeHtml(pillLabel)}</span></div>` : ''}
           </div>
-          <div style="width: 26px; height: 26px; border-radius: 50%; background: ${catColor}; border: 2px solid white; display:flex; align-items:center; justify-content:center; color:white; font-size:11.5px; margin-top: 1px;">
+          <div class="police-marker-pin" style="width: 26px; height: 26px; font-size: 11px; background:${catColor};">
             <i class="fa-solid ${catIcon}"></i>
           </div>
         </div>
       `,
-      iconSize: [0, 0],
-      iconAnchor: [0, 0]
+      iconSize: [26, 26],
+      iconAnchor: [13, 13]
     });
 
     if (sdpoSubordinateMarkers[unitKey]) {
@@ -2514,13 +2617,39 @@
         // Subordinate & Mobile Force Officers Live Location Update
         if (t.includes('/locations') || t.includes('/officer/')) {
           handleSdpoSubordinateLocationUpdate(payload);
-        } else if ((t.includes('/units_sync') || payload.type === 'units_snapshot') && payload.units) {
-          const uMap = payload.units;
-          if (Array.isArray(uMap)) {
-            uMap.forEach(u => handleSdpoSubordinateLocationUpdate(u));
-          } else {
-            for (const k in uMap) {
-              handleSdpoSubordinateLocationUpdate(uMap[k]);
+        } else if (t.includes('/units_sync') || payload.type === 'units_snapshot') {
+          if (payload.action === 'clear_all' || payload.type === 'clear_all') {
+            for (const k in sdpoSubordinateMarkers) {
+              try { officerMap.removeLayer(sdpoSubordinateMarkers[k].marker); } catch (e) {}
+            }
+            sdpoSubordinateMarkers = {};
+            updateSdpoActiveOfficerCountUI();
+            saveLiveUnitsToCache();
+            return;
+          }
+          if (payload.action === 'clear_unit' || payload.type === 'delete_unit') {
+            const delId = payload.unitId;
+            const delPh = payload.phone ? normalizePhone(payload.phone) : '';
+            for (const k in sdpoSubordinateMarkers) {
+              const u = sdpoSubordinateMarkers[k];
+              const uPh = u.data && u.data.phone ? normalizePhone(u.data.phone) : '';
+              if (k === delId || (delPh && (k === 'phone_' + delPh || uPh === delPh))) {
+                try { officerMap.removeLayer(u.marker); } catch (e) {}
+                delete sdpoSubordinateMarkers[k];
+              }
+            }
+            updateSdpoActiveOfficerCountUI();
+            saveLiveUnitsToCache();
+            return;
+          }
+          if (payload.units) {
+            const uMap = payload.units;
+            if (Array.isArray(uMap)) {
+              uMap.forEach(u => handleSdpoSubordinateLocationUpdate(u));
+            } else {
+              for (const k in uMap) {
+                handleSdpoSubordinateLocationUpdate(uMap[k]);
+              }
             }
           }
         }
@@ -2537,12 +2666,23 @@
           return;
         }
 
-        // Control Room force stop command: completely stops tracking
-        if (payload.action === 'clear_all' || (payload.action === 'clear_unit' && currentSelectedUnit && (payload.unitId === currentSelectedUnit.id || payload.unitId === currentSelectedUnit.unitId))) {
-          console.log('Remote stop command received from Control Room:', payload);
-          stopTracking();
-          alert("కంట్రోల్ రూమ్ ద్వారా మీ లైవ్ లొకేషన్ తొలగించబడింది.\n\nమీరు అవసరమైతే మరలా 'లైవ్ లొకేషన్ ప్రారంభించండి' బటన్ నొక్కి షేర్ చేసుకోవాలి.");
-          return;
+        // Control Room force stop command: completely stops tracking on this officer's phone
+        if (payload.action === 'clear_all' || payload.action === 'clear_unit') {
+          const myPhone = currentLoggedInOfficer && currentLoggedInOfficer.phone ? normalizePhone(currentLoggedInOfficer.phone) : (currentSelectedUnit && currentSelectedUnit.phone ? normalizePhone(currentSelectedUnit.phone) : '');
+          const targetPh = payload.phone ? normalizePhone(payload.phone) : (payload.unitId ? normalizePhone(payload.unitId) : '');
+          const targetId = payload.unitId || '';
+          const myUnitId = currentSelectedUnit ? (currentSelectedUnit.id || currentSelectedUnit.unitId) : '';
+
+          const isTarget = (payload.action === 'clear_all') ||
+                           (targetId && myUnitId && (myUnitId.toLowerCase() === targetId.toLowerCase() || targetId.toLowerCase().includes(myUnitId.toLowerCase()))) ||
+                           (myPhone && targetPh && myPhone === targetPh);
+
+          if (isTarget) {
+            console.log('Remote stop command received from Control Room:', payload);
+            stopTracking();
+            showToast("కంట్రోల్ రూమ్ ద్వారా మీ లైవ్ లొకేషన్ తొలగించబడింది.");
+            return;
+          }
         }
 
         if (payload.type === 'sync_request' && isTracking && lastLat !== null && lastLng !== null) {

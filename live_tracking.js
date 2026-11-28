@@ -390,6 +390,11 @@ function initLiveMQTT() {
                         clearAllLiveTrackingLocally();
                         return;
                     }
+                    if (payload.action === 'clear_unit' || payload.type === 'delete_unit') {
+                        if (payload.unitId) removeLivePartyUnit(payload.unitId);
+                        if (payload.phone) removeLivePartyUnit('phone_' + String(payload.phone).replace(/\D/g, '').slice(-10));
+                        return;
+                    }
                     if (payload.from !== liveUserId && payload.units && typeof payload.units === 'object') {
                         const now = Date.now();
                         const uMap = payload.units;
@@ -402,6 +407,8 @@ function initLiveMQTT() {
                                 const meta = getPartyUnitMeta(k, u.phone);
                                 if (!meta || !meta.id) return; // Strict Phase-2 filter
                                 const effId = meta.id;
+                                const lastClr = window.clearedUnitsMap ? (window.clearedUnitsMap[effId] || 0) : 0;
+                                if (lastClr > 0 && t <= lastClr + 5000) return;
                                 if (effId && (!window.livePartyMarkers[effId] || Number(window.livePartyMarkers[effId].lastUpdated || 0) < t)) {
                                     updateLivePartyUnitOnMap(effId, u);
                                 }
@@ -463,6 +470,15 @@ function initLiveMQTT() {
                         }
                         return;
                     }
+
+                    // Check if unit was recently cleared by Control Room
+                    const cleanPh = payload.phone ? String(payload.phone).replace(/\D/g, '').slice(-10) : '';
+                    const lastClrTime = window.clearedUnitsMap ? (window.clearedUnitsMap[unitMeta.id] || (cleanPh ? window.clearedUnitsMap['phone_' + cleanPh] : 0) || 0) : 0;
+                    if (lastClrTime > 0 && pktTime <= lastClrTime + 5000) {
+                        // Drop retransmitted packet for cleared unit
+                        return;
+                    }
+
                     updateLivePartyUnitOnMap(unitMeta.id, payload);
                 }
             } catch (e) {
@@ -926,20 +942,71 @@ window.clearSingleOfficer = function(key) {
         return;
     }
 
+    const u = window.livePartyMarkers[key];
+    const uPhone = (u && u.phone) || '';
+    const cleanPh = String(uPhone).replace(/\D/g, '').slice(-10);
+    const meta = (u && u.meta) ? u.meta : getPartyUnitMeta(key, cleanPh);
+    const effId = (meta && meta.id) ? meta.id : key;
+    const now = Date.now();
+
+    // Record clear timestamp locally so retransmitted packets are dropped
+    if (!window.clearedUnitsMap) window.clearedUnitsMap = {};
+    window.clearedUnitsMap[effId] = now;
+    if (key !== effId) window.clearedUnitsMap[key] = now;
+    if (cleanPh) window.clearedUnitsMap['phone_' + cleanPh] = now;
+    try {
+        sessionStorage.setItem('gp_cleared_units', JSON.stringify(window.clearedUnitsMap));
+    } catch(e) {}
+
     if (window.liveMqttClient && window.liveMqttClient.connected) {
         const controlTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/control_command';
-        const officerTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/officer/' + key;
         const generalTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/locations';
+        const unitsSyncTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/units_sync';
 
-        // 1. Send stop command to officer's phone
-        window.liveMqttClient.publish(controlTopic, JSON.stringify({ action: 'clear_unit', unitId: key, timestamp: Date.now() }), { qos: 1 });
-        // 2. Purge retained message on broker
-        window.liveMqttClient.publish(officerTopic, '', { qos: 1, retain: true });
-        // 3. Broadcast stopped state
-        window.liveMqttClient.publish(generalTopic, JSON.stringify({ type: 'location', unitId: key, status: 'stopped', lastUpdated: Date.now() }), { qos: 0 });
+        // 1. Send stop command to officer's phone (both unitId and phone)
+        window.liveMqttClient.publish(controlTopic, JSON.stringify({
+            action: 'clear_unit',
+            unitId: effId,
+            phone: cleanPh,
+            timestamp: now
+        }), { qos: 1 });
+
+        // 2. Broadcast unit deletion to all peers/monitors
+        window.liveMqttClient.publish(unitsSyncTopic, JSON.stringify({
+            type: 'delete_unit',
+            action: 'clear_unit',
+            unitId: effId,
+            phone: cleanPh,
+            from: liveUserId,
+            timestamp: now
+        }), { qos: 1 });
+
+        // 3. Purge all possible retained officer topics on broker
+        const topicsToPurge = [
+            'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/officer/' + effId,
+            'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/officer/' + key
+        ];
+        if (cleanPh) {
+            topicsToPurge.push('srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/officer/phone_' + cleanPh);
+            topicsToPurge.push('srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/officer/' + cleanPh);
+        }
+        topicsToPurge.forEach(function(t) {
+            window.liveMqttClient.publish(t, '', { qos: 1, retain: true });
+        });
+
+        // 4. Broadcast stopped state
+        window.liveMqttClient.publish(generalTopic, JSON.stringify({
+            type: 'location',
+            unitId: effId,
+            phone: cleanPh,
+            status: 'stopped',
+            lastUpdated: now
+        }), { qos: 0 });
     }
 
-    removeLivePartyUnit(key);
+    removeLivePartyUnit(effId);
+    if (key !== effId) removeLivePartyUnit(key);
+    if (cleanPh) removeLivePartyUnit('phone_' + cleanPh);
 };
 
 // Clear ALL Live Tracking from Control Room with Password Verification
@@ -958,26 +1025,42 @@ window.clearAllLiveTracking = function() {
         return;
     }
 
+    const now = Date.now();
+    if (!window.clearedUnitsMap) window.clearedUnitsMap = {};
+    for (const k in window.livePartyMarkers) {
+        window.clearedUnitsMap[k] = now;
+    }
+    try {
+        sessionStorage.setItem('gp_cleared_units', JSON.stringify(window.clearedUnitsMap));
+    } catch(e) {}
+
     if (window.liveMqttClient && window.liveMqttClient.connected) {
         const controlTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/control_command';
         const generalTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/locations';
         const unitsSyncTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/units_sync';
 
-        window.liveMqttClient.publish(controlTopic, JSON.stringify({ action: 'clear_all', timestamp: Date.now() }), { qos: 1 });
-        window.liveMqttClient.publish(unitsSyncTopic, JSON.stringify({ type: 'clear_all', action: 'clear_all', from: liveUserId, timestamp: Date.now() }), { qos: 1 });
+        window.liveMqttClient.publish(controlTopic, JSON.stringify({ action: 'clear_all', timestamp: now }), { qos: 1 });
+        window.liveMqttClient.publish(unitsSyncTopic, JSON.stringify({ type: 'clear_all', action: 'clear_all', from: liveUserId, timestamp: now }), { qos: 1 });
 
         // Collect all keys from live markers and metadata to ensure broker retained messages are fully wiped
         const allKeysToClear = new Set(Object.keys(window.livePartyMarkers));
         if (window.ROUTE_MOBILES_DATA && Array.isArray(window.ROUTE_MOBILES_DATA)) {
             window.ROUTE_MOBILES_DATA.forEach(function(u) {
                 if (u && (u.id || u.unitId)) allKeysToClear.add(u.id || u.unitId);
+                if (u && u.phone) {
+                    const clean = String(u.phone).replace(/\D/g, '').slice(-10);
+                    if (clean) {
+                        allKeysToClear.add('phone_' + clean);
+                        allKeysToClear.add(clean);
+                    }
+                }
             });
         }
 
         allKeysToClear.forEach(function(k) {
             const officerTopic = 'srikakulam_police_tracker/' + LIVE_ROOM_CODE + '/officer/' + k;
             window.liveMqttClient.publish(officerTopic, '', { qos: 1, retain: true });
-            window.liveMqttClient.publish(generalTopic, JSON.stringify({ type: 'location', unitId: k, status: 'stopped', lastUpdated: Date.now() }), { qos: 0 });
+            window.liveMqttClient.publish(generalTopic, JSON.stringify({ type: 'location', unitId: k, status: 'stopped', lastUpdated: now }), { qos: 0 });
         });
     }
 

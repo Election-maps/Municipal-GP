@@ -112,7 +112,11 @@ public class LocationTrackingService extends Service implements LocationListener
                             JSONObject json = new JSONObject(str);
                             String action = json.optString("action", "");
                             String targetUnitId = json.optString("unitId", "");
-                            if ("clear_all".equals(action) || ("clear_unit".equals(action) && unitId != null && unitId.equals(targetUnitId))) {
+                            String targetPhone = json.optString("phone", "");
+                            boolean matchUnit = (unitId != null && !unitId.isEmpty() && (unitId.equalsIgnoreCase(targetUnitId) || targetUnitId.toLowerCase().contains(unitId.toLowerCase())));
+                            boolean matchPhone = (phone != null && !phone.isEmpty() && targetPhone != null && !targetPhone.isEmpty() && phone.replaceAll("\\D", "").endsWith(targetPhone.replaceAll("\\D", "")));
+
+                            if ("clear_all".equals(action) || ("clear_unit".equals(action) && (matchUnit || matchPhone))) {
                                 Log.i(TAG, "Control command force stop received: " + action);
                                 stopTracking();
                                 stopSelf();
