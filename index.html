@@ -17,7 +17,7 @@
     <!-- MQTT.js library for real-time live synchronization -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <!-- Pre-loaded Forces Data (Routes, SF, SSF, QRTs, Reserve Parties) -->
-    <script src="route_mobiles_data.js?v=20261128_p2_v5"></script>
+    <script src="route_mobiles_data.js?v=20261128_p2_v6"></script>
     <!-- Live Forces Real-time Tracking Engine -->
     <script src="live_tracking.js?v=20261126_v12"></script>
     <style>
@@ -516,7 +516,7 @@
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-reserve" checked onchange="onLivePartyCategoryCheckChange('RESERVE', this.checked)" class="w-3 h-3 text-emerald-600 accent-emerald-600 cursor-pointer">
-                        <span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-building-columns text-[8px]"></i></span> Reserve Parties (<span class="legend-reserve-count">10</span>)
+                        <span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-building-columns text-[8px]"></i></span> Reserve Parties (<span class="legend-reserve-count">2</span>)
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-static" checked onchange="onLivePartyCategoryCheckChange('STATIC', this.checked)" class="w-3 h-3 text-cyan-600 accent-cyan-600 cursor-pointer">
@@ -531,11 +531,11 @@
             <div class="flex flex-nowrap items-center justify-between gap-2 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white px-2.5 py-1.5 rounded-lg border border-slate-800 shadow-md overflow-x-auto whitespace-nowrap">
                 <div class="flex items-center gap-1 text-xs shrink-0">
                     <span class="font-bold text-amber-400 mr-1 flex items-center gap-1 text-[11px] sm:text-xs">
-                        <i class="fa-solid fa-satellite-dish animate-pulse text-emerald-400"></i> Live Forces (<span id="live-forces-total-badge">199</span>):
+                        <i class="fa-solid fa-satellite-dish animate-pulse text-emerald-400"></i> Live Forces (<span id="live-forces-total-badge">191</span>):
                     </span>
                     <label class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 cursor-pointer transition select-none" id="live-label-party-all" title="అన్నీ ఎంచుకోండి / రద్దు చేయండి (Select / Deselect All)">
                         <input type="checkbox" id="live-check-party-all" checked onchange="toggleAllLivePartyCategories(this.checked)" class="w-3.5 h-3.5 rounded text-blue-600 bg-slate-900 border-slate-500 focus:ring-0 cursor-pointer accent-blue-500">
-                        <span>All (<span id="live-forces-all-count">199</span>)</span>
+                        <span>All (<span id="live-forces-all-count">191</span>)</span>
                     </label>
                     <label class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-blue-300 border border-blue-500/40 cursor-pointer transition select-none" id="live-label-party-rm" title="రూట్ మొబైల్స్ లైవ్ లొకేషన్లు (Routes Live)">
                         <input type="checkbox" id="live-check-party-rm" value="RM" checked onchange="onLivePartyCategoryCheckChange('RM', this.checked)" class="w-3.5 h-3.5 rounded text-blue-600 bg-slate-900 border-slate-500 focus:ring-0 cursor-pointer accent-blue-500">
@@ -555,7 +555,7 @@
                     </label>
                     <label class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/40 cursor-pointer transition select-none" id="live-label-party-reserve" title="రిజర్వ్ పార్టీల లైవ్ లొకేషన్లు (Reserve Parties Live)">
                         <input type="checkbox" id="live-check-party-reserve" value="RESERVE" checked onchange="onLivePartyCategoryCheckChange('RESERVE', this.checked)" class="w-3.5 h-3.5 rounded text-emerald-600 bg-slate-900 border-slate-500 focus:ring-0 cursor-pointer accent-emerald-500">
-                        <span><i class="fa-solid fa-building-columns text-emerald-400 mr-0.5"></i> Reserve (<span id="live-forces-reserve-count">10</span>)</span>
+                        <span><i class="fa-solid fa-building-columns text-emerald-400 mr-0.5"></i> Reserve (<span id="live-forces-reserve-count">2</span>)</span>
                     </label>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
@@ -758,7 +758,7 @@
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-reserve" checked onchange="onLivePartyCategoryCheckChange('RESERVE', this.checked)" class="w-3 h-3 text-emerald-600 accent-emerald-600 cursor-pointer">
-                        <span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-building-columns text-[8px]"></i></span> Reserve Parties (<span class="legend-reserve-count">10</span>)
+                        <span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shadow-sm"><i class="fa-solid fa-building-columns text-[8px]"></i></span> Reserve Parties (<span class="legend-reserve-count">2</span>)
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer hover:bg-slate-100 rounded px-1 py-0.5 transition select-none">
                         <input type="checkbox" id="legend-check-party-static" checked onchange="onLivePartyCategoryCheckChange('STATIC', this.checked)" class="w-3 h-3 text-cyan-600 accent-cyan-600 cursor-pointer">

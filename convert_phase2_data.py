@@ -11,7 +11,6 @@ def clean(v):
 def extract_phone(text):
     if not text:
         return ""
-    # Find 10 digit number starting with 6-9
     m = re.findall(r'[6-9]\d{9}', str(text))
     if m:
         return m[0]
@@ -19,8 +18,7 @@ def extract_phone(text):
 
 units = []
 
-# 1. Routes (Sheet 'Routes')
-# Row 1 is header: Col 1: S.No, Col 2: Name of the Mandal, Col 3: Route No, Col 4: Route Incharge Details, Col 5: Supporting staff, Col 6: Route incharge Head Quarter
+# 1. Routes (Sheet 'Routes') - exactly 128 routes
 ws_routes = wb["Routes"]
 for r in range(2, 130):
     sno = clean(ws_routes.cell(r, 1).value)
@@ -54,8 +52,7 @@ for r in range(2, 130):
 
 print(f"Routes extracted: {len(units)}")
 
-# 2. Striking Forces (Sheet 'Striking Forces')
-# Row 2 is header: Col 1: Sl. No., Col 2: GP, Col 3: Name of the Mandal, Col 4: Stracking force No, Col 5: SF Head Quarter, Col 6: Force Deployed (In-Charge SI), Col 7: Supporting PCs/HGs
+# 2. Striking Forces (Sheet 'Striking Forces') - exactly 30 SFs
 ws_sf = wb["Striking Forces"]
 sf_count = 0
 for r in range(4, 34):
@@ -68,8 +65,6 @@ for r in range(4, 34):
     supp = clean(ws_sf.cell(r, 7).value)
     
     if not sno and not mandal and not officer:
-        continue
-    if sno and sno.lower().startswith("total"):
         continue
         
     phone = extract_phone(officer) or extract_phone(supp)
@@ -91,8 +86,7 @@ for r in range(4, 34):
 
 print(f"SF extracted: {sf_count}")
 
-# 3. Special Striking Forces (Sheet 'Special Striking Forces')
-# Row 2 is header: Col 1: Sl. No., Col 2: GP, Col 3: Name of the Mandal, Col 4: No of SSF, Col 5: SSF HQ, Col 6: In-Charge CI, Col 7: Supporting PCs / HGs
+# 3. Special Striking Forces (Sheet 'Special Striking Forces') - exactly 26 SSFs
 ws_ssf = wb["Special Striking Forces"]
 ssf_count = 0
 for r in range(4, 30):
@@ -105,8 +99,6 @@ for r in range(4, 30):
     supp = clean(ws_ssf.cell(r, 7).value)
     
     if not sno and not mandal and not officer:
-        continue
-    if sno and sno.lower().startswith("total"):
         continue
         
     phone = extract_phone(officer) or extract_phone(supp)
@@ -128,12 +120,10 @@ for r in range(4, 30):
 
 print(f"SSF extracted: {ssf_count}")
 
-# 4. QRTs (Sheet 'QRTss' - Rows 3 to 7: strictly QRT-1 to QRT-5)
+# 4. QRTs (Sheet 'QRTss' - exactly 5 QRT teams: QRT-1 to QRT-5)
 ws_qrt = wb["QRTss"]
 qrt_count = 0
-special_teams = []
-
-for r in range(3, 15):
+for r in range(3, 8):
     sno = clean(ws_qrt.cell(r, 1).value)
     name = clean(ws_qrt.cell(r, 2).value)
     loc = clean(ws_qrt.cell(r, 3).value)
@@ -144,45 +134,25 @@ for r in range(3, 15):
         
     phone = extract_phone(officer)
     mandal_name = loc.split(",")[0].replace("Mandals", "").replace("Mandal", "").strip() if loc else "Srikakulam"
-    
-    # Strictly QRT teams (QRT-1 to QRT-5)
-    if name.upper().startswith("QRT"):
-        qrt_count += 1
-        uid = f"QRT_{sno}_{name}".replace(" ", "_").replace("-", "_").replace("/", "_")
-        units.append({
-            "id": uid,
-            "category": "QRTs",
-            "categoryKey": "QRT",
-            "mandal": mandal_name,
-            "route": name,
-            "unitName": f"{name} ({loc})",
-            "hq": loc,
-            "officer": officer.replace("\n", ", "),
-            "phone": phone,
-            "supporting": officer.replace("\n", ", "),
-            "pollingStations": loc
-        })
-    else:
-        # Rows 8 to 14: Special Headquarters / Reserve Teams
-        uid = f"Special_Team_{sno}_{name}".replace(" ", "_").replace("-", "_").replace("/", "_")
-        special_teams.append({
-            "id": uid,
-            "category": "Reserve Parties",
-            "categoryKey": "RESERVE",
-            "mandal": mandal_name,
-            "route": name,
-            "unitName": f"{name} ({loc})",
-            "hq": loc,
-            "officer": officer.replace("\n", ", "),
-            "phone": phone,
-            "supporting": officer.replace("\n", ", "),
-            "pollingStations": loc
-        })
+    qrt_count += 1
+    uid = f"QRT_{sno}_{name}".replace(" ", "_").replace("-", "_")
+    units.append({
+        "id": uid,
+        "category": "QRTs",
+        "categoryKey": "QRT",
+        "mandal": mandal_name,
+        "route": name,
+        "unitName": f"{name} ({loc})",
+        "hq": loc,
+        "officer": officer.replace("\n", ", "),
+        "phone": phone,
+        "supporting": officer.replace("\n", ", "),
+        "pollingStations": loc
+    })
 
-print(f"QRT extracted (strictly QRT teams): {qrt_count}")
-print(f"Special Reserve Teams extracted: {len(special_teams)}")
+print(f"QRT extracted (strictly 5 QRT teams): {qrt_count}")
 
-# 5. Addl. SP Reserve (Sheet 'Addl. SP Reserve')
+# 5. Reserve Parties (Sheet 'Addl. SP Reserve' - exactly 2 Reserve teams)
 ws_asp = wb["Addl. SP Reserve"]
 asp_count = 0
 for r in range(2, 4):
@@ -213,45 +183,9 @@ for r in range(2, 4):
         "pollingStations": clean_area
     })
 
-print(f"Addl SP Reserve extracted: {asp_count}")
+print(f"Reserve Parties extracted (strictly 2 Reserve teams): {asp_count}")
 
-# 6. SP Reserve (Sheet 'SP Reserve')
-ws_sp = wb["SP Reserve"]
-sp_count = 0
-for r in range(2, 3):
-    sno = clean(ws_sp.cell(r, 1).value)
-    force_type = clean(ws_sp.cell(r, 2).value)
-    area = clean(ws_sp.cell(r, 3).value)
-    officer = clean(ws_sp.cell(r, 4).value)
-    remarks = clean(ws_sp.cell(r, 5).value)
-    
-    if not sno and not officer:
-        continue
-        
-    phone = extract_phone(officer)
-    sp_count += 1
-    uid = f"SP_Reserve_{sno}"
-    clean_area = area.replace("\n", " ").strip()
-    units.append({
-        "id": uid,
-        "category": "Reserve Parties",
-        "categoryKey": "RESERVE",
-        "mandal": clean_area,
-        "route": "SP Reserve",
-        "unitName": f"SP Reserve ({clean_area})",
-        "hq": "Srikakulam Dist HQ",
-        "officer": officer.replace("\n", ", "),
-        "phone": phone,
-        "supporting": remarks or officer.replace("\n", ", "),
-        "pollingStations": clean_area
-    })
-
-print(f"SP Reserve extracted: {sp_count}")
-
-# Add the Special Teams to Reserve Parties
-units.extend(special_teams)
-
-# 7. Static Parties (Sheet 'Statck')
+# 6. Static Parties (Sheet 'Statck' - exactly 27 static parties)
 ws_statck = wb["Statck"]
 statck_count = 0
 for r in range(3, ws_statck.max_row + 1):
@@ -262,8 +196,6 @@ for r in range(3, ws_statck.max_row + 1):
     officer = clean(ws_statck.cell(r, 5).value)
     
     if not mandal and not ps and not officer:
-        continue
-    if mandal and mandal.lower().startswith("total"):
         continue
         
     phone = extract_phone(officer)
