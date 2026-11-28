@@ -266,6 +266,23 @@ window.initLivePartyTracking = function() {
         window.livePartyMarkersGroup = L.layerGroup().addTo(liveMap);
     }
 
+    // Immediately purge obsolete units from local cache
+    try {
+        const cachedStr = localStorage.getItem('gp_live_units_cache');
+        if (cachedStr) {
+            const cached = JSON.parse(cachedStr);
+            const cleaned = {};
+            for (const k in cached) {
+                const u = cached[k];
+                const meta = getPartyUnitMeta(k, u && u.phone);
+                if (meta && meta.id) {
+                    cleaned[meta.id] = u;
+                }
+            }
+            localStorage.setItem('gp_live_units_cache', JSON.stringify(cleaned));
+        }
+    } catch(e) {}
+
     restoreLiveUnitsFromCache();
     initOfficerMessagesStorage();
     initLiveMQTT();
@@ -382,8 +399,11 @@ function initLiveMQTT() {
                             if (t > 0 && t < 1e11) t *= 1000;
                             if (t <= 0 || (now - t) <= LIVE_UNIT_EXPIRY_MS) {
                                 const k = u.unitId || u.id || (u.phone ? ('phone_' + String(u.phone).replace(/\D/g, '').slice(-10)) : u._mapKey);
-                                if (k && (!window.livePartyMarkers[k] || Number(window.livePartyMarkers[k].lastUpdated || 0) < t)) {
-                                    updateLivePartyUnitOnMap(k, u);
+                                const meta = getPartyUnitMeta(k, u.phone);
+                                if (!meta || !meta.id) return; // Strict Phase-2 filter
+                                const effId = meta.id;
+                                if (effId && (!window.livePartyMarkers[effId] || Number(window.livePartyMarkers[effId].lastUpdated || 0) < t)) {
+                                    updateLivePartyUnitOnMap(effId, u);
                                 }
                             }
                         });
@@ -413,8 +433,22 @@ function initLiveMQTT() {
                 const unitKey = payload.unitId || payload.id || (payload.phone ? ('phone_' + String(payload.phone).replace(/\D/g, '').slice(-10)) : (rawTopicLast !== 'locations' ? rawTopicLast : null));
                 if (!unitKey) return;
 
+                // Strict Phase-2 filter: Ensure unit belongs to official 2. Force - GP Election Phase-2-2026 on 28-11-2026 dataset
+                const unitMeta = getPartyUnitMeta(unitKey, payload.phone);
+                if (!unitMeta || !unitMeta.id) {
+                    // Wipe retained message on broker so it stops transmitting
+                    if (topic.indexOf('/officer/') !== -1 && window.liveMqttClient && window.liveMqttClient.connected) {
+                        window.liveMqttClient.publish(topic, '', { qos: 1, retain: true });
+                    }
+                    if (window.livePartyMarkers && window.livePartyMarkers[unitKey]) {
+                        removeLivePartyUnit(unitKey);
+                    }
+                    return;
+                }
+
                 if (payload.status === 'stopped' || payload.action === 'clear_unit') {
-                    removeLivePartyUnit(unitKey);
+                    removeLivePartyUnit(unitMeta.id);
+                    if (unitKey !== unitMeta.id) removeLivePartyUnit(unitKey);
                 } else if (payload.latitude || payload.lat) {
                     let pktTime = Number(payload.lastUpdated || payload.timestamp || 0);
                     if (pktTime > 0 && pktTime < 1e11) {
@@ -423,12 +457,13 @@ function initLiveMQTT() {
                     const now = Date.now();
                     // Reject stale packets older than active expiry window (24 hours matches NETRA APK)
                     if (pktTime > 0 && (now - pktTime) > LIVE_UNIT_EXPIRY_MS) {
-                        if (window.livePartyMarkers && window.livePartyMarkers[unitKey]) {
+                        if (window.livePartyMarkers && (window.livePartyMarkers[unitMeta.id] || window.livePartyMarkers[unitKey])) {
+                            removeLivePartyUnit(unitMeta.id);
                             removeLivePartyUnit(unitKey);
                         }
                         return;
                     }
-                    updateLivePartyUnitOnMap(unitKey, payload);
+                    updateLivePartyUnitOnMap(unitMeta.id, payload);
                 }
             } catch (e) {
                 console.error('Failed to parse live tracking packet:', e);
@@ -463,35 +498,26 @@ function updateLivePartyUnitOnMap(key, data) {
     const lng = parseFloat(data.longitude || data.lng);
     if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return;
 
-    // Allow metadata from ROUTE_MOBILES_DATA or construct fallback so ALL units (Static, Supervisors, Field) show on map
-    let meta = getPartyUnitMeta(key, data.phone);
-    const effectiveKey = (meta && meta.id) ? meta.id : key;
+    // STRICT PHASE-2 FILTER: ONLY units present in official 2. Force - GP Election Phase-2-2026 on 28-11-2026 (ROUTE_MOBILES_DATA) are allowed!
+    const meta = getPartyUnitMeta(key, data.phone);
+    if (!meta || !meta.id) {
+        // Discard units from old phases (e.g. Ragoulu, TPM School), old tests, or non-Phase-2 units
+        if (window.livePartyMarkers && window.livePartyMarkers[key]) {
+            removeLivePartyUnit(key);
+        }
+        return;
+    }
+    const effectiveKey = meta.id;
 
     // Clean up older duplicate alias marker if key differs (e.g. phone_... vs unit ID)
     if (effectiveKey !== key && window.livePartyMarkers && window.livePartyMarkers[key]) {
         removeLivePartyUnit(key);
     }
 
-    if (!meta) {
-        meta = {
-            id: effectiveKey,
-            unitId: effectiveKey,
-            unitName: data.unitName || effectiveKey,
-            mandal: data.mandal || '',
-            category: data.category || (String(data.categoryKey || '').toUpperCase() === 'STATIC' ? 'Static Parties' : 'Duty Force'),
-            categoryKey: data.categoryKey ? normalizePartyCategoryKey(data.categoryKey) : 'OTHER',
-            officer: data.officer || 'Police Officer',
-            phone: data.phone || '',
-            supporting: data.supporting || '',
-            hq: data.hq || '',
-            route: data.route || ''
-        };
-    }
-
-    const catKey = meta.categoryKey ? normalizePartyCategoryKey(meta.categoryKey) : (data.categoryKey ? normalizePartyCategoryKey(data.categoryKey) : 'OTHER');
-    const mandal = meta.mandal || data.mandal || '';
-    const unitName = meta.unitName || data.unitName || effectiveKey;
-    const officer = meta.officer || data.officer || 'Police Officer';
+    const catKey = meta.categoryKey ? normalizePartyCategoryKey(meta.categoryKey) : 'RM';
+    const mandal = meta.mandal || '';
+    const unitName = meta.unitName || effectiveKey;
+    const officer = meta.officer || 'Police Officer';
     const phone = meta.phone || data.phone || '';
     const speed = parseFloat(data.speed || 0);
     const speedKmh = Math.round(speed * 3.6);
@@ -1023,7 +1049,11 @@ function restoreLiveUnitsFromCache() {
             }
 
             const meta = getPartyUnitMeta(k, u.phone);
-            const effId = (meta && meta.id) ? meta.id : k;
+            if (!meta || !meta.id) {
+                // Strictly Phase-2 only: purge units not in current 2. Force - GP Election Phase-2-2026 on 28-11-2026 Excel sheet
+                continue;
+            }
+            const effId = meta.id;
 
             // Deduplicate by official unit ID
             if (seenOfficialIds.has(effId)) {

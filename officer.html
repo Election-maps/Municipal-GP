@@ -1820,9 +1820,16 @@
     const rawKey = payload.unitId || payload.id || (payload.phone ? 'phone_' + normalizePhone(payload.phone) : null);
     if (!rawKey) return;
 
-    // Resolve official unit metadata from allUnitsData (strictly 171 forces from M & GP 2511-14)
+    // STRICT PHASE-2 FILTER: Resolve official unit metadata (strictly 2. Force - GP Election Phase-2-2026 on 28-11-2026)
     const resolvedUnit = getPartyUnitMeta(rawKey, payload.phone);
-    const unitKey = (resolvedUnit && resolvedUnit.id) ? resolvedUnit.id : rawKey;
+    if (!resolvedUnit || !resolvedUnit.id) {
+      if (sdpoSubordinateMarkers[rawKey]) {
+        try { officerMap.removeLayer(sdpoSubordinateMarkers[rawKey].marker); } catch (e) {}
+        delete sdpoSubordinateMarkers[rawKey];
+      }
+      return;
+    }
+    const unitKey = resolvedUnit.id;
 
     // Clean up older duplicate alias marker if key differs (e.g. phone_... vs official unit ID)
     if (unitKey !== rawKey && sdpoSubordinateMarkers[rawKey]) {
